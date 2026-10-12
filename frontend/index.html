@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1b4d6b">
+  <title>Ocorrências escolares</title>
+</head>
+<body>
+  <a class="pular" href="#conteudo">Ir para o conteúdo</a>
+
+  <header class="topo">
+    <h1>Ocorrências escolares</h1>
+    <p>Registre e acompanhe ocorrências por escola.</p>
+  </header>
+
+  <main id="conteudo" class="layout" tabindex="-1">
+
+    <nav class="abas" aria-label="Seções">
+      <div role="tablist" class="abas-lista">
+        <button role="tab" id="aba-registrar" data-painel="registrar" aria-controls="painel-registrar" aria-selected="true" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          <span>Registrar</span>
+        </button>
+        <button role="tab" id="aba-ocorrencias" data-painel="ocorrencias" aria-controls="painel-ocorrencias" aria-selected="false" tabindex="-1" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg>
+          <span>Ocorrências</span>
+        </button>
+        <button role="tab" id="aba-relatorio" data-painel="relatorio" aria-controls="painel-relatorio" aria-selected="false" tabindex="-1" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 20V10M12 20V4M18 20v-7"/></svg>
+          <span>Vermelhas</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- REGISTRAR -->
+    <section id="painel-registrar" class="painel" role="tabpanel" aria-labelledby="aba-registrar">
+      <h2>Nova ocorrência</h2>
+      <form id="form" novalidate autocomplete="off">
+        <p id="erro-geral" class="erro-geral" role="alert" hidden></p>
+
+        <div class="campo">
+          <label for="escola">Escola</label>
+          <input id="escola" type="text" list="lista-escolas" placeholder="Digite parte do nome" aria-describedby="erro-escola" enterkeyhint="next">
+          <datalist id="lista-escolas"></datalist>
+          <p class="erro" id="erro-escola"></p>
+        </div>
+
+        <div class="campo">
+          <label for="data">Data da ocorrência</label>
+          <input id="data" type="date" aria-describedby="erro-data">
+          <p class="erro" id="erro-data"></p>
+        </div>
+
+        <fieldset class="campo" aria-describedby="erro-gravidade">
+          <legend>Gravidade</legend>
+          <div class="gravidade">
+            <input type="radio" id="g-amarelo" name="gravidade" value="AMARELO">
+            <label class="g amarelo" for="g-amarelo">Amarelo</label>
+            <input type="radio" id="g-vermelho" name="gravidade" value="VERMELHO">
+            <label class="g vermelho" for="g-vermelho">Vermelho</label>
+          </div>
+          <p class="erro" id="erro-gravidade"></p>
+        </fieldset>
+
+        <div class="campo">
+          <label for="tipo">Tipo <span class="opcional">(opcional)</span></label>
+          <input id="tipo" type="text" list="lista-tipos" maxlength="100" placeholder="Ex.: briga, dano ao prédio">
+          <datalist id="lista-tipos">
+            <option value="Briga"></option>
+            <option value="Agressão"></option>
+            <option value="Dano ao patrimônio"></option>
+            <option value="Falta de segurança"></option>
+            <option value="Invasão"></option>
+            <option value="Ameaça"></option>
+          </datalist>
+        </div>
+
+        <div class="campo">
+          <label for="descricao">O que aconteceu <span class="opcional">(opcional)</span></label>
+          <textarea id="descricao" maxlength="2000" rows="4" aria-describedby="contador"></textarea>
+          <p class="contador" id="contador">0 / 2000</p>
+        </div>
+
+        <fieldset class="campo" aria-describedby="erro-registrado_por">
+          <legend>Quem registrou</legend>
+          <div class="opcoes">
+            <input type="radio" id="r-diretor" name="registrado_por" value="DIRETOR">
+            <label for="r-diretor">Diretor</label>
+            <input type="radio" id="r-vice" name="registrado_por" value="VICE_DIRETOR">
+            <label for="r-vice">Vice-diretor</label>
+            <input type="radio" id="r-outros" name="registrado_por" value="OUTROS">
+            <label for="r-outros">Outros</label>
+          </div>
+          <p class="erro" id="erro-registrado_por"></p>
+          <div id="outro-campo" class="campo-outro" hidden>
+            <label for="outro">Nome ou cargo</label>
+            <input id="outro" type="text" maxlength="100" aria-describedby="erro-outro">
+            <p class="erro" id="erro-outro"></p>
+          </div>
+        </fieldset>
+
+        <button type="submit" id="enviar" class="principal">Registrar ocorrência</button>
+      </form>
+    </section>
+
+    <!-- OCORRENCIAS -->
+    <section id="painel-ocorrencias" class="painel" role="tabpanel" aria-labelledby="aba-ocorrencias" hidden>
+      <h2>Ocorrências</h2>
+
+      <div class="filtros">
+        <div class="campo">
+          <label for="busca">Buscar escola</label>
+          <input id="busca" type="search" placeholder="Digite parte do nome">
+        </div>
+        <div class="chips" role="radiogroup" aria-label="Filtrar por gravidade">
+          <button type="button" class="chip" role="radio" aria-checked="true" data-grav="">Todas</button>
+          <button type="button" class="chip" role="radio" aria-checked="false" data-grav="VERMELHO">Vermelho</button>
+          <button type="button" class="chip" role="radio" aria-checked="false" data-grav="AMARELO">Amarelo</button>
+        </div>
+      </div>
+
+      <p id="lista-status" class="status" role="status" aria-live="polite"></p>
+      <div id="lista" class="cartoes"></div>
+    </section>
+
+    <!-- RELATORIO -->
+    <section id="painel-relatorio" class="painel" role="tabpanel" aria-labelledby="aba-relatorio" hidden>
+      <h2>Ocorrências vermelhas por escola</h2>
+      <p id="resumo" class="resumo"></p>
+      <label class="interruptor">
+        <input type="checkbox" id="mostrar-zeradas">
+        <span>Mostrar escolas sem ocorrência vermelha</span>
+      </label>
+      <p id="rel-status" class="status" role="status" aria-live="polite"></p>
+      <ol id="relatorio" class="ranking"></ol>
+    </section>
+  </main>
+
+  <div id="aviso" class="aviso" role="status" aria-live="polite"></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

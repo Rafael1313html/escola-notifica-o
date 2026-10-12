@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ocorrências escolares</title>
+<style>
+  :root {
+    --fundo: #f2f5f7;
+    --papel: #ffffff;
+    --tinta: #16222c;
+    --suave: #5b6b78;
+    --linha: #d5dde3;
+    --azul: #1b4d6b;
+    --amarelo: #f2b705;
+    --amarelo-texto: #3d2f00;
+    --vermelho: #c0392b;
+    --erro: #a32a1e;
+    --ok: #1f6b45;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fundo: #10171d;
+      --papel: #18222b;
+      --tinta: #e8eef2;
+      --suave: #9db0bd;
+      --linha: #2b3a46;
+      --azul: #6fb1d6;
+      --erro: #ff8a7a;
+      --ok: #6fd3a0;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--fundo);
+    color: var(--tinta);
+    font: 16px/1.5 "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  main { max-width: 1080px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  h2 { font-size: 1.15rem; margin: 0 0 12px; }
+  .sub { color: var(--suave); margin: 0 0 24px; }
+  .grade { display: grid; gap: 20px; grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .grade { grid-template-columns: 420px 1fr; align-items: start; } }
+  section {
+    background: var(--papel);
+    border: 1px solid var(--linha);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  label, legend { display: block; font-weight: 600; margin-bottom: 6px; }
+  fieldset { border: 0; padding: 0; margin: 0 0 16px; }
+  .campo { margin-bottom: 16px; }
+  input[type="text"], input[type="date"], select, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    font: inherit;
+    color: var(--tinta);
+    background: var(--papel);
+    border: 1px solid var(--linha);
+    border-radius: 6px;
+  }
+  textarea { min-height: 96px; resize: vertical; }
+  :focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
+
+  /* Gravidade: o elemento central da tela */
+  .gravidade { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .gravidade input { position: absolute; opacity: 0; }
+  .gravidade label {
+    margin: 0;
+    padding: 16px 12px;
+    text-align: center;
+    font-size: 1.05rem;
+    border: 2px solid var(--linha);
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .gravidade .amarelo { border-left: 10px solid var(--amarelo); }
+  .gravidade .vermelho { border-left: 10px solid var(--vermelho); }
+  .gravidade input:checked + .amarelo { background: var(--amarelo); color: var(--amarelo-texto); border-color: var(--amarelo); }
+  .gravidade input:checked + .vermelho { background: var(--vermelho); color: #fff; border-color: var(--vermelho); }
+  .gravidade input:focus-visible + label { outline: 3px solid var(--azul); outline-offset: 2px; }
+
+  .opcoes { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+  .opcoes label { font-weight: 400; display: flex; align-items: center; gap: 6px; margin: 0; }
+  #outro-campo { margin-top: 10px; }
+  [hidden] { display: none !important; }
+
+  button {
+    font: inherit; font-weight: 600;
+    padding: 12px 20px;
+    color: #fff; background: var(--azul);
+    border: 0; border-radius: 6px; cursor: pointer;
+  }
+  @media (prefers-color-scheme: dark) { button { color: #0c1319; } }
+  button:disabled { opacity: .6; cursor: wait; }
+  #msg { margin-top: 12px; min-height: 1.5em; font-weight: 600; }
+  #msg.erro { color: var(--erro); }
+  #msg.ok { color: var(--ok); }
+
+  .filtro { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .filtro select { width: auto; }
+  .tabela-rolagem { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--linha); vertical-align: top; }
+  th { color: var(--suave); font-weight: 600; }
+  .selo { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .85rem; font-weight: 600; }
+  .selo.AMARELO { background: var(--amarelo); color: var(--amarelo-texto); }
+  .selo.VERMELHO { background: var(--vermelho); color: #fff; }
+  .vazio { color: var(--suave); padding: 12px 0; }
+  .coluna { display: grid; gap: 20px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Ocorrências escolares</h1>
+  <p class="sub">Registre uma ocorrência e acompanhe as mais graves por escola.</p>
+
+  <div class="grade">
+    <section aria-labelledby="t-form">
+      <h2 id="t-form">Nova ocorrência</h2>
+      <form id="form" novalidate>
+        <div class="campo">
+          <label for="escola">Escola</label>
+          <select id="escola" name="escola_id" required><option value="">Carregando escolas…</option></select>
+        </div>
+
+        <div class="campo">
+          <label for="data">Data da ocorrência</label>
+          <input type="date" id="data" name="data_ocorrencia" required>
+        </div>
+
+        <div class="campo">
+          <label for="tipo">Tipo</label>
+          <input type="text" id="tipo" name="tipo" maxlength="100" placeholder="Ex.: briga, falta de segurança, dano ao prédio">
+        </div>
+
+        <div class="campo">
+          <label for="descricao">O que aconteceu</label>
+          <textarea id="descricao" name="descricao"></textarea>
+        </div>
+
+        <fieldset>
+          <legend>Gravidade</legend>
+          <div class="gravidade">
+            <input type="radio" id="g-amarelo" name="gravidade" value="AMARELO">
+            <label class="amarelo" for="g-amarelo">Amarelo</label>
+            <input type="radio" id="g-vermelho" name="gravidade" value="VERMELHO">
+            <label class="vermelho" for="g-vermelho">Vermelho</label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Quem registrou</legend>
+          <div class="opcoes">
+            <label><input type="radio" name="registrado_por" value="DIRETOR"> Diretor</label>
+            <label><input type="radio" name="registrado_por" value="VICE_DIRETOR"> Vice-diretor</label>
+            <label><input type="radio" name="registrado_por" value="OUTROS"> Outros</label>
+          </div>
+          <div id="outro-campo" hidden>
+            <label for="outro">Nome ou cargo</label>
+            <input type="text" id="outro" name="registrado_por_outro" maxlength="100">
+          </div>
+        </fieldset>
+
+        <button type="submit" id="enviar">Registrar ocorrência</button>
+        <div id="msg" role="status" aria-live="polite"></div>
+      </form>
+    </section>
+
+    <div class="coluna">
+      <section aria-labelledby="t-lista">
+        <h2 id="t-lista">Últimas ocorrências</h2>
+        <div class="filtro">
+          <label for="f-grav" style="margin:0;align-self:center">Gravidade</label>
+          <select id="f-grav">
+            <option value="">Todas</option>
+            <option value="VERMELHO">Vermelho</option>
+            <option value="AMARELO">Amarelo</option>
+          </select>
+        </div>
+        <div class="tabela-rolagem">
+          <table>
+            <thead><tr><th>Data</th><th>Escola</th><th>Gravidade</th><th>Registrou</th></tr></thead>
+            <tbody id="lista"></tbody>
+          </table>
+        </div>
+        <div id="lista-vazia" class="vazio" hidden>Nenhuma ocorrência registrada ainda.</div>
+      </section>
+
+      <section aria-labelledby="t-rel">
+        <h2 id="t-rel">Ocorrências vermelhas por escola</h2>
+        <div class="tabela-rolagem">
+          <table>
+            <thead><tr><th>Escola</th><th>Vermelhas</th></tr></thead>
+            <tbody id="relatorio"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script>
+const ROTULO_REGISTRANTE = { DIRETOR: 'Diretor', VICE_DIRETOR: 'Vice-diretor' };
+const $ = (id) => document.getElementById(id);
+
+function celula(tr, texto) {
+  const td = document.createElement('td');
+  td.textContent = texto;
+  tr.appendChild(td);
+  return td;
+}
+
+function formatarData(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+}
+
+async function carregarEscolas() {
+  const resp = await fetch('/api/escolas');
+  const escolas = await resp.json();
+  const sel = $('escola');
+  sel.innerHTML = '';
+  const vazio = new Option('Escolha a escola', '');
+  sel.add(vazio);
+  escolas.forEach((e) => sel.add(new Option(e.nome, e.id)));
+}
+
+async function carregarLista() {
+  const grav = $('f-grav').value;
+  const resp = await fetch('/api/ocorrencias' + (grav ? `?gravidade=${grav}` : ''));
+  const itens = await resp.json();
+  const corpo = $('lista');
+  corpo.innerHTML = '';
+  $('lista-vazia').hidden = itens.length > 0;
+  itens.forEach((o) => {
+    const tr = document.createElement('tr');
+    celula(tr, formatarData(o.data_ocorrencia));
+    celula(tr, o.escola);
+    const tdG = document.createElement('td');
+    const selo = document.createElement('span');
+    selo.className = 'selo ' + o.gravidade;
+    selo.textContent = o.gravidade === 'VERMELHO' ? 'Vermelho' : 'Amarelo';
+    tdG.appendChild(selo);
+    tr.appendChild(tdG);
+    celula(tr, ROTULO_REGISTRANTE[o.registrado_por] || o.registrado_por_outro);
+    corpo.appendChild(tr);
+  });
+}
+
+async function carregarRelatorio() {
+  const resp = await fetch('/api/relatorios/vermelhas-por-escola');
+  const itens = await resp.json();
+  const corpo = $('relatorio');
+  corpo.innerHTML = '';
+  itens.forEach((i) => {
+    const tr = document.createElement('tr');
+    celula(tr, i.escola);
+    celula(tr, String(i.total_vermelhas));
+    corpo.appendChild(tr);
+  });
+}
+
+function mostrarMensagem(texto, tipo) {
+  const m = $('msg');
+  m.textContent = texto;
+  m.className = tipo;
+}
+
+document.querySelectorAll('input[name="registrado_por"]').forEach((r) => {
+  r.addEventListener('change', () => {
+    const outros = document.querySelector('input[name="registrado_por"]:checked').value === 'OUTROS';
+    $('outro-campo').hidden = !outros;
+    if (!outros) $('outro').value = '';
+  });
+});
+
+$('f-grav').addEventListener('change', carregarLista);
+
+$('form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const dados = Object.fromEntries(new FormData($('form')).entries());
+  $('enviar').disabled = true;
+  mostrarMensagem('', '');
+  try {
+    const resp = await fetch('/api/ocorrencias', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dados),
+    });
+    const corpo = await resp.json();
+    if (!resp.ok) {
+      mostrarMensagem(corpo.erros.join(' '), 'erro');
+    } else {
+      mostrarMensagem('Ocorrência registrada.', 'ok');
+      $('form').reset();
+      $('outro-campo').hidden = true;
+      await Promise.all([carregarLista(), carregarRelatorio()]);
+    }
+  } catch (e) {
+    mostrarMensagem('Não foi possível enviar. Verifique a conexão com o servidor.', 'erro');
+  } finally {
+    $('enviar').disabled = false;
+  }
+});
+
+$('data').valueAsDate = new Date();
+carregarEscolas();
+carregarLista();
+carregarRelatorio();
+</script>
+</body>
+</html>
