@@ -18,11 +18,17 @@ Sistema de registro de ocorrências escolares. Node.js, Express, MySQL e front-e
 
 Para desenvolver o front-end com recarga automática, rode `npm run dev` dentro de `frontend` e mantenha o servidor Node ativo na porta 3000.
 
-## Publicar no Railway
+## Demonstração no GitHub Pages
+
+O workflow `.github/workflows/pages.yml` publica a interface automaticamente após um push em `main`. Na primeira publicação, abra **Settings → Pages** no repositório e selecione **GitHub Actions** como origem. O endereço do projeto será `https://rafael1313html.github.io/escola-notifica-o/`.
+
+Essa demonstração funciona sem servidor e sem MySQL. Os registros ficam no armazenamento local do navegador de cada visitante; não são compartilhados entre pessoas e podem ser apagados ao limpar os dados do navegador. Use somente dados fictícios. O GitHub Pages em repositório privado depende do plano da conta; se a publicação for bloqueada pelo plano, será necessário usar um repositório público ou outro host estático.
+
+## Publicar o backend no Railway
 
 O `railway.json` configura o build, o início da aplicação e a rota de saúde. O build compila o front-end e o servidor Express entrega os arquivos gerados. O comando de início cria as tabelas e cadastra as 103 escolas de forma repetível.
 
-1. Envie este repositório ao GitHub e crie um projeto Railway conectado a ele.
+1. Crie um projeto Railway conectado a este repositório.
 2. No Railway, adicione um serviço **MySQL** ao mesmo projeto.
 3. Configure no serviço da aplicação estas variáveis, como referências às variáveis do serviço MySQL (ajuste `MySQL` ao nome dado ao serviço):
 
@@ -35,7 +41,7 @@ O `railway.json` configura o build, o início da aplicação e a rota de saúde.
    ```
 
 4. Gere um domínio público para o serviço da aplicação nas configurações de rede do Railway.
-5. Abra o domínio para testar.
+5. Abra o domínio para testar o backend compartilhado e persistente.
 
 O app não tem autenticação: quem tiver o link pode consultar e criar registros. Use somente dados fictícios no ambiente público de teste; não insira nomes, descrições ou informações reais de estudantes. Nunca envie o arquivo `.env` ao GitHub.
 

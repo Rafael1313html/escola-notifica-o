@@ -1,4 +1,7 @@
 import type { Escola, Gravidade, ItemRelatorio, NovaOcorrencia, Ocorrencia } from './types';
+import { criarOcorrenciaDemo, escolasDemo, listarOcorrenciasDemo, listarRelatorioDemo } from './demo';
+
+const modoDemo = import.meta.env.VITE_DEMO_MODE === 'true';
 
 export class ApiError extends Error {
   readonly erros: string[];
@@ -23,16 +26,19 @@ async function pedir<T>(url: string, opcoes?: RequestInit): Promise<T> {
   return corpo as T;
 }
 
-export const listarEscolas = (): Promise<Escola[]> => pedir<Escola[]>('/api/escolas');
+export const listarEscolas = (): Promise<Escola[]> =>
+  modoDemo ? Promise.resolve(escolasDemo) : pedir<Escola[]>('/api/escolas');
 
 export const listarOcorrencias = (gravidade: Gravidade | ''): Promise<Ocorrencia[]> =>
-  pedir<Ocorrencia[]>('/api/ocorrencias' + (gravidade ? `?gravidade=${gravidade}` : ''));
+  modoDemo
+    ? listarOcorrenciasDemo(gravidade)
+    : pedir<Ocorrencia[]>('/api/ocorrencias' + (gravidade ? `?gravidade=${gravidade}` : ''));
 
 export const listarRelatorio = (): Promise<ItemRelatorio[]> =>
-  pedir<ItemRelatorio[]>('/api/relatorios/vermelhas-por-escola');
+  modoDemo ? listarRelatorioDemo() : pedir<ItemRelatorio[]>('/api/relatorios/vermelhas-por-escola');
 
 export const criarOcorrencia = (dados: NovaOcorrencia): Promise<{ id: number }> =>
-  pedir<{ id: number }>('/api/ocorrencias', {
+  modoDemo ? criarOcorrenciaDemo(dados) : pedir<{ id: number }>('/api/ocorrencias', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dados),
