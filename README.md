@@ -22,7 +22,7 @@ Para desenvolver o front-end com recarga automática, rode `npm run dev` dentro 
 
 O workflow `.github/workflows/pages.yml` publica a interface automaticamente após um push em `main`. Na primeira publicação, abra **Settings → Pages** no repositório e selecione **GitHub Actions** como origem. O endereço do projeto será `https://rafael1313html.github.io/escola-notifica-o/`.
 
-Essa demonstração funciona sem servidor e sem MySQL. Os registros ficam no armazenamento local do navegador de cada visitante; não são compartilhados entre pessoas e podem ser apagados ao limpar os dados do navegador. Use somente dados fictícios. O GitHub Pages em repositório privado depende do plano da conta; se a publicação for bloqueada pelo plano, será necessário usar um repositório público ou outro host estático.
+Essa demonstração funciona sem servidor e sem MySQL. Os registros ficam no armazenamento local do navegador de cada visitante; não são compartilhados entre pessoas e podem ser apagados ao limpar os dados do navegador. Use somente dados fictícios. O GitHub Pages em repositório privado depende do plano da conta; se a publicação for bloqueada pelo plano, conecte o repositório privado ao Cloudflare Pages e use `npm --prefix frontend ci && npm --prefix frontend run build:demo` como comando de build e `frontend/dist` como diretório de saída. O Cloudflare Pages publica em um domínio `pages.dev`.
 
 ## Publicar o backend no Railway
 
