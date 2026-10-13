@@ -5,6 +5,7 @@ const pool = require('./db');
 
 const app = express();
 app.use(express.json());
+app.get('/health', (req, res) => res.status(200).send('ok'));
 // Serve o front-end compilado (frontend/dist). Se ainda não foi gerado, usa a página simples em public/.
 const fs = require('fs');
 const pastaFront = path.join(__dirname, '..', 'frontend', 'dist');

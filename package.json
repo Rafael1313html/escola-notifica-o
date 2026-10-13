@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
+    "build": "npm --prefix frontend ci && npm --prefix frontend run build",
     "db:init": "node scripts/init-db.js"
   },
   "dependencies": {
