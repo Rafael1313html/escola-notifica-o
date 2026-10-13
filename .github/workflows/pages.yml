@@ -1,8 +1,8 @@
-name: Publicar demonstração no GitHub Pages
+name: Deploy Frontend to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
   workflow_dispatch:
 
 permissions:
@@ -15,29 +15,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  publicar:
+  build-and-deploy:
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Baixar o código
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Configurar Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - name: Configurar GitHub Pages
+      - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
-      - name: Instalar dependências
+      - name: Install dependencies
         run: npm ci && npm --prefix frontend ci
-      - name: Compilar demonstração
+      - name: Build demo frontend
         run: npm --prefix frontend run build:demo
-      - name: Enviar arquivos estáticos
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
           path: frontend/dist
-      - name: Publicar
+      - name: Deploy to GitHub Pages
         id: deploy
         uses: actions/deploy-pages@v4
