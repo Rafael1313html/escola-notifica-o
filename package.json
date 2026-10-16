@@ -8,7 +8,8 @@
     "dev": "node --watch src/server.js",
     "build": "npm --prefix frontend ci && npm --prefix frontend run build",
     "build:demo": "npm --prefix frontend ci && npm --prefix frontend run build:demo",
-    "db:init": "node scripts/init-db.js"
+    "db:init": "node scripts/init-db.js",
+    "test": "node --test tests/*.test.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

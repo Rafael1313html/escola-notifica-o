@@ -1,3 +1,5 @@
 node_modules
 .env
 frontend/dist/
+frontend/test-results/
+frontend/playwright-report/

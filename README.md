@@ -2,7 +2,21 @@
 
 Sistema de registro de ocorrências escolares. Node.js, Express, MySQL e front-end TypeScript com Vite.
 
+## Interface
+
+A entrada usa a composição visual da [Plataforma Conviva SP](https://conviva.educacao.sp.gov.br/login): fotografia escolar, cartão branco, botão azul e fonte Montserrat. O logotipo Conviva Educação solicitado foi incorporado em sua versão horizontal, sem redesenho. Os recursos são servidos localmente, com fontes e licença em `frontend/public/assets`.
+
+- Painel com indicadores de todo o histórico e evolução dos últimos seis meses.
+- Consulta dos 200 registros mais recentes, com busca, filtros por escola, gravidade e período, paginação e detalhes.
+- Formulário com validação, mensagens por campo e confirmação com número do registro.
+- Relatório de classificação vermelha por escola e exportação CSV dos resultados selecionados.
+- Navegação por teclado, suporte a celular, preferência por movimento reduzido e impressão.
+
+A tela de entrada abre o painel da aplicação. Ela não autentica usuários nem integra o Gov.br. A identidade visual não indica homologação oficial. Antes do uso com dados reais, ainda é necessário implementar autenticação e controle de acesso.
+
 ## Rodar localmente
+
+Use Node.js 20.19 ou superior na linha 20, ou Node.js 22.12 ou superior, para compilar o front-end.
 
 1. Copie `.env.example` para `.env` e configure o acesso ao MySQL.
 2. Na pasta principal, execute:
@@ -50,6 +64,7 @@ O app não tem autenticação: quem tiver o link pode consultar e criar registro
 | Método | Rota | Descrição |
 |---|---|---|
 | GET | `/api/escolas` | Lista as escolas |
+| GET | `/api/indicadores` | Totais de todo o histórico e agregados mensais dos últimos seis meses |
 | POST | `/api/ocorrencias` | Registra uma ocorrência |
 | GET | `/api/ocorrencias?gravidade=VERMELHO` | Lista ocorrências, com filtros opcionais `gravidade` e `escola_id` |
 | GET | `/api/relatorios/vermelhas-por-escola` | Total de ocorrências vermelhas por escola |
@@ -61,3 +76,16 @@ O app não tem autenticação: quem tiver o link pode consultar e criar registro
 - `registrado_por`: `DIRETOR`, `VICE_DIRETOR` ou `OUTROS`; somente um por ocorrência.
 - `registrado_por_outro` é obrigatório quando `registrado_por` for `OUTROS` e fica vazio nos demais casos.
 - As regras `CHECK` exigem MySQL 8.0.16 ou mais recente.
+
+## Validação
+
+```sh
+npm test
+npm --prefix frontend run build
+npm --prefix frontend exec playwright install chromium
+npm --prefix frontend run test:e2e
+```
+
+Os testes da API usam um banco simulado, sem alterar o MySQL configurado. Os testes de navegador usam o modo de demonstração em contextos isolados, cobrindo cadastro, filtros, paginação, detalhes, exportação, teclado e verificações automáticas de acessibilidade no desktop e no celular. Com Chrome já instalado, defina `PLAYWRIGHT_BROWSER_CHANNEL=chrome` para utilizá-lo.
+
+A API valida datas de calendário, bloqueia datas futuras, limita o tamanho dos textos e retorna erros públicos sem detalhes internos do banco. As datas de referência seguem `America/Sao_Paulo`. As exportações escapam campos e neutralizam textos que poderiam ser interpretados como fórmulas por planilhas.

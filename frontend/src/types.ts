@@ -33,3 +33,19 @@ export interface NovaOcorrencia {
   registrado_por: Registrante;
   registrado_por_outro: string;
 }
+
+export interface MesIndicador {
+  mes: string;
+  total: number;
+  vermelhas: number;
+  amarelas: number;
+}
+
+export interface Indicadores {
+  total_ocorrencias: number;
+  total_vermelhas: number;
+  total_amarelas: number;
+  escolas_com_registros: number;
+  total_escolas: number;
+  meses: MesIndicador[];
+}

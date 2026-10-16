@@ -1,6 +1,7 @@
-import './styles.css';
-import { ApiError, criarOcorrencia, listarEscolas, listarOcorrencias, listarRelatorio } from './api';
-import type { Escola, Gravidade, ItemRelatorio, NovaOcorrencia, Ocorrencia, Registrante } from './types';
+﻿import './styles.css';
+import { ApiError, criarOcorrencia, listarEscolas, listarIndicadores, listarOcorrencias, listarRelatorio, modoDemo } from './api';
+import type { Escola, Gravidade, Indicadores, ItemRelatorio, NovaOcorrencia, Ocorrencia, Registrante } from './types';
+import { baixarCSV, formatarData, hojeISO, normalizar, numero, protocolo } from './utils';
 
 /* ---------- utilidades ---------- */
 
@@ -10,60 +11,72 @@ function q<T extends HTMLElement>(seletor: string, raiz: ParentNode = document):
   return elemento;
 }
 
-function normalizar(texto: string): string {
-  return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim();
+function el<K extends keyof HTMLElementTagNameMap>(tag: K, classe = '', texto?: string): HTMLElementTagNameMap[K] {
+  const elemento = document.createElement(tag);
+  if (classe) elemento.className = classe;
+  if (texto !== undefined) elemento.textContent = texto;
+  return elemento;
 }
 
-function formatarData(iso: string): string {
-  const [ano, mes, dia] = iso.slice(0, 10).split('-');
-  return `${dia}/${mes}/${ano}`;
-}
-
-function hojeISO(): string {
-  const d = new Date();
-  const mes = String(d.getMonth() + 1).padStart(2, '0');
-  const dia = String(d.getDate()).padStart(2, '0');
-  return `${d.getFullYear()}-${mes}-${dia}`;
+function icone(nome: string): SVGSVGElement {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.classList.add('icone');
+  svg.setAttribute('aria-hidden', 'true');
+  const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+  use.setAttribute('href', `#i-${nome}`);
+  svg.append(use);
+  return svg;
 }
 
 const ROTULO_REGISTRANTE: Record<Registrante, string> = {
-  DIRETOR: 'Diretor',
-  VICE_DIRETOR: 'Vice-diretor',
-  OUTROS: 'Outros',
+  DIRETOR: 'Diretor', VICE_DIRETOR: 'Vice-diretor', OUTROS: 'Outros',
 };
+const ROTULO_GRAVIDADE: Record<Gravidade, string> = { AMARELO: 'Amarela', VERMELHO: 'Vermelha' };
 
-const ROTULO_GRAVIDADE: Record<Gravidade, string> = {
-  AMARELO: 'Amarelo',
-  VERMELHO: 'Vermelho',
-};
+function responsavel(o: Ocorrencia): string {
+  return o.registrado_por === 'OUTROS' && o.registrado_por_outro
+    ? o.registrado_por_outro : ROTULO_REGISTRANTE[o.registrado_por] || 'Não informado';
+}
+
+function criarSelo(gravidade: Gravidade): HTMLElement {
+  const cor = gravidade.toLowerCase();
+  const selo = el('span', `selo ${cor}`);
+  selo.append(el('span', `ponto ${cor}`), document.createTextNode(ROTULO_GRAVIDADE[gravidade]));
+  return selo;
+}
+
+function criarVazio(titulo: string, texto: string, acao?: { rotulo: string; executar: () => void }): HTMLElement {
+  const vazio = el('div', 'vazio');
+  vazio.append(icone('lista'), el('h3', '', titulo), el('p', '', texto));
+  if (acao) {
+    const botao = el('button', 'botao secundario', acao.rotulo);
+    botao.type = 'button';
+    botao.addEventListener('click', acao.executar);
+    vazio.append(botao);
+  }
+  return vazio;
+}
 
 /* ---------- estado ---------- */
 
-type Painel = 'registrar' | 'ocorrencias' | 'relatorio';
-
+type Painel = 'visao-geral' | 'registrar' | 'ocorrencias' | 'relatorio';
 const estado = {
   escolas: new Map<string, number>(), // nome normalizado -> id
-  ocorrencias: [] as Ocorrencia[],
-  relatorio: [] as ItemRelatorio[],
+  ocorrencias: null as Ocorrencia[] | null,
+  relatorio: null as ItemRelatorio[] | null,
+  indicadores: null as Indicadores | null,
   filtroGravidade: '' as Gravidade | '',
-  busca: '',
-  mostrarZeradas: false,
+  busca: '', escolaFiltro: '', periodo: '', pagina: 1,
+  mostrarZeradas: false, carregando: false, enviando: false,
 };
-
+const TAMANHO_PAGINA = 10;
 const CHAVE_REGISTRANTE = 'escola-notificacao:registrado_por';
 
 function lerPreferencia(): string | null {
-  try {
-    return localStorage.getItem(CHAVE_REGISTRANTE);
-  } catch {
-    return null;
-  }
+  try { return localStorage.getItem(CHAVE_REGISTRANTE); } catch { return null; }
 }
-
 function salvarPreferencia(valor: string): void {
-  try {
-    localStorage.setItem(CHAVE_REGISTRANTE, valor);
-  } catch {
+  try { localStorage.setItem(CHAVE_REGISTRANTE, valor); } catch {
     /* sem armazenamento: segue sem lembrar */
   }
 }
@@ -81,58 +94,88 @@ const botaoEnviar = q<HTMLButtonElement>('#enviar');
 const erroGeral = q<HTMLParagraphElement>('#erro-geral');
 const contador = q<HTMLParagraphElement>('#contador');
 const aviso = q<HTMLDivElement>('#aviso');
+const botaoAtualizar = q<HTMLButtonElement>('#atualizar');
 
 /* ---------- abas ---------- */
 
 const abas = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
 const paineis: Record<Painel, HTMLElement> = {
-  registrar: q('#painel-registrar'),
-  ocorrencias: q('#painel-ocorrencias'),
-  relatorio: q('#painel-relatorio'),
+  'visao-geral': q('#painel-visao-geral'), registrar: q('#painel-registrar'),
+  ocorrencias: q('#painel-ocorrencias'), relatorio: q('#painel-relatorio'),
 };
-const telaLarga = window.matchMedia('(min-width: 960px)');
-let painelAtivo: Painel = 'registrar';
+const TITULOS: Record<Painel, [string, string]> = {
+  'visao-geral': ['Visão geral', 'Informações da rede para uma gestão mais atenta e integrada.'],
+  registrar: ['Nova ocorrência', 'Registre os fatos e contribua para o acompanhamento da sua escola.'],
+  ocorrencias: ['Ocorrências', 'Consulte, filtre e acompanhe os registros da rede de ensino.'],
+  relatorio: ['Relatórios', 'Informações consolidadas para apoiar as decisões da gestão.'],
+};
+let painelAtivo: Painel = 'visao-geral';
+const telaMovel = window.matchMedia('(max-width: 699px)');
 
 function ativar(painel: Painel, moverFoco = false): void {
-  // Em telas largas o formulário fica sempre visível ao lado.
-  if (telaLarga.matches && painel === 'registrar') painel = 'ocorrencias';
+  q('#inicio').hidden = true;
+  q('.lateral').hidden = false;
+  q('.aplicacao').hidden = false;
+  q<HTMLAnchorElement>('.pular').href = '#conteudo';
   painelAtivo = painel;
-  (Object.keys(paineis) as Painel[]).forEach((nome) => {
-    paineis[nome].hidden = nome !== painel;
-  });
+  (Object.keys(paineis) as Painel[]).forEach((nome) => { paineis[nome].hidden = nome !== painel; });
   abas.forEach((aba) => {
     const ativa = aba.dataset.painel === painel;
     aba.setAttribute('aria-selected', String(ativa));
     aba.tabIndex = ativa ? 0 : -1;
     if (ativa && moverFoco) aba.focus();
   });
+  const [titulo, subtitulo] = TITULOS[painel];
+  q('#titulo-pagina').textContent = titulo;
+  q('#subtitulo-pagina').textContent = subtitulo;
+  q('#caminho-atual').textContent = titulo;
+  q<HTMLButtonElement>('.acoes-pagina [data-abrir="registrar"]').hidden = painel === 'registrar';
+  document.title = `${titulo} · Conviva Educação`;
   if (location.hash !== `#${painel}`) history.replaceState(null, '', `#${painel}`);
-  if (painel === 'ocorrencias') void carregarOcorrencias();
-  if (painel === 'relatorio') void carregarRelatorio();
 }
 
 abas.forEach((aba) => {
   aba.addEventListener('click', () => ativar(aba.dataset.painel as Painel));
   aba.addEventListener('keydown', (ev) => {
-    const visiveis = abas.filter((a) => a.offsetParent !== null);
-    const i = visiveis.indexOf(aba);
+    const i = abas.indexOf(aba);
     let destino: HTMLButtonElement | undefined;
-    if (ev.key === 'ArrowRight') destino = visiveis[(i + 1) % visiveis.length];
-    if (ev.key === 'ArrowLeft') destino = visiveis[(i - 1 + visiveis.length) % visiveis.length];
-    if (destino) {
-      ev.preventDefault();
-      ativar(destino.dataset.painel as Painel, true);
-    }
+    if (ev.key === 'ArrowRight' || ev.key === 'ArrowDown') destino = abas[(i + 1) % abas.length];
+    if (ev.key === 'ArrowLeft' || ev.key === 'ArrowUp') destino = abas[(i - 1 + abas.length) % abas.length];
+    if (ev.key === 'Home') destino = abas[0];
+    if (ev.key === 'End') destino = abas[abas.length - 1];
+    if (destino) { ev.preventDefault(); ativar(destino.dataset.painel as Painel, true); }
   });
 });
-
-telaLarga.addEventListener('change', () => ativar(painelAtivo));
-
+function ajustarOrientacao(): void {
+  q('[role="tablist"]').setAttribute('aria-orientation', telaMovel.matches ? 'horizontal' : 'vertical');
+}
+telaMovel.addEventListener('change', ajustarOrientacao);
+ajustarOrientacao();
 function painelDaUrl(): Painel {
   const h = location.hash.replace('#', '');
-  return h === 'ocorrencias' || h === 'relatorio' || h === 'registrar' ? h : 'registrar';
+  return Object.hasOwn(paineis, h) ? h as Painel : 'visao-geral';
 }
-window.addEventListener('hashchange', () => ativar(painelDaUrl()));
+function sincronizarRota(): void {
+  if (!location.hash || location.hash === '#inicio') {
+    q('#inicio').hidden = false;
+    q('.lateral').hidden = true;
+    q('.aplicacao').hidden = true;
+    q<HTMLAnchorElement>('.pular').href = '#entrada-conteudo';
+    document.title = 'Ocorrências escolares · Conviva Educação';
+  } else ativar(painelDaUrl());
+}
+window.addEventListener('hashchange', sincronizarRota);
+q('#entrar-painel').addEventListener('click', () => {
+  ativar('visao-geral');
+  q('#conteudo').focus();
+});
+document.querySelectorAll<HTMLButtonElement>('[data-abrir]').forEach((botao) => {
+  botao.addEventListener('click', () => {
+    ativar(botao.dataset.abrir as Painel);
+    if (painelAtivo === 'registrar') campoEscola.focus();
+    else paineis[painelAtivo].focus();
+  });
+});
 
 /* ---------- aviso (toast) ---------- */
 
@@ -141,120 +184,71 @@ function mostrarAviso(texto: string): void {
   aviso.textContent = texto;
   aviso.classList.add('visivel');
   window.clearTimeout(temporizadorAviso);
-  temporizadorAviso = window.setTimeout(() => aviso.classList.remove('visivel'), 4000);
+  temporizadorAviso = window.setTimeout(() => aviso.classList.remove('visivel'), 6000);
 }
 
 /* ---------- formulário ---------- */
 
 type CampoErro = 'escola' | 'data' | 'gravidade' | 'registrado_por' | 'outro';
-interface ErroCampo {
-  campo: CampoErro;
-  mensagem: string;
-}
-
+interface ErroCampo { campo: CampoErro; mensagem: string; }
 const ALVO_FOCO: Record<CampoErro, string> = {
-  escola: 'escola',
-  data: 'data',
-  gravidade: 'g-amarelo',
-  registrado_por: 'r-diretor',
-  outro: 'outro',
+  escola: 'escola', data: 'data', gravidade: 'g-amarelo', registrado_por: 'r-diretor', outro: 'outro',
 };
-
 function limparErro(campo: CampoErro): void {
-  q<HTMLParagraphElement>(`#erro-${campo}`).textContent = '';
-  const alvo = document.getElementById(ALVO_FOCO[campo]);
-  alvo?.removeAttribute('aria-invalid');
+  q(`#erro-${campo}`).textContent = '';
+  document.getElementById(ALVO_FOCO[campo])?.removeAttribute('aria-invalid');
 }
-
 function limparTodosErros(): void {
   (Object.keys(ALVO_FOCO) as CampoErro[]).forEach(limparErro);
   erroGeral.hidden = true;
   erroGeral.textContent = '';
 }
-
 function mostrarErro(erro: ErroCampo): void {
-  q<HTMLParagraphElement>(`#erro-${erro.campo}`).textContent = erro.mensagem;
+  q(`#erro-${erro.campo}`).textContent = erro.mensagem;
   document.getElementById(ALVO_FOCO[erro.campo])?.setAttribute('aria-invalid', 'true');
 }
-
 function valorRadio(nome: string): string {
-  const marcado = form.querySelector<HTMLInputElement>(`input[name="${nome}"]:checked`);
-  return marcado ? marcado.value : '';
+  return form.querySelector<HTMLInputElement>(`input[name="${nome}"]:checked`)?.value || '';
 }
-
 function validar(): { erros: ErroCampo[]; dados: NovaOcorrencia | null } {
   const erros: ErroCampo[] = [];
-
   const escolaId = estado.escolas.get(normalizar(campoEscola.value));
-  if (escolaId === undefined) {
-    erros.push({
-      campo: 'escola',
-      mensagem: campoEscola.value.trim()
-        ? 'Escolha uma escola da lista de sugestões.'
-        : 'Escolha a escola.',
-    });
-  }
-
-  if (!campoData.value) {
-    erros.push({ campo: 'data', mensagem: 'Informe a data da ocorrência.' });
-  } else if (campoData.value > hojeISO()) {
-    erros.push({ campo: 'data', mensagem: 'A data não pode ser no futuro.' });
-  }
-
+  if (escolaId === undefined) erros.push({ campo: 'escola', mensagem: campoEscola.value.trim()
+    ? 'Escolha uma escola da lista de sugestões.' : 'Escolha a escola.' });
+  campoData.max = hojeISO();
+  if (!campoData.value || !campoData.validity.valid) erros.push({ campo: 'data', mensagem: 'Informe uma data válida, igual ou anterior a hoje.' });
   const gravidade = valorRadio('gravidade');
-  if (gravidade !== 'AMARELO' && gravidade !== 'VERMELHO') {
-    erros.push({ campo: 'gravidade', mensagem: 'Escolha amarelo ou vermelho.' });
-  }
-
+  if (gravidade !== 'AMARELO' && gravidade !== 'VERMELHO') erros.push({ campo: 'gravidade', mensagem: 'Escolha a classificação amarela ou vermelha.' });
   const registrante = valorRadio('registrado_por');
   if (registrante !== 'DIRETOR' && registrante !== 'VICE_DIRETOR' && registrante !== 'OUTROS') {
     erros.push({ campo: 'registrado_por', mensagem: 'Escolha quem registrou.' });
   } else if (registrante === 'OUTROS' && !campoOutro.value.trim()) {
     erros.push({ campo: 'outro', mensagem: 'Informe o nome ou cargo de quem registrou.' });
   }
-
-  if (erros.length > 0 || escolaId === undefined) return { erros, dados: null };
-
-  return {
-    erros,
-    dados: {
-      escola_id: escolaId,
-      data_ocorrencia: campoData.value,
-      tipo: campoTipo.value.trim(),
-      descricao: campoDescricao.value.trim(),
-      gravidade: gravidade as Gravidade,
-      registrado_por: registrante as Registrante,
-      registrado_por_outro: campoOutro.value.trim(),
-    },
-  };
+  if (erros.length || escolaId === undefined) return { erros, dados: null };
+  return { erros, dados: { escola_id: escolaId, data_ocorrencia: campoData.value,
+    tipo: campoTipo.value.trim(), descricao: campoDescricao.value.trim(), gravidade: gravidade as Gravidade,
+    registrado_por: registrante as Registrante, registrado_por_outro: campoOutro.value.trim() } };
 }
 
 // Some o erro assim que a pessoa corrige o campo.
 campoEscola.addEventListener('input', () => limparErro('escola'));
 campoData.addEventListener('input', () => limparErro('data'));
 campoOutro.addEventListener('input', () => limparErro('outro'));
-form.querySelectorAll<HTMLInputElement>('input[name="gravidade"]').forEach((r) =>
-  r.addEventListener('change', () => limparErro('gravidade'))
-);
-form.querySelectorAll<HTMLInputElement>('input[name="registrado_por"]').forEach((r) =>
-  r.addEventListener('change', () => {
-    limparErro('registrado_por');
-    const outros = r.value === 'OUTROS' && r.checked;
-    blocoOutro.hidden = !outros;
-    if (outros) campoOutro.focus();
-    else {
-      campoOutro.value = '';
-      limparErro('outro');
-    }
-  })
-);
-
-campoDescricao.addEventListener('input', () => {
-  contador.textContent = `${campoDescricao.value.length} / 2000`;
-});
+form.querySelectorAll<HTMLInputElement>('input[name="gravidade"]').forEach((r) => r.addEventListener('change', () => limparErro('gravidade')));
+form.querySelectorAll<HTMLInputElement>('input[name="registrado_por"]').forEach((r) => r.addEventListener('change', () => {
+  limparErro('registrado_por');
+  const outros = r.value === 'OUTROS' && r.checked;
+  blocoOutro.hidden = !outros;
+  campoOutro.required = outros;
+  if (outros) campoOutro.focus();
+  else { campoOutro.value = ''; limparErro('outro'); }
+}));
+campoDescricao.addEventListener('input', () => { contador.textContent = `${campoDescricao.value.length} / 2000`; });
 
 form.addEventListener('submit', async (ev) => {
   ev.preventDefault();
+  if (estado.enviando || estado.carregando) return;
   limparTodosErros();
   const { erros, dados } = validar();
   if (!dados) {
@@ -262,17 +256,18 @@ form.addEventListener('submit', async (ev) => {
     document.getElementById(ALVO_FOCO[erros[0].campo])?.focus();
     return;
   }
-
+  estado.enviando = true;
   botaoEnviar.disabled = true;
-  botaoEnviar.textContent = 'Registrando…';
+  q('span', botaoEnviar).textContent = 'Registrando…';
+  form.setAttribute('aria-busy', 'true');
   try {
-    await criarOcorrencia(dados);
+    const resultado = await criarOcorrencia(dados);
     salvarPreferencia(dados.registrado_por);
-    mostrarAviso('Ocorrência registrada.');
+    mostrarAviso(`Ocorrência ${protocolo(resultado.id)} registrada com sucesso.`);
     reiniciarFormulario(dados.registrado_por);
     // Atualiza só o que está na tela; as outras seções recarregam ao abrir.
-    if (painelAtivo === 'ocorrencias') void carregarOcorrencias();
-    if (painelAtivo === 'relatorio') void carregarRelatorio();
+    // O painel e as consultas agora compartilham os dados atualizados após cada registro.
+    await atualizarDados();
     campoEscola.focus();
   } catch (erro) {
     const mensagens = erro instanceof ApiError ? erro.erros : ['Não foi possível registrar. Tente novamente.'];
@@ -280,43 +275,40 @@ form.addEventListener('submit', async (ev) => {
     erroGeral.hidden = false;
     erroGeral.focus();
   } finally {
-    botaoEnviar.disabled = false;
-    botaoEnviar.textContent = 'Registrar ocorrência';
+    estado.enviando = false;
+    botaoEnviar.disabled = estado.escolas.size === 0;
+    q('span', botaoEnviar).textContent = 'Registrar ocorrência';
+    form.removeAttribute('aria-busy');
   }
 });
-
 function reiniciarFormulario(registrante: Registrante): void {
-  campoEscola.value = '';
-  campoTipo.value = '';
-  campoDescricao.value = '';
+  campoEscola.value = ''; campoTipo.value = ''; campoDescricao.value = '';
   contador.textContent = '0 / 2000';
-  form.querySelectorAll<HTMLInputElement>('input[name="gravidade"]').forEach((r) => (r.checked = false));
+  limparTodosErros();
+  form.querySelectorAll<HTMLInputElement>('input[name="gravidade"]').forEach((r) => { r.checked = false; });
   // Mantém a data e quem registrou: costuma ser a mesma pessoa em várias ocorrências.
   const mantido = form.querySelector<HTMLInputElement>(`input[name="registrado_por"][value="${registrante}"]`);
   if (mantido) mantido.checked = true;
-  if (registrante !== 'OUTROS') {
-    campoOutro.value = '';
-    blocoOutro.hidden = true;
-  }
+  if (registrante !== 'OUTROS') { campoOutro.value = ''; blocoOutro.hidden = true; campoOutro.required = false; }
 }
+// Em telas largas o formulário fica sempre visível ao lado.
+// As orientações de preenchimento ocupam a coluna lateral do painel de registro.
 
 /* ---------- escolas ---------- */
 
 async function carregarEscolas(): Promise<void> {
-  try {
-    const escolas: Escola[] = await listarEscolas();
-    const lista = q<HTMLDataListElement>('#lista-escolas');
-    escolas.forEach((e) => {
-      estado.escolas.set(normalizar(e.nome), e.id);
-      const opcao = document.createElement('option');
-      opcao.value = e.nome;
-      lista.appendChild(opcao);
-    });
-  } catch (erro) {
-    erroGeral.textContent =
-      erro instanceof ApiError ? erro.erros.join(' ') : 'Não foi possível carregar as escolas.';
-    erroGeral.hidden = false;
-  }
+  const escolas: Escola[] = await listarEscolas();
+  const lista = q<HTMLDataListElement>('#lista-escolas');
+  const filtro = q<HTMLSelectElement>('#filtro-escola');
+  estado.escolas.clear();
+  lista.replaceChildren();
+  filtro.replaceChildren(new Option('Todas as escolas', ''));
+  escolas.forEach((e) => {
+    estado.escolas.set(normalizar(e.nome), e.id);
+    lista.append(new Option(e.nome, e.nome));
+    filtro.append(new Option(e.nome, e.nome));
+  });
+  filtro.value = estado.escolaFiltro;
 }
 
 /* ---------- lista de ocorrências ---------- */
@@ -324,164 +316,285 @@ async function carregarEscolas(): Promise<void> {
 const listaEl = q<HTMLDivElement>('#lista');
 const listaStatus = q<HTMLParagraphElement>('#lista-status');
 
-function criarCartao(o: Ocorrencia): HTMLElement {
-  const cartao = document.createElement('article');
-  cartao.className = `cartao ${o.gravidade.toLowerCase()}`;
-
-  const topo = document.createElement('div');
-  topo.className = 'cartao-topo';
-  const selo = document.createElement('span');
-  selo.className = `selo ${o.gravidade.toLowerCase()}`;
-  selo.textContent = ROTULO_GRAVIDADE[o.gravidade];
-  const data = document.createElement('time');
-  data.dateTime = o.data_ocorrencia.slice(0, 10);
-  data.textContent = formatarData(o.data_ocorrencia);
-  topo.append(selo, data);
-
-  const titulo = document.createElement('h3');
-  titulo.textContent = o.escola;
-
-  const meta = document.createElement('p');
-  meta.className = 'meta';
-  const quem = o.registrado_por === 'OUTROS' && o.registrado_por_outro
-    ? o.registrado_por_outro
-    : ROTULO_REGISTRANTE[o.registrado_por];
-  meta.textContent = [o.tipo, `Registrado por ${quem}`].filter(Boolean).join(' · ');
-
-  cartao.append(topo, titulo, meta);
-
-  if (o.descricao) {
-    const detalhes = document.createElement('details');
-    const resumo = document.createElement('summary');
-    resumo.textContent = 'Ver descrição';
-    const texto = document.createElement('p');
-    texto.textContent = o.descricao;
-    detalhes.append(resumo, texto);
-    cartao.appendChild(detalhes);
-  }
-  return cartao;
+function criarTabela(itens: Ocorrencia[]): HTMLElement {
+  const container = el('div', 'tabela-container');
+  container.tabIndex = 0;
+  container.setAttribute('role', 'region');
+  container.setAttribute('aria-label', 'Registros de ocorrências. Role horizontalmente para ver todas as colunas.');
+  const tabela = el('table', 'tabela');
+  tabela.setAttribute('aria-label', 'Ocorrências escolares');
+  const cabecalho = tabela.createTHead().insertRow();
+  ['Registro', 'Unidade escolar', 'Classificação', 'Data', 'Detalhes'].forEach((rotulo) => {
+    const th = el('th', '', rotulo); th.scope = 'col'; cabecalho.append(th);
+  });
+  const corpo = tabela.createTBody();
+  itens.forEach((o) => {
+    const linha = corpo.insertRow();
+    linha.insertCell().append(el('span', 'registro-id', protocolo(o.id)));
+    const escola = linha.insertCell();
+    escola.append(el('span', 'escola-nome', o.escola), el('span', 'tipo-nome', o.tipo || 'Tipo não informado'));
+    linha.insertCell().append(criarSelo(o.gravidade));
+    const data = el('time', '', formatarData(o.data_ocorrencia));
+    data.dateTime = o.data_ocorrencia.slice(0, 10);
+    linha.insertCell().append(data);
+    const ver = el('button', 'botao-icone');
+    ver.type = 'button';
+    ver.setAttribute('aria-label', `Ver detalhes do registro ${protocolo(o.id)}`);
+    ver.append(icone('olho'));
+    ver.addEventListener('click', () => abrirDetalhes(o));
+    linha.insertCell().append(ver);
+  });
+  container.append(tabela);
+  return container;
 }
 
-function desenharLista(): void {
+function itensFiltrados(): Ocorrencia[] {
   const termo = normalizar(estado.busca);
-  const itens = estado.ocorrencias.filter((o) => !termo || normalizar(o.escola).includes(termo));
-  listaEl.replaceChildren(...itens.map(criarCartao));
-
-  if (itens.length === 0) {
-    listaStatus.replaceChildren();
-    const texto = document.createElement('span');
-    const filtrando = Boolean(termo) || estado.filtroGravidade !== '';
-    texto.textContent = filtrando
-      ? 'Nenhuma ocorrência encontrada com esse filtro. '
-      : 'Nenhuma ocorrência registrada ainda. ';
-    listaStatus.appendChild(texto);
-    if (!filtrando) {
-      const botao = document.createElement('button');
-      botao.type = 'button';
-      botao.className = 'link';
-      botao.textContent = 'Registrar a primeira';
-      botao.addEventListener('click', () => ativar('registrar'));
-      listaStatus.appendChild(botao);
-    }
-  } else {
-    listaStatus.textContent = `${itens.length} ${itens.length === 1 ? 'ocorrência' : 'ocorrências'}`;
-  }
+  const hoje = hojeISO();
+  const inicio = new Date(`${hoje}T12:00:00Z`);
+  inicio.setUTCDate(inicio.getUTCDate() - (Number(estado.periodo) - 1));
+  return (estado.ocorrencias || []).filter((o) =>
+    (!estado.filtroGravidade || o.gravidade === estado.filtroGravidade) &&
+    (!estado.escolaFiltro || o.escola === estado.escolaFiltro) &&
+    (!estado.periodo || (o.data_ocorrencia.slice(0, 10) >= inicio.toISOString().slice(0, 10) && o.data_ocorrencia.slice(0, 10) <= hoje)) &&
+    (!termo || normalizar(`${o.escola} ${o.tipo || ''} ${protocolo(o.id)}`).includes(termo)));
 }
-
-async function carregarOcorrencias(): Promise<void> {
-  listaStatus.textContent = 'Carregando…';
-  try {
-    estado.ocorrencias = await listarOcorrencias(estado.filtroGravidade);
-    desenharLista();
-  } catch (erro) {
-    listaEl.replaceChildren();
-    listaStatus.replaceChildren();
-    const msg = document.createElement('span');
-    msg.className = 'erro-texto';
-    msg.textContent = (erro instanceof ApiError ? erro.erros.join(' ') : 'Erro ao carregar.') + ' ';
-    const tentar = document.createElement('button');
-    tentar.type = 'button';
-    tentar.className = 'link';
-    tentar.textContent = 'Tentar de novo';
-    tentar.addEventListener('click', () => void carregarOcorrencias());
-    listaStatus.append(msg, tentar);
-  }
+function desenharLista(): void {
+  const itens = itensFiltrados();
+  const paginas = Math.max(1, Math.ceil(itens.length / TAMANHO_PAGINA));
+  estado.pagina = Math.min(estado.pagina, paginas);
+  const inicio = (estado.pagina - 1) * TAMANHO_PAGINA;
+  const filtrando = Boolean(estado.busca || estado.filtroGravidade || estado.escolaFiltro || estado.periodo);
+  listaEl.replaceChildren(itens.length ? criarTabela(itens.slice(inicio, inicio + TAMANHO_PAGINA)) : criarVazio(
+    estado.ocorrencias === null ? 'Registros indisponíveis' : filtrando ? 'Nenhuma ocorrência encontrada' : 'Os registros começam por aqui',
+    estado.ocorrencias === null ? 'Atualize a página para tentar carregar as informações.' : filtrando ? 'Revise os filtros ou tente outra busca.' : 'Registre a primeira ocorrência para acompanhar a sua rede.',
+    { rotulo: estado.ocorrencias === null ? 'Tentar novamente' : filtrando ? 'Limpar filtros' : 'Nova ocorrência',
+      executar: estado.ocorrencias === null ? () => { void atualizarDados(); } : filtrando ? limparFiltros : () => { ativar('registrar'); campoEscola.focus(); } }));
+  listaStatus.textContent = estado.ocorrencias === null ? '' : `${numero(itens.length)} ${itens.length === 1 ? 'registro encontrado' : 'registros encontrados'}${filtrando ? ' com os filtros selecionados' : ''}.`;
+  q('#pagina-info').textContent = itens.length ? `${inicio + 1}–${Math.min(inicio + TAMANHO_PAGINA, itens.length)} de ${numero(itens.length)} registros · Página ${estado.pagina} de ${paginas}` : 'Nenhum registro para exibir';
+  q<HTMLButtonElement>('#pagina-anterior').disabled = estado.pagina <= 1;
+  q<HTMLButtonElement>('#pagina-proxima').disabled = estado.pagina >= paginas;
+  q<HTMLButtonElement>('#exportar-lista').disabled = !itens.length || estado.carregando;
+  const recentes = q('#recentes-lista');
+  recentes.replaceChildren(estado.ocorrencias?.length ? criarTabela(estado.ocorrencias.slice(0, 5)) : criarVazio(
+    estado.ocorrencias === null ? 'Não foi possível carregar os registros' : 'Sua rede, acompanhada desde o primeiro registro',
+    estado.ocorrencias === null ? 'Use Atualizar para tentar novamente.' : 'As ocorrências mais recentes serão exibidas aqui.',
+    estado.ocorrencias === null ? undefined : { rotulo: 'Registrar ocorrência', executar: () => { ativar('registrar'); campoEscola.focus(); } }));
 }
-
-q<HTMLInputElement>('#busca').addEventListener('input', (ev) => {
-  estado.busca = (ev.target as HTMLInputElement).value;
-  desenharLista();
-});
-
+function atualizarFiltros(): void { estado.pagina = 1; desenharLista(); }
+q<HTMLInputElement>('#busca').addEventListener('input', (ev) => { estado.busca = (ev.target as HTMLInputElement).value; atualizarFiltros(); });
+q<HTMLSelectElement>('#filtro-escola').addEventListener('change', (ev) => { estado.escolaFiltro = (ev.target as HTMLSelectElement).value; atualizarFiltros(); });
+q<HTMLSelectElement>('#filtro-periodo').addEventListener('change', (ev) => { estado.periodo = (ev.target as HTMLSelectElement).value; atualizarFiltros(); });
 const chips = Array.from(document.querySelectorAll<HTMLButtonElement>('.chip'));
-chips.forEach((chip) =>
-  chip.addEventListener('click', () => {
-    chips.forEach((c) => c.setAttribute('aria-checked', String(c === chip)));
-    estado.filtroGravidade = (chip.dataset.grav ?? '') as Gravidade | '';
-    void carregarOcorrencias();
-  })
-);
+chips.forEach((chip) => chip.addEventListener('click', () => {
+  chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
+  estado.filtroGravidade = (chip.dataset.grav || '') as Gravidade | '';
+  atualizarFiltros();
+}));
+function limparFiltros(): void {
+  estado.busca = ''; estado.escolaFiltro = ''; estado.periodo = ''; estado.filtroGravidade = '';
+  q<HTMLInputElement>('#busca').value = '';
+  q<HTMLSelectElement>('#filtro-escola').value = '';
+  q<HTMLSelectElement>('#filtro-periodo').value = '';
+  chips.forEach((chip) => chip.setAttribute('aria-pressed', String(chip.dataset.grav === '')));
+  atualizarFiltros();
+}
+q('#limpar-filtros').addEventListener('click', limparFiltros);
+q('#pagina-anterior').addEventListener('click', () => { estado.pagina -= 1; desenharLista(); });
+q('#pagina-proxima').addEventListener('click', () => { estado.pagina += 1; desenharLista(); });
+q('#exportar-lista').addEventListener('click', () => {
+  const itens = itensFiltrados();
+  if (!itens.length) return;
+  baixarCSV(`ocorrencias-${hojeISO()}.csv`, [
+    ['Registro', 'Escola', 'Data', 'Classificação', 'Tipo', 'Descrição', 'Responsável', 'Situação'],
+    ...itens.map((o) => [protocolo(o.id), o.escola, formatarData(o.data_ocorrencia), ROTULO_GRAVIDADE[o.gravidade], o.tipo || '', o.descricao || '', responsavel(o), o.status]),
+  ]);
+  mostrarAviso(`${numero(itens.length)} registros exportados com os filtros atuais.`);
+});
 
 /* ---------- relatório ---------- */
 
 const rankingEl = q<HTMLOListElement>('#relatorio');
 const resumoEl = q<HTMLParagraphElement>('#resumo');
 const relStatus = q<HTMLParagraphElement>('#rel-status');
-
 function desenharRelatorio(): void {
+  if (!estado.relatorio) {
+    resumoEl.textContent = 'Não foi possível consultar o relatório.';
+    relStatus.textContent = 'Use Atualizar para tentar novamente.';
+    q<HTMLButtonElement>('#exportar-relatorio').disabled = true;
+    return;
+  }
   const comVermelha = estado.relatorio.filter((i) => i.total_vermelhas > 0);
   const total = comVermelha.reduce((soma, i) => soma + i.total_vermelhas, 0);
-  resumoEl.textContent = total === 0
-    ? 'Nenhuma ocorrência vermelha registrada.'
-    : `${total} ${total === 1 ? 'ocorrência vermelha' : 'ocorrências vermelhas'} em ${comVermelha.length} ${comVermelha.length === 1 ? 'escola' : 'escolas'}.`;
-
+  resumoEl.textContent = total === 0 ? 'Nenhuma ocorrência vermelha registrada.'
+    : `${numero(total)} ${total === 1 ? 'ocorrência vermelha' : 'ocorrências vermelhas'} em ${numero(comVermelha.length)} ${comVermelha.length === 1 ? 'escola' : 'escolas'}.`;
   const itens = estado.mostrarZeradas ? estado.relatorio : comVermelha;
   const maior = Math.max(1, ...estado.relatorio.map((i) => i.total_vermelhas));
-
-  rankingEl.replaceChildren(
-    ...itens.map((i) => {
-      const li = document.createElement('li');
-      const nome = document.createElement('span');
-      nome.className = 'rank-nome';
-      nome.textContent = i.escola;
-      const numero = document.createElement('strong');
-      numero.className = 'rank-num';
-      numero.textContent = String(i.total_vermelhas);
-      const barra = document.createElement('span');
-      barra.className = 'rank-barra';
-      barra.style.setProperty('--largura', `${(i.total_vermelhas / maior) * 100}%`);
-      barra.setAttribute('aria-hidden', 'true');
-      li.append(nome, numero, barra);
-      return li;
-    })
-  );
-  relStatus.textContent = itens.length === 0 ? 'Nada para mostrar.' : '';
+  rankingEl.replaceChildren(...itens.map((i) => {
+    const li = el('li');
+    const barra = el('span', 'rank-barra');
+    barra.style.setProperty('--largura', `${(i.total_vermelhas / maior) * 100}%`);
+    barra.setAttribute('aria-hidden', 'true');
+    const contagem = el('strong', 'rank-num', numero(i.total_vermelhas));
+    contagem.setAttribute('aria-label', `${numero(i.total_vermelhas)} ocorrências vermelhas`);
+    li.append(el('span', 'rank-nome', i.escola), contagem, barra);
+    return li;
+  }));
+  relStatus.textContent = itens.length ? `${numero(itens.length)} escolas no relatório.` : 'Nenhuma escola com classificação vermelha neste histórico.';
+  q<HTMLButtonElement>('#exportar-relatorio').disabled = !itens.length || estado.carregando;
 }
-
-async function carregarRelatorio(): Promise<void> {
-  relStatus.textContent = 'Carregando…';
-  try {
-    estado.relatorio = await listarRelatorio();
-    desenharRelatorio();
-  } catch (erro) {
-    rankingEl.replaceChildren();
-    relStatus.textContent = erro instanceof ApiError ? erro.erros.join(' ') : 'Erro ao carregar.';
-  }
-}
-
 q<HTMLInputElement>('#mostrar-zeradas').addEventListener('change', (ev) => {
   estado.mostrarZeradas = (ev.target as HTMLInputElement).checked;
   desenharRelatorio();
 });
+q('#exportar-relatorio').addEventListener('click', () => {
+  const itens = estado.relatorio?.filter((i) => estado.mostrarZeradas || i.total_vermelhas > 0) || [];
+  if (!itens.length) return;
+  baixarCSV(`relatorio-vermelhas-${hojeISO()}.csv`, [['Escola', 'Ocorrências vermelhas'], ...itens.map((i) => [i.escola, i.total_vermelhas])]);
+  mostrarAviso('Relatório exportado com sucesso.');
+});
+
+/* ---------- painel da rede ---------- */
+
+function desenharIndicadores(): void {
+  const dados = estado.indicadores;
+  if (!dados) {
+    q('#grafico-nota').textContent = 'Indicadores indisponíveis. Use Atualizar para tentar novamente.';
+    return;
+  }
+  q('#metrica-total').textContent = numero(dados.total_ocorrencias);
+  q('#nav-total').textContent = numero(dados.total_ocorrencias);
+  q('#metrica-vermelhas').textContent = numero(dados.total_vermelhas);
+  q('#metrica-amarelas').textContent = numero(dados.total_amarelas);
+  q('#metrica-escolas').textContent = numero(dados.escolas_com_registros);
+  q('#metrica-rede').textContent = `De ${numero(dados.total_escolas)} unidades da rede`;
+  const distribuicao = q('#distribuicao');
+  distribuicao.replaceChildren(...(['AMARELO', 'VERMELHO'] as Gravidade[]).map((gravidade) => {
+    const cor = gravidade.toLowerCase();
+    const total = gravidade === 'VERMELHO' ? dados.total_vermelhas : dados.total_amarelas;
+    const percentual = dados.total_ocorrencias ? (total / dados.total_ocorrencias) * 100 : 0;
+    const item = el('div', 'distribuicao-item');
+    const titulo = el('div', 'distribuicao-titulo');
+    const contagem = el('strong', '', numero(total));
+    contagem.append(el('small', '', `${percentual.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`));
+    titulo.append(el('span', `ponto ${cor}`), document.createTextNode(gravidade === 'VERMELHO' ? 'Vermelhas' : 'Amarelas'), contagem);
+    const fundo = el('div', 'barra-fundo');
+    const barra = el('span', cor);
+    barra.style.width = `${percentual}%`;
+    fundo.setAttribute('aria-hidden', 'true');
+    fundo.append(barra); item.append(titulo, fundo);
+    return item;
+  }));
+  const hoje = hojeISO();
+  const meses = Array.from({ length: 6 }, (_, i) => {
+    const data = new Date(`${hoje.slice(0, 7)}-01T12:00:00Z`);
+    data.setUTCMonth(data.getUTCMonth() - 5 + i);
+    const mes = data.toISOString().slice(0, 7);
+    return { data, ...(dados.meses.find((item) => item.mes === mes) || { mes, total: 0, amarelas: 0, vermelhas: 0 }) };
+  });
+  const maior = Math.max(1, ...meses.map((item) => item.total));
+  const grafico = q('#grafico-mensal');
+  grafico.setAttribute('role', 'group');
+  grafico.replaceChildren(...meses.map((item) => {
+    const coluna = el('div', 'grafico-coluna');
+    const altura = (item.total / maior) * 82;
+    coluna.style.setProperty('--altura', `${altura}%`);
+    const rotulo = item.data.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+    coluna.setAttribute('role', 'img');
+    coluna.setAttribute('aria-label', `${rotulo}: ${item.amarelas} amarelas e ${item.vermelhas} vermelhas.`);
+    coluna.title = `${rotulo}: ${item.total} registros`;
+    const barras = el('div', 'grafico-barras');
+    const vermelha = el('span', 'barra-vermelha');
+    const amarela = el('span', 'barra-amarela');
+    vermelha.style.height = `${item.total ? item.vermelhas / item.total * 100 : 0}%`;
+    amarela.style.height = `${item.total ? item.amarelas / item.total * 100 : 0}%`;
+    barras.append(vermelha, amarela);
+    coluna.append(el('span', 'grafico-total', numero(item.total)), barras,
+      el('span', 'grafico-mes', item.data.toLocaleDateString('pt-BR', { month: 'short', timeZone: 'UTC' }).replace('.', '')));
+    return coluna;
+  }));
+  const totalPeriodo = meses.reduce((total, item) => total + item.total, 0);
+  q('#grafico-nota').textContent = `${numero(totalPeriodo)} ${totalPeriodo === 1 ? 'registro' : 'registros'} no período · Inclui o mês atual`;
+}
+
+/* ---------- detalhes e orientações ---------- */
+
+function abrirDetalhes(o: Ocorrencia): void {
+  q('#detalhes-titulo').textContent = protocolo(o.id);
+  const conteudo = q('#detalhes-conteudo');
+  const grade = el('dl', 'detalhes-grade');
+  const valores = [['Data da ocorrência', formatarData(o.data_ocorrencia)], ['Tipo', o.tipo || 'Não informado'],
+    ['Responsável pelo registro', responsavel(o)], ['Situação', o.status === 'ABERTA' ? 'Aberta' : o.status || 'Não informada']];
+  valores.forEach(([rotulo, valor]) => {
+    const item = el('div'); item.append(el('dt', '', rotulo), el('dd', '', valor)); grade.append(item);
+  });
+  conteudo.replaceChildren(criarSelo(o.gravidade), el('h3', 'detalhes-escola', o.escola), grade,
+    el('p', 'detalhes-descricao', o.descricao || 'Nenhuma descrição informada.'));
+  q<HTMLDialogElement>('#detalhes-dialog').showModal();
+}
+q('#abrir-orientacoes').addEventListener('click', () => q<HTMLDialogElement>('#orientacoes-dialog').showModal());
+q('#orientacoes-entrada').addEventListener('click', () => q<HTMLDialogElement>('#orientacoes-dialog').showModal());
+document.querySelectorAll<HTMLDialogElement>('dialog').forEach((dialog) => {
+  dialog.querySelectorAll<HTMLButtonElement>('[data-fechar]').forEach((botao) => botao.addEventListener('click', () => dialog.close()));
+  dialog.addEventListener('click', (ev) => {
+    const limites = dialog.getBoundingClientRect();
+    if (ev.target === dialog && (ev.clientX < limites.left || ev.clientX > limites.right || ev.clientY < limites.top || ev.clientY > limites.bottom)) dialog.close();
+  });
+});
+
+/* ---------- carregamento ---------- */
+
+async function atualizarDados(): Promise<void> {
+  if (estado.carregando) return;
+  estado.carregando = true;
+  botaoAtualizar.disabled = true;
+  botaoEnviar.disabled = true;
+  q<HTMLButtonElement>('#exportar-lista').disabled = true;
+  q<HTMLButtonElement>('#exportar-relatorio').disabled = true;
+  q('#conteudo').setAttribute('aria-busy', 'true');
+  q('#ultima-atualizacao').textContent = 'Atualizando informações da rede…';
+  const tarefas = [
+    carregarEscolas(),
+    listarOcorrencias('').then((dados) => { estado.ocorrencias = dados.slice(0, 200); }),
+    listarIndicadores().then((dados) => { estado.indicadores = dados; }),
+    listarRelatorio().then((dados) => { estado.relatorio = dados; }),
+  ];
+  const resultados = await Promise.allSettled(tarefas);
+  estado.carregando = false;
+  botaoAtualizar.disabled = false;
+  botaoEnviar.disabled = estado.enviando || estado.escolas.size === 0;
+  q('#conteudo').removeAttribute('aria-busy');
+  desenharLista(); desenharRelatorio(); desenharIndicadores();
+  const falhas = resultados.flatMap((resultado, i) => resultado.status === 'rejected' ? [['escolas', 'ocorrências', 'indicadores', 'relatório'][i]] : []);
+  const falha = q('#falha-dados');
+  falha.hidden = !falhas.length;
+  falha.replaceChildren();
+  if (falhas.length) {
+    falha.append(document.createTextNode(`Não foi possível atualizar: ${falhas.join(', ')}. Informações anteriores, quando disponíveis, foram mantidas. `));
+    const tentar = el('button', 'link', 'Tentar novamente');
+    tentar.type = 'button'; tentar.addEventListener('click', () => { void atualizarDados(); }); falha.append(tentar);
+    q('#ultima-atualizacao').textContent = 'Atualização incompleta. Consulte o aviso acima.';
+  } else {
+    const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+    q('#ultima-atualizacao').textContent = `Atualizado às ${hora} · Horário de Brasília`;
+  }
+}
+botaoAtualizar.addEventListener('click', () => { void atualizarDados(); });
 
 /* ---------- início ---------- */
 
 campoData.value = hojeISO();
+campoData.min = '1000-01-01';
 campoData.max = hojeISO();
+q<HTMLTimeElement>('#data-atual').dateTime = hojeISO();
+q('#data-atual').textContent = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'America/Sao_Paulo' });
+q('#aviso-demo').hidden = !modoDemo;
+q('#entrada-demo').hidden = !modoDemo;
+if (modoDemo) q('#ambiente').textContent = 'Demonstração';
 const preferido = lerPreferencia();
 if (preferido === 'DIRETOR' || preferido === 'VICE_DIRETOR') {
-  const r = form.querySelector<HTMLInputElement>(`input[name="registrado_por"][value="${preferido}"]`);
-  if (r) r.checked = true;
+  const radio = form.querySelector<HTMLInputElement>(`input[name="registrado_por"][value="${preferido}"]`);
+  if (radio) radio.checked = true;
 }
-void carregarEscolas();
-ativar(painelDaUrl());
+sincronizarRota();
+void atualizarDados();

@@ -8,10 +8,13 @@
     "build": "tsc --noEmit && vite build",
     "build:demo": "tsc --noEmit && vite build --mode demo",
     "build:github": "tsc --noEmit && vite build --mode github",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.64.1",
     "typescript": "^5.5.4",
-    "vite": "^5.4.2"
+    "vite": "^7.3.7"
   }
 }

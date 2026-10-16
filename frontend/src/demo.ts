@@ -1,4 +1,4 @@
-import type { Escola, Gravidade, ItemRelatorio, NovaOcorrencia, Ocorrencia } from './types';
+import type { Escola, Gravidade, Indicadores, ItemRelatorio, NovaOcorrencia, Ocorrencia } from './types';
 
 const nomesEscolas = [
   'ABEL DOS REIS',
@@ -114,7 +114,14 @@ let memoria: Ocorrencia[] = [];
 function ler(): Ocorrencia[] {
   try {
     const valor = localStorage.getItem(chave);
-    if (valor) return JSON.parse(valor) as Ocorrencia[];
+    if (valor) {
+      const itens: unknown = JSON.parse(valor);
+      if (Array.isArray(itens) && itens.every((item) => item && typeof item === 'object' &&
+        Number.isSafeInteger(item.id) && typeof item.escola === 'string' &&
+        typeof item.data_ocorrencia === 'string' && ['AMARELO', 'VERMELHO'].includes(item.gravidade))) {
+        memoria = itens as Ocorrencia[];
+      }
+    }
   } catch {
     // O modo de demonstração continua funcionando enquanto esta página estiver aberta.
   }
@@ -146,6 +153,27 @@ export async function listarRelatorioDemo(): Promise<ItemRelatorio[]> {
       ).length,
     }))
     .sort((a, b) => b.total_vermelhas - a.total_vermelhas || a.escola.localeCompare(b.escola));
+}
+
+export async function listarIndicadoresDemo(): Promise<Indicadores> {
+  const itens = ler();
+  const meses = new Map<string, Indicadores['meses'][number]>();
+  itens.forEach((item) => {
+    const mes = item.data_ocorrencia.slice(0, 7);
+    const agregado = meses.get(mes) || { mes, total: 0, vermelhas: 0, amarelas: 0 };
+    agregado.total += 1;
+    if (item.gravidade === 'VERMELHO') agregado.vermelhas += 1;
+    else agregado.amarelas += 1;
+    meses.set(mes, agregado);
+  });
+  return {
+    total_ocorrencias: itens.length,
+    total_vermelhas: itens.filter((item) => item.gravidade === 'VERMELHO').length,
+    total_amarelas: itens.filter((item) => item.gravidade === 'AMARELO').length,
+    escolas_com_registros: new Set(itens.map((item) => item.escola)).size,
+    total_escolas: escolasDemo.length,
+    meses: [...meses.values()],
+  };
 }
 
 export async function criarOcorrenciaDemo(dados: NovaOcorrencia): Promise<{ id: number }> {
