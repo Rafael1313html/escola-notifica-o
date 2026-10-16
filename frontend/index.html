@@ -14,6 +14,7 @@
   </script>
   <meta name="description" content="Registro e acompanhamento de ocorrências escolares com a identidade Conviva SP.">
   <link rel="icon" type="image/jpeg" href="/assets/conviva-sp.jpeg">
+  <link rel="stylesheet" href="/assets/bni-rodape.css">
   <title>Ocorrências escolares · Conviva SP</title>
 </head>
 <body>
@@ -51,7 +52,7 @@
         <p id="entrada-demo" class="entrada-demo" hidden>Demonstração · Utilize somente dados fictícios.</p>
       </div>
     </main>
-    <footer class="entrada-rodape"><span>Convivência, cuidado e proteção escolar.</span><span>Gestão de ocorrências escolares</span></footer>
+    <footer class="bni-rodape bni-rodape-entrada"><div class="bni-identidade"><p class="bni-legenda">DESENVOLVIDO POR</p><div class="bni-marca"><img src="/assets/bni-simbolo.svg" width="36" height="36" alt=""><strong>bni·tecnologia</strong></div><p class="bni-descricao">Software sob medida, código próprio e soluções pensadas para o longo prazo.</p></div><div class="bni-base"><span>© 2026 BNI Tecnologia — todos os direitos reservados.</span></div></footer>
   </section>
 
   <aside class="lateral">
@@ -151,7 +152,7 @@
         <div class="bloco"><div class="bloco-cabecalho"><div><h2>Classificação vermelha por escola</h2><p>Consolidado de todos os registros da rede.</p></div><button class="botao secundario" id="exportar-relatorio" type="button"><svg class="icone"><use href="#i-download"/></svg>Exportar CSV</button></div><div class="relatorio-resumo"><span class="icone-fundo vermelho"><svg class="icone"><use href="#i-grafico"/></svg></span><p id="resumo" class="resumo">Consultando informações…</p></div><div class="relatorio-filtros"><label class="interruptor"><input type="checkbox" id="mostrar-zeradas"><span>Incluir escolas sem ocorrências vermelhas</span></label><span class="periodo">Todo o histórico</span></div><p id="rel-status" class="status" role="status" aria-live="polite"></p><ol id="relatorio" class="ranking"></ol></div>
       <article class="bloco acessos-bloco"><div class="bloco-cabecalho"><div><h2>Estatísticas de acesso</h2><p>Visitas e visualizações do site, com consulta privada na conta Cloudflare do administrador.</p></div></div><div class="acessos-conteudo"><p>Web Analytics habilitado no Cloudflare. Entre na conta proprietária para consultar visitas, visualizações de página e o período desejado. Os dados podem levar alguns minutos para aparecer.</p><a class="botao secundario" id="acessos-cloudflare" href="https://dash.cloudflare.com/4f629e0de9a41d35b1e4d2bbb042738e/web-analytics" target="_blank" rel="noopener noreferrer">Abrir métricas no Cloudflare (nova aba)</a><a class="link" href="https://developers.cloudflare.com/pages/how-to/web-analytics/" target="_blank" rel="noopener noreferrer">Sobre a medição (guia oficial)</a></div></article>
       </section>
-      <footer class="rodape"><span><strong>Conviva SP</strong> · Gestão de ocorrências escolares</span><span>Informação para orientar. Cuidado para transformar.</span></footer>
+      <footer class="bni-rodape"><div class="bni-identidade"><p class="bni-legenda">DESENVOLVIDO POR</p><div class="bni-marca"><img src="/assets/bni-simbolo.svg" width="36" height="36" alt=""><strong>bni·tecnologia</strong></div><p class="bni-descricao">Software sob medida, código próprio e soluções pensadas para o longo prazo.</p></div><div class="bni-base"><span>© 2026 BNI Tecnologia — todos os direitos reservados.</span></div></footer>
     </main>
   </div>
   <dialog id="detalhes-dialog" aria-labelledby="detalhes-titulo"><div class="dialog-cabecalho"><div><p class="sobretitulo">CONSULTA DO REGISTRO</p><h2 id="detalhes-titulo">Detalhes da ocorrência</h2></div><button type="button" class="botao-icone" data-fechar aria-label="Fechar detalhes"><svg class="icone"><use href="#i-close"/></svg></button></div><div id="detalhes-conteudo"></div><div class="dialog-rodape"><button class="botao secundario" type="button" data-fechar>Fechar</button></div></dialog>

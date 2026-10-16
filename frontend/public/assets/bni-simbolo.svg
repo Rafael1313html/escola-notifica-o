@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40" fill="none">
+  <defs><linearGradient id="bni" x1="6" y1="32" x2="27" y2="7" gradientUnits="userSpaceOnUse"><stop stop-color="#3f5fea"/><stop offset=".5" stop-color="#0bbadc"/><stop offset="1" stop-color="#b4f6ff"/></linearGradient></defs>
+  <path d="M7 33 23 6l10 27H7Z" fill="#102944" stroke="url(#bni)" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="m23 6-3 24 13 3L23 6Z" fill="#0b7189" stroke="#55d9ec" stroke-width=".8" stroke-linejoin="round"/>
+  <path d="m7 33 13-3 3-24" stroke="#7eabff" stroke-width="1.2"/>
+</svg>

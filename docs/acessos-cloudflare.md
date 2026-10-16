@@ -23,4 +23,6 @@ O link público de teste é [escola-notificacao.pages.dev](https://escola-notifi
 
 Web Analytics foi habilitado na conta proprietária para o projeto `escola-notificacao`. A nova implantação permite a inserção automática do beacon pelo Cloudflare. A verificação operacional deve conferir o script `static.cloudflareinsights.com/beacon.min.js` no HTML publicado e o envio de eventos ao serviço de medição. Uma publicação bem-sucedida do site, sozinha, não comprova a entrega dos eventos.
 
+Verificação de 16/10/2026: o HTML da aplicação e do UML incluiu o beacon; o script carregou e o serviço `/cdn-cgi/rum` respondeu HTTP 204 nos acessos reais de teste. A consulta aos totais continua privada no painel da conta Cloudflare.
+
 Referências oficiais: [Web Analytics no Pages](https://developers.cloudflare.com/pages/how-to/web-analytics/) e [Configurar Web Analytics](https://developers.cloudflare.com/web-analytics/get-started/).

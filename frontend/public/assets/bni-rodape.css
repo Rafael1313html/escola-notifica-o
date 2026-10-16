@@ -1,0 +1,12 @@
+footer.bni-rodape { display: block; margin-top: 28px; padding: 28px 30px 18px; background: #0b111e; color: #b9c9da; border: 1px solid #223247; border-radius: 12px; text-align: left; font-family: Montserrat, sans-serif; }
+.bni-rodape .bni-identidade { max-width: 490px; }
+.bni-rodape .bni-legenda { margin: 0 0 12px; color: #76dce9; font-size: 9px; font-weight: 600; letter-spacing: 1.6px; }
+.bni-rodape .bni-marca { display: flex; align-items: center; gap: 12px; }
+.bni-rodape .bni-marca img { display: block; width: 36px; height: 36px; flex: 0 0 auto; }
+.bni-rodape .bni-marca strong { color: #d2e6f6; font-size: 20px; font-weight: 600; letter-spacing: -.5px; }
+.bni-rodape .bni-descricao { color: #b9c9da; font-size: 13px; line-height: 1.8; margin: 14px 0 0; }
+.bni-rodape .bni-base { margin-top: 24px; padding-top: 16px; border-top: 1px solid #223247; color: #a8bfd3; font-size: 10px; letter-spacing: .5px; line-height: 1.7; }
+footer.bni-rodape-entrada { width: calc(100% - 48px); max-width: 1200px; margin: 24px auto; }
+footer.bni-rodape-documento { max-width: 1636px; margin: 0 32px 28px; }
+@media (max-width: 699px) { footer.bni-rodape { padding: 22px 20px 16px; margin-top: 24px; } .bni-rodape .bni-marca strong { font-size: 18px; } .bni-rodape .bni-descricao { font-size: 12px; } .bni-rodape .bni-base { font-size: 10px; letter-spacing: 0; } footer.bni-rodape-entrada { width: calc(100% - 32px); margin: 16px auto; } footer.bni-rodape-documento { margin: 0 16px 24px; } }
+@media print { footer.bni-rodape { display: flex; align-items: center; justify-content: space-between; gap: 16px; background: white; color: #27364c; padding: 4px 20px; margin: 4px 0 0; border: 0; border-top: 1px solid #d9e3ec; border-radius: 0; break-inside: avoid; } .bni-rodape .bni-legenda, .bni-rodape .bni-descricao { display: none; } .bni-rodape .bni-marca img { width: 18px; height: 18px; } .bni-rodape .bni-marca strong { color: #27364c; font-size: 12px; } .bni-rodape .bni-base { color: #526477; border: 0; margin: 0; padding: 0; font-size: 9px; letter-spacing: 0; } }
