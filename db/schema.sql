@@ -27,3 +27,18 @@ CREATE TABLE IF NOT EXISTS ocorrencias (
     ),
     INDEX idx_ocorrencias_gravidade (gravidade)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Um PDF ou link opcional por ocorrência. Reexecutar este esquema atualiza bancos existentes.
+CREATE TABLE IF NOT EXISTS ocorrencia_anexos (
+    ocorrencia_id INT NOT NULL PRIMARY KEY,
+    tipo VARCHAR(4) NOT NULL,
+    nome VARCHAR(180) NULL,
+    url VARCHAR(2048) NULL,
+    tamanho INT UNSIGNED NULL,
+    arquivo MEDIUMBLOB NULL,
+    CONSTRAINT fk_anexo_ocorrencia FOREIGN KEY (ocorrencia_id) REFERENCES ocorrencias (id) ON DELETE CASCADE,
+    CONSTRAINT ck_anexo_conteudo CHECK (
+        (tipo = 'PDF' AND nome IS NOT NULL AND arquivo IS NOT NULL AND tamanho BETWEEN 1 AND 5242880 AND url IS NULL)
+        OR (tipo = 'LINK' AND url IS NOT NULL AND nome IS NULL AND arquivo IS NULL AND tamanho IS NULL)
+    )
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

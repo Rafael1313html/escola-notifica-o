@@ -427,7 +427,7 @@ dialog::backdrop { background: #182e256b; backdrop-filter: blur(3px); }
 .marca { padding: 27px 25px 12px; justify-content: center; }
 .marca img { display: block; width: 177px; height: auto; max-width: 100%; }
 .marca-descricao { text-align: center; font-size: 7px; font-weight: 600; letter-spacing: 1px; color: #526782; padding: 4px 10px 28px; }
-.lateral::before { background: linear-gradient(to right, #0f7ba6 0 50%, #722282 50% 72%, #35b58d 72% 87%, #e7bd34 87%); }
+.lateral::before { background: linear-gradient(to right, #2abfc3 0 65%, #ffb51c 65%); }
 .topo { background: #0f7ba6; border-bottom-color: #0f7ba6; }
 .caminho, .caminho strong, .caminho > .icone, .data-atual { color: white; }
 .separador { color: #b4d5e5; }
@@ -442,7 +442,7 @@ dialog::backdrop { background: #182e256b; backdrop-filter: blur(3px); }
 .entrada-fundo { min-height: 650px; height: min(84dvh, 850px); display: grid; place-items: center; padding: 42px 24px; background: linear-gradient(#0a182654, #040b17a6), url('/assets/escola-corredor.jpg') center center / cover; }
 .entrada-fundo:focus { outline-offset: -5px; }
 .entrada-cartao { width: min(430px, 100%); background: white; border-radius: 17px; box-shadow: 0 15px 65px #0000002e; padding: 36px 34px 28px; text-align: center; }
-.entrada-logo { width: 242px; height: auto; max-width: 85%; display: block; margin: 0 auto 25px; }
+.entrada-logo { width: 100%; height: auto; max-width: 100%; display: block; margin: 0 auto 25px; border-radius: 8px; }
 .entrada-titulo .sobretitulo { color: #4b6384; font-size: 8px; letter-spacing: 1.2px; margin-bottom: 12px; }
 .entrada-titulo h1 { font-size: 21px; line-height: 1.4; letter-spacing: -.65px; color: #263f5b; font-weight: 600; }
 .entrada-titulo > p:last-child { color: #607086; font-size: 11px; line-height: 1.9; margin: 12px 0 23px; }
@@ -464,8 +464,20 @@ dialog::backdrop { background: #182e256b; backdrop-filter: blur(3px); }
   .voltar-inicio { color: #315d8c; font-size: 10px; }
   .entrada-fundo { min-height: calc(100dvh - 90px); height: auto; padding: 38px 20px; }
   .entrada-cartao { padding: 32px 24px 25px; border-radius: 14px; max-width: 370px; }
-  .entrada-logo { width: 232px; margin-bottom: 26px; }
+  .entrada-logo { width: 100%; margin-bottom: 26px; }
   .entrada-titulo h1 { font-size: 21px; }
   .entrada-cartao > .principal { font-size: 10px; min-height: 46px; padding-left: 10px; padding-right: 10px; }
   .entrada-rodape { flex-direction: column; gap: 6px; padding: 20px; text-align: center; font-size: 9px; }
 }
+
+.marca img { border-radius: 7px; }
+.campo input[type="file"] { height: auto; padding: 12px; max-width: 100%; font-size: 12px; }
+.campo input[type="file"]::file-selector-button { border: 1px solid #b8c9db; background: #edf4fa; color: #244c70; border-radius: 5px; padding: 9px; margin-right: 10px; cursor: pointer; }
+.anexo-indicador { display: block; margin-top: 5px; color: #315a87; font-size: 10px; font-weight: 600; }
+.descricao-resumo { margin-top: 7px; max-width: 460px; white-space: normal; overflow-wrap: anywhere; color: var(--suave); font-size: 11px; line-height: 1.6; }
+.detalhes-anexo { border-top: 1px solid var(--linha); margin-top: 22px; padding-top: 20px; }
+.detalhes-anexo h3 { font-size: 13px; }
+.anexo-nome { font-size: 12px; overflow-wrap: anywhere; margin: 12px 0; }
+.detalhes-anexo .botao { white-space: normal; text-align: center; }
+.apresentacao-link { display: flex; gap: 9px; align-items: center; color: #315a87; font-size: 11px; margin-top: 16px; text-underline-offset: 3px; }
+@media (max-width: 699px) { .marca { height: 80px; padding: 9px 18px; } .marca img { width: 111px; } }

@@ -1,12 +1,12 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f7ba6">
-  <meta name="description" content="Registro e acompanhamento de ocorrências escolares com a identidade Conviva Educação.">
-  <link rel="icon" type="image/png" href="/assets/conviva-educacao.png">
-  <title>Ocorrências escolares · Conviva Educação</title>
+  <meta name="description" content="Registro e acompanhamento de ocorrências escolares com a identidade Conviva SP.">
+  <link rel="icon" type="image/jpeg" href="/assets/conviva-sp.jpeg">
+  <title>Ocorrências escolares · Conviva SP</title>
 </head>
 <body>
   <a class="pular" href="#conteudo">Ir para o conteúdo</a>
@@ -33,7 +33,7 @@
   <section id="inicio" class="entrada" aria-label="Acesso ao painel de ocorrências" hidden>
     <main class="entrada-fundo" id="entrada-conteudo" tabindex="-1">
       <div class="entrada-cartao">
-        <img class="entrada-logo" src="/assets/conviva-educacao.png" width="242" height="90" alt="Conviva Educação">
+        <img class="entrada-logo" src="/assets/conviva-sp.jpeg" width="2752" height="1536" alt="Conviva SP">
         <div class="entrada-titulo"><p class="sobretitulo">CONVIVÊNCIA E CUIDADO ESCOLAR</p><h1>Gestão de ocorrências escolares</h1><p>Informações que conectam a rede.<br>Cuidado que transforma a convivência.</p></div>
         <button id="entrar-painel" type="button" class="botao principal"><svg class="icone"><use href="#i-seta"/></svg>Acessar painel de ocorrências</button>
         <button type="button" id="orientacoes-entrada" class="link">Orientações para o registro</button>
@@ -44,8 +44,8 @@
   </section>
 
   <aside class="lateral">
-    <a class="marca" href="#inicio" aria-label="Conviva Educação — início">
-      <img src="/assets/conviva-educacao.png" alt="Conviva Educação" width="177" height="66">
+    <a class="marca" href="#inicio" aria-label="Conviva SP — início">
+      <img src="/assets/conviva-sp.jpeg" alt="Conviva SP" width="2752" height="1536">
     </a>
     <p class="marca-descricao">GESTÃO DE OCORRÊNCIAS ESCOLARES</p>
     <p class="nav-legenda">ÁREA DE GESTÃO</p>
@@ -60,6 +60,7 @@
     <div class="lateral-apoio">
       <p class="nav-legenda">APOIO À GESTÃO</p>
       <button class="nav-ajuda" id="abrir-orientacoes" type="button"><svg class="icone"><use href="#i-info"/></svg>Orientações de registro</button>
+      <a class="apresentacao-link" href="%BASE_URL%apresentacao.html" target="_blank" rel="noopener">Como o sistema funciona (nova aba)</a>
     </div>
     <div class="lateral-rodape"><span class="rede-icone"><svg class="icone"><use href="#i-escudo"/></svg></span><div><strong>Convivência escolar</strong><span>Uma rede de cuidado e proteção</span></div></div>
   </aside>
@@ -109,9 +110,14 @@
             </div>
             <div class="form-secao"><h3><span>02</span>Classificação e descrição</h3>
               <fieldset class="campo" aria-describedby="erro-gravidade"><legend>Gravidade <span aria-hidden="true">*</span></legend><div class="gravidade"><input type="radio" id="g-amarelo" name="gravidade" value="AMARELO" required><label class="g amarelo" for="g-amarelo"><span class="ponto amarelo"></span><span><strong>Amarela</strong><small>Atenção e monitoramento</small></span><span class="radio-indicador"></span></label><input type="radio" id="g-vermelho" name="gravidade" value="VERMELHO" required><label class="g vermelho" for="g-vermelho"><span class="ponto vermelho"></span><span><strong>Vermelha</strong><small>Acompanhamento prioritário</small></span><span class="radio-indicador"></span></label></div><p class="erro" id="erro-gravidade"></p></fieldset>
-              <div class="campo"><label for="descricao">Descrição <span class="opcional">(opcional)</span></label><textarea id="descricao" maxlength="2000" rows="5" placeholder="Descreva os fatos de forma objetiva, com as informações necessárias ao acompanhamento." aria-describedby="ajuda-descricao contador"></textarea><div class="campo-rodape"><p id="ajuda-descricao" class="ajuda">Evite dados pessoais desnecessários.</p><p class="contador" id="contador">0 / 2000</p></div></div>
+              <div class="campo"><label for="descricao">Descrição <span class="opcional">(opcional)</span></label><textarea id="descricao" maxlength="5000" rows="5" placeholder="Descreva os fatos de forma objetiva, com as informações necessárias ao acompanhamento." aria-describedby="ajuda-descricao contador"></textarea><div class="campo-rodape"><p id="ajuda-descricao" class="ajuda">Evite dados pessoais desnecessários.</p><p class="contador" id="contador">0 / 5000</p></div></div>
             </div>
-            <div class="form-secao"><h3><span>03</span>Responsável pelo registro</h3>
+            <div class="form-secao"><h3><span>03</span>Documento de apoio <span class="opcional">(opcional)</span></h3>
+              <div class="campo"><label for="anexo-tipo">Anexar à ocorrência</label><select id="anexo-tipo" aria-describedby="ajuda-anexo"><option value="">Sem anexo</option><option value="PDF">Arquivo PDF</option><option value="LINK">Link de documento</option></select><p id="ajuda-anexo" class="ajuda">Escolha um PDF ou link. O documento ficará vinculado a este registro.</p></div>
+              <div id="anexo-pdf-campo" class="campo" hidden><label for="anexo-pdf">Arquivo PDF</label><input id="anexo-pdf" type="file" accept=".pdf,application/pdf" aria-describedby="ajuda-pdf erro-anexo-pdf"><p id="ajuda-pdf" class="ajuda">Um arquivo de até 5 MB. Para trocar, selecione outro PDF.</p><p id="erro-anexo-pdf" class="erro"></p></div>
+              <div id="anexo-link-campo" class="campo" hidden><label for="anexo-link">Link do documento</label><input id="anexo-link" type="url" maxlength="2048" placeholder="https://exemplo.com/documento" aria-describedby="ajuda-link erro-anexo-link"><p id="ajuda-link" class="ajuda">Use http:// ou https://. O sistema guarda o endereço; o acesso depende das permissões na origem.</p><p id="erro-anexo-link" class="erro"></p></div>
+            </div>
+            <div class="form-secao"><h3><span>04</span>Responsável pelo registro</h3>
               <fieldset class="campo" aria-describedby="erro-registrado_por"><legend>Função do responsável <span aria-hidden="true">*</span></legend><div class="opcoes"><input type="radio" id="r-diretor" name="registrado_por" value="DIRETOR" required><label for="r-diretor">Diretor</label><input type="radio" id="r-vice" name="registrado_por" value="VICE_DIRETOR" required><label for="r-vice">Vice-diretor</label><input type="radio" id="r-outros" name="registrado_por" value="OUTROS" required><label for="r-outros">Outros</label></div><p class="erro" id="erro-registrado_por"></p><div id="outro-campo" class="campo-outro" hidden><label for="outro">Nome ou cargo <span aria-hidden="true">*</span></label><input id="outro" type="text" maxlength="100" aria-describedby="erro-outro"><p class="erro" id="erro-outro"></p></div></fieldset>
             </div>
             <div class="form-acoes"><button type="button" class="botao secundario" data-abrir="ocorrencias">Voltar à consulta</button><button type="submit" id="enviar" class="botao principal"><svg class="icone"><use href="#i-check"/></svg><span>Registrar ocorrência</span></button></div>
@@ -132,7 +138,7 @@
       <section id="painel-relatorio" class="painel" role="tabpanel" aria-labelledby="aba-relatorio" tabindex="0" hidden>
         <div class="bloco"><div class="bloco-cabecalho"><div><h2>Classificação vermelha por escola</h2><p>Consolidado de todos os registros da rede.</p></div><button class="botao secundario" id="exportar-relatorio" type="button"><svg class="icone"><use href="#i-download"/></svg>Exportar CSV</button></div><div class="relatorio-resumo"><span class="icone-fundo vermelho"><svg class="icone"><use href="#i-grafico"/></svg></span><p id="resumo" class="resumo">Consultando informações…</p></div><div class="relatorio-filtros"><label class="interruptor"><input type="checkbox" id="mostrar-zeradas"><span>Incluir escolas sem ocorrências vermelhas</span></label><span class="periodo">Todo o histórico</span></div><p id="rel-status" class="status" role="status" aria-live="polite"></p><ol id="relatorio" class="ranking"></ol></div>
       </section>
-      <footer class="rodape"><span><strong>Conviva Educação</strong> · Gestão de ocorrências escolares</span><span>Informação para orientar. Cuidado para transformar.</span></footer>
+      <footer class="rodape"><span><strong>Conviva SP</strong> · Gestão de ocorrências escolares</span><span>Informação para orientar. Cuidado para transformar.</span></footer>
     </main>
   </div>
   <dialog id="detalhes-dialog" aria-labelledby="detalhes-titulo"><div class="dialog-cabecalho"><div><p class="sobretitulo">CONSULTA DO REGISTRO</p><h2 id="detalhes-titulo">Detalhes da ocorrência</h2></div><button type="button" class="botao-icone" data-fechar aria-label="Fechar detalhes"><svg class="icone"><use href="#i-close"/></svg></button></div><div id="detalhes-conteudo"></div><div class="dialog-rodape"><button class="botao secundario" type="button" data-fechar>Fechar</button></div></dialog>

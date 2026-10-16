@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const express = require('express');
 const { GRAVIDADES, hojeISO, idValido, validarOcorrencia } = require('./validacao');
+const { validarAnexo } = require('./anexos');
 
 function criarApp(pool) {
   const app = express();
@@ -11,6 +12,7 @@ function criarApp(pool) {
     if (req.path.startsWith('/api/')) res.set('Cache-Control', 'no-store');
     next();
   });
+  app.use('/api/ocorrencias', express.json({ limit: '8mb' }));
   app.use(express.json({ limit: '32kb' }));
   app.get('/health', (req, res) => res.status(200).send('ok'));
   // Serve o front-end compilado (frontend/dist). Se ainda não foi gerado, usa a página simples em public/.
@@ -30,13 +32,32 @@ function criarApp(pool) {
     try {
       const { erros, dados } = validarOcorrencia(req.body);
       if (erros.length) return res.status(400).json({ erros });
-      const [resultado] = await pool.query(
-        `INSERT INTO ocorrencias
-           (escola_id, data_ocorrencia, tipo, descricao, gravidade, registrado_por, registrado_por_outro)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [dados.escola_id, dados.data_ocorrencia, dados.tipo, dados.descricao,
-          dados.gravidade, dados.registrado_por, dados.registrado_por_outro]
-      );
+      const validacaoAnexo = validarAnexo(req.body.anexo);
+      if (validacaoAnexo.erros.length) return res.status(400).json({ erros: validacaoAnexo.erros });
+      const anexo = validacaoAnexo.anexo;
+      const conexao = anexo ? await pool.getConnection() : pool;
+      let resultado;
+      try {
+        if (anexo) await conexao.beginTransaction();
+        [resultado] = await conexao.query(
+          `INSERT INTO ocorrencias
+             (escola_id, data_ocorrencia, tipo, descricao, gravidade, registrado_por, registrado_por_outro)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [dados.escola_id, dados.data_ocorrencia, dados.tipo, dados.descricao,
+            dados.gravidade, dados.registrado_por, dados.registrado_por_outro]
+        );
+        if (anexo) {
+          await conexao.query(`INSERT INTO ocorrencia_anexos
+            (ocorrencia_id, tipo, nome, url, tamanho, arquivo) VALUES (?, ?, ?, ?, ?, ?)`,
+          [resultado.insertId, anexo.tipo, anexo.nome || null, anexo.url || null, anexo.tamanho || null, anexo.arquivo || null]);
+          await conexao.commit();
+        }
+      } catch (erro) {
+        if (anexo) await conexao.rollback();
+        throw erro;
+      } finally {
+        if (anexo) conexao.release();
+      }
       res.status(201).json({ id: resultado.insertId });
     } catch (erro) { next(erro); }
   });
@@ -59,11 +80,28 @@ function criarApp(pool) {
       const where = filtros.length ? `WHERE ${filtros.join(' AND ')}` : '';
       const [rows] = await pool.query(
         `SELECT o.id, e.nome AS escola, o.data_ocorrencia, o.tipo, o.descricao,
-                o.gravidade, o.registrado_por, o.registrado_por_outro, o.status, o.criado_em
+                o.gravidade, o.registrado_por, o.registrado_por_outro, o.status, o.criado_em,
+                a.tipo AS anexo_tipo, a.nome AS anexo_nome, a.url AS anexo_url, a.tamanho AS anexo_tamanho
            FROM ocorrencias o JOIN escolas e ON e.id = o.escola_id
+           LEFT JOIN ocorrencia_anexos a ON a.ocorrencia_id = o.id
            ${where} ORDER BY o.data_ocorrencia DESC, o.id DESC LIMIT 200`, valores
       );
-      res.json(rows);
+      res.json(rows.map(({ anexo_tipo, anexo_nome, anexo_url, anexo_tamanho, ...ocorrencia }) => ({
+        ...ocorrencia,
+        anexo: anexo_tipo ? { tipo: anexo_tipo, nome: anexo_nome, url: anexo_url, tamanho: anexo_tamanho } : null,
+      })));
+    } catch (erro) { next(erro); }
+  });
+
+  app.get('/api/ocorrencias/:id/anexo', async (req, res, next) => {
+    if (!idValido(req.params.id)) return res.status(400).json({ erros: ['Registro inválido.'] });
+    try {
+      const [rows] = await pool.query('SELECT nome, arquivo FROM ocorrencia_anexos WHERE ocorrencia_id = ? AND tipo = ?', [Number(req.params.id), 'PDF']);
+      if (!rows.length) return res.status(404).json({ erros: ['PDF não encontrado para esta ocorrência.'] });
+      res.set('Content-Type', 'application/pdf');
+      res.set('Content-Security-Policy', "sandbox; default-src 'none'");
+      res.attachment(rows[0].nome);
+      res.send(rows[0].arquivo);
     } catch (erro) { next(erro); }
   });
 

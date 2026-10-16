@@ -28,7 +28,7 @@ function validarOcorrencia(corpo) {
   if (!REGISTRANTES.includes(corpo.registrado_por)) erros.push('Escolha quem registrou.');
   const textos = {};
   for (const [campo, limite, rotulo] of [
-    ['tipo', 100, 'O tipo'], ['descricao', 2000, 'A descrição'],
+    ['tipo', 100, 'O tipo'], ['descricao', 5000, 'A descrição'],
     ['registrado_por_outro', 100, 'O nome ou cargo'],
   ]) {
     const valor = corpo[campo];

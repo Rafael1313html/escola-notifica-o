@@ -1,5 +1,6 @@
 import type { Escola, Gravidade, Indicadores, ItemRelatorio, NovaOcorrencia, Ocorrencia } from './types';
 import { criarOcorrenciaDemo, escolasDemo, listarIndicadoresDemo, listarOcorrenciasDemo, listarRelatorioDemo } from './demo';
+import { arquivoDemo } from './arquivos-demo';
 
 export const modoDemo = import.meta.env.VITE_DEMO_MODE === 'true';
 
@@ -50,3 +51,21 @@ export const criarOcorrencia = (dados: NovaOcorrencia): Promise<{ id: number }> 
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dados),
   });
+
+export async function baixarAnexo(id: number, nome: string): Promise<void> {
+  let arquivo: Blob;
+  if (modoDemo) {
+    const conteudo = await arquivoDemo(id, 'ler');
+    if (!conteudo) throw new Error('PDF não encontrado neste navegador.');
+    arquivo = new Blob([Uint8Array.from(atob(conteudo), (letra) => letra.charCodeAt(0))], { type: 'application/pdf' });
+  } else {
+    const resposta = await fetch(`/api/ocorrencias/${id}/anexo`, { signal: AbortSignal.timeout(30000), cache: 'no-store' });
+    if (!resposta.ok) throw new Error('Não foi possível baixar o PDF desta ocorrência. Tente novamente.');
+    arquivo = await resposta.blob();
+  }
+  const url = URL.createObjectURL(arquivo);
+  const link = document.createElement('a');
+  link.href = url; link.download = nome;
+  document.body.append(link); link.click(); link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 10000);
+}

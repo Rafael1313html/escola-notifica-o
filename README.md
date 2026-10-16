@@ -4,15 +4,29 @@ Sistema de registro de ocorrências escolares. Node.js, Express, MySQL e front-e
 
 ## Interface
 
-A entrada usa a composição visual da [Plataforma Conviva SP](https://conviva.educacao.sp.gov.br/login): fotografia escolar, cartão branco, botão azul e fonte Montserrat. O logotipo Conviva Educação solicitado foi incorporado em sua versão horizontal, sem redesenho. Os recursos são servidos localmente, com fontes e licença em `frontend/public/assets`.
+A entrada usa fotografia escolar, cartão branco, botão azul e fonte Montserrat. A logo Conviva SP fornecida em `logo.jpeg` substitui a anterior na entrada, na navegação e no ícone da página. Os recursos são servidos localmente, com fontes e licença em `frontend/public/assets`.
 
 - Painel com indicadores de todo o histórico e evolução dos últimos seis meses.
 - Consulta dos 200 registros mais recentes, com busca, filtros por escola, gravidade e período, paginação e detalhes.
 - Formulário com validação, mensagens por campo e confirmação com número do registro.
+- Descrição de até 5.000 caracteres, com resumo de até 300 caracteres no painel e texto completo nos detalhes e no CSV.
+- Um documento opcional por nova ocorrência: arquivo PDF de até 5 MB ou link HTTP/HTTPS. A consulta exibe o anexo nos detalhes, com download do PDF ou abertura do link.
 - Relatório de classificação vermelha por escola e exportação CSV dos resultados selecionados.
 - Navegação por teclado, suporte a celular, preferência por movimento reduzido e impressão.
 
 A tela de entrada abre o painel da aplicação. Ela não autentica usuários nem integra o Gov.br. A identidade visual não indica homologação oficial. Antes do uso com dados reais, ainda é necessário implementar autenticação e controle de acesso.
+
+## Apresentação ao cliente e arquitetura
+
+Abra `/apresentacao.html` com a aplicação iniciada, ou use **Como o sistema funciona** na lateral. A página traz o fluxo de uso, o diagrama da arquitetura e um botão para imprimir ou salvar em PDF. Veja os diagramas Mermaid e detalhes técnicos em [docs/arquitetura.md](docs/arquitetura.md).
+
+## Armazenamento de documentos
+
+No modo com servidor, o PDF fica na tabela `ocorrencia_anexos` do MySQL, vinculado ao ID da ocorrência. A gravação usa uma transação para salvar ocorrência e anexo juntos. Listagens carregam somente metadados; o arquivo é transferido ao baixar. Links são armazenados como endereços, sem copiar o documento da origem.
+
+Para atualizar um banco já existente, execute `npm run db:init`. Isso cria a tabela de anexos sem apagar ocorrências. O arquivo `db/mysql_completo.sql` também inclui a tabela para uso no Workbench.
+
+Na demonstração, os registros e metadados continuam em `localStorage`; PDFs ficam em IndexedDB no navegador. Falhas de persistência recusam o envio. Limpar dados do navegador remove os registros e arquivos locais.
 
 ## Rodar localmente
 
@@ -67,6 +81,7 @@ O app não tem autenticação: quem tiver o link pode consultar e criar registro
 | GET | `/api/indicadores` | Totais de todo o histórico e agregados mensais dos últimos seis meses |
 | POST | `/api/ocorrencias` | Registra uma ocorrência |
 | GET | `/api/ocorrencias?gravidade=VERMELHO` | Lista ocorrências, com filtros opcionais `gravidade` e `escola_id` |
+| GET | `/api/ocorrencias/:id/anexo` | Baixa o PDF vinculado à ocorrência; retorna 404 quando não existe |
 | GET | `/api/relatorios/vermelhas-por-escola` | Total de ocorrências vermelhas por escola |
 | GET | `/health` | Verificação de disponibilidade |
 

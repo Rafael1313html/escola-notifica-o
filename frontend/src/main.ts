@@ -1,5 +1,6 @@
-﻿import './styles.css';
-import { ApiError, criarOcorrencia, listarEscolas, listarIndicadores, listarOcorrencias, listarRelatorio, modoDemo } from './api';
+import './styles.css';
+import { ApiError, baixarAnexo, criarOcorrencia, listarEscolas, listarIndicadores, listarOcorrencias, listarRelatorio, modoDemo } from './api';
+import { lerPDF, LIMITE_PDF, linkValido } from './anexos';
 import type { Escola, Gravidade, Indicadores, ItemRelatorio, NovaOcorrencia, Ocorrencia, Registrante } from './types';
 import { baixarCSV, formatarData, hojeISO, normalizar, numero, protocolo } from './utils';
 
@@ -89,6 +90,9 @@ const campoData = q<HTMLInputElement>('#data');
 const campoTipo = q<HTMLInputElement>('#tipo');
 const campoDescricao = q<HTMLTextAreaElement>('#descricao');
 const campoOutro = q<HTMLInputElement>('#outro');
+const campoAnexoTipo = q<HTMLSelectElement>('#anexo-tipo');
+const campoAnexoPDF = q<HTMLInputElement>('#anexo-pdf');
+const campoAnexoLink = q<HTMLInputElement>('#anexo-link');
 const blocoOutro = q<HTMLDivElement>('#outro-campo');
 const botaoEnviar = q<HTMLButtonElement>('#enviar');
 const erroGeral = q<HTMLParagraphElement>('#erro-geral');
@@ -130,7 +134,7 @@ function ativar(painel: Painel, moverFoco = false): void {
   q('#subtitulo-pagina').textContent = subtitulo;
   q('#caminho-atual').textContent = titulo;
   q<HTMLButtonElement>('.acoes-pagina [data-abrir="registrar"]').hidden = painel === 'registrar';
-  document.title = `${titulo} · Conviva Educação`;
+  document.title = `${titulo} · Conviva SP`;
   if (location.hash !== `#${painel}`) history.replaceState(null, '', `#${painel}`);
 }
 
@@ -161,7 +165,7 @@ function sincronizarRota(): void {
     q('.lateral').hidden = true;
     q('.aplicacao').hidden = true;
     q<HTMLAnchorElement>('.pular').href = '#entrada-conteudo';
-    document.title = 'Ocorrências escolares · Conviva Educação';
+    document.title = 'Ocorrências escolares · Conviva SP';
   } else ativar(painelDaUrl());
 }
 window.addEventListener('hashchange', sincronizarRota);
@@ -189,10 +193,11 @@ function mostrarAviso(texto: string): void {
 
 /* ---------- formulário ---------- */
 
-type CampoErro = 'escola' | 'data' | 'gravidade' | 'registrado_por' | 'outro';
+type CampoErro = 'escola' | 'data' | 'gravidade' | 'registrado_por' | 'outro' | 'anexo-pdf' | 'anexo-link';
 interface ErroCampo { campo: CampoErro; mensagem: string; }
 const ALVO_FOCO: Record<CampoErro, string> = {
   escola: 'escola', data: 'data', gravidade: 'g-amarelo', registrado_por: 'r-diretor', outro: 'outro',
+  'anexo-pdf': 'anexo-pdf', 'anexo-link': 'anexo-link',
 };
 function limparErro(campo: CampoErro): void {
   q(`#erro-${campo}`).textContent = '';
@@ -225,6 +230,15 @@ function validar(): { erros: ErroCampo[]; dados: NovaOcorrencia | null } {
   } else if (registrante === 'OUTROS' && !campoOutro.value.trim()) {
     erros.push({ campo: 'outro', mensagem: 'Informe o nome ou cargo de quem registrou.' });
   }
+  if (campoAnexoTipo.value === 'PDF') {
+    const arquivo = campoAnexoPDF.files?.[0];
+    if (!arquivo) erros.push({ campo: 'anexo-pdf', mensagem: 'Selecione o PDF ou escolha Sem anexo.' });
+    else if (!/\.pdf$/i.test(arquivo.name) || arquivo.name.length > 180) erros.push({ campo: 'anexo-pdf', mensagem: 'Selecione um arquivo .pdf com nome de até 180 caracteres.' });
+    else if (!arquivo.size || arquivo.size > LIMITE_PDF) erros.push({ campo: 'anexo-pdf', mensagem: 'O PDF deve ter até 5 MB.' });
+  }
+  if (campoAnexoTipo.value === 'LINK' && !linkValido(campoAnexoLink.value.trim())) {
+    erros.push({ campo: 'anexo-link', mensagem: 'Informe um link http:// ou https:// válido, sem credenciais.' });
+  }
   if (erros.length || escolaId === undefined) return { erros, dados: null };
   return { erros, dados: { escola_id: escolaId, data_ocorrencia: campoData.value,
     tipo: campoTipo.value.trim(), descricao: campoDescricao.value.trim(), gravidade: gravidade as Gravidade,
@@ -244,7 +258,14 @@ form.querySelectorAll<HTMLInputElement>('input[name="registrado_por"]').forEach(
   if (outros) campoOutro.focus();
   else { campoOutro.value = ''; limparErro('outro'); }
 }));
-campoDescricao.addEventListener('input', () => { contador.textContent = `${campoDescricao.value.length} / 2000`; });
+campoDescricao.addEventListener('input', () => { contador.textContent = `${campoDescricao.value.length} / 5000`; });
+campoAnexoTipo.addEventListener('change', () => {
+  q('#anexo-pdf-campo').hidden = campoAnexoTipo.value !== 'PDF';
+  q('#anexo-link-campo').hidden = campoAnexoTipo.value !== 'LINK';
+  limparErro('anexo-pdf'); limparErro('anexo-link');
+});
+campoAnexoPDF.addEventListener('change', () => limparErro('anexo-pdf'));
+campoAnexoLink.addEventListener('input', () => limparErro('anexo-link'));
 
 form.addEventListener('submit', async (ev) => {
   ev.preventDefault();
@@ -261,6 +282,13 @@ form.addEventListener('submit', async (ev) => {
   q('span', botaoEnviar).textContent = 'Registrando…';
   form.setAttribute('aria-busy', 'true');
   try {
+    if (campoAnexoTipo.value === 'PDF') {
+      try { dados.anexo = await lerPDF(campoAnexoPDF.files![0]); } catch (erro) {
+        mostrarErro({ campo: 'anexo-pdf', mensagem: erro instanceof Error ? erro.message : 'Não foi possível ler o PDF.' });
+        campoAnexoPDF.focus();
+        return;
+      }
+    } else if (campoAnexoTipo.value === 'LINK') dados.anexo = { tipo: 'LINK', url: campoAnexoLink.value.trim() };
     const resultado = await criarOcorrencia(dados);
     salvarPreferencia(dados.registrado_por);
     mostrarAviso(`Ocorrência ${protocolo(resultado.id)} registrada com sucesso.`);
@@ -270,7 +298,7 @@ form.addEventListener('submit', async (ev) => {
     await atualizarDados();
     campoEscola.focus();
   } catch (erro) {
-    const mensagens = erro instanceof ApiError ? erro.erros : ['Não foi possível registrar. Tente novamente.'];
+    const mensagens = erro instanceof ApiError ? erro.erros : [erro instanceof Error ? erro.message : 'Não foi possível registrar. Tente novamente.'];
     erroGeral.textContent = mensagens.join(' ');
     erroGeral.hidden = false;
     erroGeral.focus();
@@ -283,7 +311,9 @@ form.addEventListener('submit', async (ev) => {
 });
 function reiniciarFormulario(registrante: Registrante): void {
   campoEscola.value = ''; campoTipo.value = ''; campoDescricao.value = '';
-  contador.textContent = '0 / 2000';
+  campoAnexoTipo.value = ''; campoAnexoPDF.value = ''; campoAnexoLink.value = '';
+  q('#anexo-pdf-campo').hidden = true; q('#anexo-link-campo').hidden = true;
+  contador.textContent = '0 / 5000';
   limparTodosErros();
   form.querySelectorAll<HTMLInputElement>('input[name="gravidade"]').forEach((r) => { r.checked = false; });
   // Mantém a data e quem registrou: costuma ser a mesma pessoa em várias ocorrências.
@@ -333,6 +363,8 @@ function criarTabela(itens: Ocorrencia[]): HTMLElement {
     linha.insertCell().append(el('span', 'registro-id', protocolo(o.id)));
     const escola = linha.insertCell();
     escola.append(el('span', 'escola-nome', o.escola), el('span', 'tipo-nome', o.tipo || 'Tipo não informado'));
+    if (o.descricao) escola.append(el('p', 'descricao-resumo', o.descricao.length > 300 ? `${o.descricao.slice(0, 299).trimEnd()}…` : o.descricao));
+    if (o.anexo) escola.append(el('span', 'anexo-indicador', o.anexo.tipo === 'PDF' ? 'PDF anexado' : 'Link anexado'));
     linha.insertCell().append(criarSelo(o.gravidade));
     const data = el('time', '', formatarData(o.data_ocorrencia));
     data.dateTime = o.data_ocorrencia.slice(0, 10);
@@ -530,6 +562,27 @@ function abrirDetalhes(o: Ocorrencia): void {
   });
   conteudo.replaceChildren(criarSelo(o.gravidade), el('h3', 'detalhes-escola', o.escola), grade,
     el('p', 'detalhes-descricao', o.descricao || 'Nenhuma descrição informada.'));
+  const documentos = el('section', 'detalhes-anexo');
+  documentos.append(el('h3', '', 'Documento de apoio'));
+  const anexo = o.anexo;
+  if (anexo?.tipo === 'PDF') {
+    documentos.append(el('p', 'anexo-nome', `${anexo.nome} · ${(anexo.tamanho / 1024).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} KB`));
+    const baixar = el('button', 'botao secundario', 'Baixar PDF');
+    baixar.type = 'button';
+    const status = el('p', 'erro'); status.setAttribute('role', 'status');
+    baixar.addEventListener('click', async () => {
+      baixar.disabled = true; status.textContent = 'Preparando PDF…';
+      try { await baixarAnexo(o.id, anexo.nome); status.textContent = 'Download iniciado.'; }
+      catch (erro) { status.textContent = erro instanceof Error ? erro.message : 'Não foi possível baixar o PDF.'; }
+      finally { baixar.disabled = false; }
+    });
+    documentos.append(baixar, status);
+  } else if (anexo?.tipo === 'LINK' && linkValido(anexo.url)) {
+    const link = el('a', 'botao secundario', 'Abrir documento (nova aba)');
+    link.href = anexo.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+    documentos.append(el('p', 'anexo-nome', anexo.url), link);
+  } else documentos.append(el('p', 'ajuda', 'Nenhum documento anexado a esta ocorrência.'));
+  conteudo.append(documentos);
   q<HTMLDialogElement>('#detalhes-dialog').showModal();
 }
 q('#abrir-orientacoes').addEventListener('click', () => q<HTMLDialogElement>('#orientacoes-dialog').showModal());

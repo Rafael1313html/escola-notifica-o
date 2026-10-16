@@ -1,6 +1,9 @@
 export type Gravidade = 'AMARELO' | 'VERMELHO';
 export type Registrante = 'DIRETOR' | 'VICE_DIRETOR' | 'OUTROS';
 
+export type NovoAnexo = { tipo: 'PDF'; nome: string; conteudo: string } | { tipo: 'LINK'; url: string };
+export type Anexo = { tipo: 'PDF'; nome: string; tamanho: number } | { tipo: 'LINK'; url: string };
+
 export interface Escola {
   id: number;
   nome: string;
@@ -17,6 +20,7 @@ export interface Ocorrencia {
   registrado_por_outro: string | null;
   status: string;
   criado_em: string;
+  anexo?: Anexo | null;
 }
 
 export interface ItemRelatorio {
@@ -32,6 +36,7 @@ export interface NovaOcorrencia {
   gravidade: Gravidade;
   registrado_por: Registrante;
   registrado_por_outro: string;
+  anexo?: NovoAnexo | null;
 }
 
 export interface MesIndicador {

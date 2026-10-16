@@ -132,3 +132,94 @@ test('gera CSV compatível com planilhas e protege células com fórmulas', () =
   expect(csv).toContain('"Texto ""entre aspas"""');
   expect(csv.startsWith('\uFEFF')).toBe(true);
 });
+
+test('PDF fica vinculado à ocorrência e pode ser baixado após recarregar', async ({ page }) => {
+  const pdf = Buffer.from('%PDF-1.7\n1 0 obj<</Type/Catalog>>endobj\n%%EOF');
+  await page.goto('/#registrar');
+  await expect(page.locator('#enviar')).toBeEnabled();
+  await page.locator('#escola').fill('ABEL DOS REIS');
+  await page.locator('label[for="g-amarelo"]').click();
+  await page.locator('label[for="r-diretor"]').click();
+  await page.locator('#anexo-tipo').selectOption('PDF');
+  await page.locator('#enviar').click();
+  await expect(page.locator('#erro-anexo-pdf')).toContainText('Selecione o PDF');
+  await page.locator('#anexo-pdf').setInputFiles({ name: 'falso.pdf', mimeType: 'application/pdf', buffer: Buffer.from('conteúdo inválido') });
+  await page.locator('#enviar').click();
+  await expect(page.locator('#erro-anexo-pdf')).toContainText('não é um PDF válido');
+  await page.locator('#anexo-pdf').setInputFiles({ name: 'relatorio.pdf', mimeType: 'application/pdf', buffer: pdf });
+  await page.locator('#enviar').click();
+  await expect(page.locator('#aviso')).toContainText('EN-000001 registrada com sucesso');
+  await expect(page.locator('#anexo-tipo')).toHaveValue('');
+  await page.getByRole('tab', { name: 'Ocorrências' }).click();
+  await page.reload();
+  await expect(page.locator('#lista')).toContainText('PDF anexado');
+  await page.getByRole('button', { name: 'Ver detalhes do registro EN-000001' }).click();
+  await expect(page.getByRole('dialog')).toContainText('relatorio.pdf');
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Baixar PDF' }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe('relatorio.pdf');
+  const stream = await download.createReadStream();
+  const partes: Buffer[] = [];
+  for await (const parte of stream!) partes.push(Buffer.from(parte));
+  expect(Buffer.concat(partes)).toEqual(pdf);
+});
+
+test('link é validado, salvo e aberto pelo registro após recarregar', async ({ page }) => {
+  await page.goto('/#registrar');
+  await expect(page.locator('#enviar')).toBeEnabled();
+  await page.locator('#escola').fill('ABEL DOS REIS');
+  await page.locator('label[for="g-amarelo"]').click();
+  await page.locator('label[for="r-diretor"]').click();
+  await page.locator('#anexo-tipo').selectOption('LINK');
+  await page.locator('#anexo-link').fill('javascript:alert(1)');
+  await page.locator('#enviar').click();
+  await expect(page.locator('#erro-anexo-link')).toContainText('http:// ou https://');
+  await page.locator('#anexo-link').fill('https://example.org/documento.pdf');
+  await page.locator('#enviar').click();
+  await expect(page.locator('#aviso')).toContainText('EN-000001 registrada com sucesso');
+  await page.getByRole('tab', { name: 'Ocorrências' }).click();
+  await page.reload();
+  await expect(page.locator('#lista')).toContainText('Link anexado');
+  await page.getByRole('button', { name: 'Ver detalhes do registro EN-000001' }).click();
+  const link = page.getByRole('link', { name: 'Abrir documento (nova aba)' });
+  await expect(link).toHaveAttribute('href', 'https://example.org/documento.pdf');
+  await expect(link).toHaveAttribute('target', '_blank');
+  await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+});
+
+test('apresentação do cliente mostra fluxo e arquitetura sem recursos externos', async ({ page }) => {
+  await page.goto('/apresentacao.html');
+  await expect(page.getByRole('heading', { name: 'Cada ocorrência, com seu contexto.' })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Arquitetura da aplicação com servidor' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Imprimir ou salvar em PDF' })).toBeVisible();
+  const resultados = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+  expect(resultados.violations.map((v) => ({ id: v.id, elementos: v.nodes.map((n) => n.target) }))).toEqual([]);
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test('descrição aceita 5000 caracteres e o painel resume em até 300 sem perder o texto completo', async ({ page }) => {
+  const descricao = 'A'.repeat(5000);
+  await page.goto('/#registrar');
+  await expect(page.locator('#enviar')).toBeEnabled();
+  await page.locator('#escola').fill('ABEL DOS REIS');
+  await page.locator('label[for="g-amarelo"]').click();
+  await page.locator('label[for="r-diretor"]').click();
+  await expect(page.locator('#descricao')).toHaveAttribute('maxlength', '5000');
+  await page.locator('#descricao').fill(descricao);
+  await expect(page.locator('#contador')).toHaveText('5000 / 5000');
+  await page.locator('#enviar').click();
+  await expect(page.locator('#aviso')).toContainText('EN-000001 registrada com sucesso');
+  await page.getByRole('tab', { name: 'Ocorrências' }).click();
+  await page.reload();
+  await expect(page.locator('#lista .descricao-resumo')).toHaveText('A'.repeat(299) + '…');
+  await page.getByRole('button', { name: 'Ver detalhes do registro EN-000001' }).click();
+  await expect(page.locator('.detalhes-descricao')).toHaveText(descricao);
+  await page.keyboard.press('Escape');
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Exportar CSV' }).click();
+  const stream = await (await downloadPromise).createReadStream();
+  const partes: Buffer[] = [];
+  for await (const parte of stream!) partes.push(Buffer.from(parte));
+  expect(Buffer.concat(partes).toString('utf8')).toContain(descricao);
+});

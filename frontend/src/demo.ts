@@ -1,4 +1,5 @@
 import type { Escola, Gravidade, Indicadores, ItemRelatorio, NovaOcorrencia, Ocorrencia } from './types';
+import { arquivoDemo } from './arquivos-demo';
 
 const nomesEscolas = [
   'ABEL DOS REIS',
@@ -129,11 +130,13 @@ function ler(): Ocorrencia[] {
 }
 
 function gravar(itens: Ocorrencia[]): void {
-  memoria = itens;
   try {
     localStorage.setItem(chave, JSON.stringify(itens));
+    memoria = itens;
   } catch {
     // Sem armazenamento local, os registros ficam apenas na memória desta página.
+    // Recusa novos envios para não confirmar uma gravação sem persistência.
+    throw new Error('Não foi possível salvar o registro. Verifique o espaço e as permissões do navegador.');
   }
 }
 
@@ -179,8 +182,12 @@ export async function listarIndicadoresDemo(): Promise<Indicadores> {
 export async function criarOcorrenciaDemo(dados: NovaOcorrencia): Promise<{ id: number }> {
   const escola = escolasDemo.find((item) => item.id === dados.escola_id);
   if (!escola) throw new Error('Escolha uma escola válida.');
-  const ocorrencias = ler();
+  const ocorrencias = [...ler()];
   const id = ocorrencias.reduce((maior, item) => Math.max(maior, item.id), 0) + 1;
+  const anexo = dados.anexo?.tipo === 'PDF'
+    ? { tipo: 'PDF' as const, nome: dados.anexo.nome, tamanho: atob(dados.anexo.conteudo).length }
+    : dados.anexo || null;
+  if (dados.anexo?.tipo === 'PDF') await arquivoDemo(id, 'gravar', dados.anexo.conteudo);
   ocorrencias.push({
     id,
     escola: escola.nome,
@@ -192,7 +199,11 @@ export async function criarOcorrenciaDemo(dados: NovaOcorrencia): Promise<{ id: 
     registrado_por_outro: dados.registrado_por === 'OUTROS' ? dados.registrado_por_outro : null,
     status: 'ABERTA',
     criado_em: new Date().toISOString(),
+    anexo,
   });
-  gravar(ocorrencias);
+  try { gravar(ocorrencias); } catch (erro) {
+    if (dados.anexo?.tipo === 'PDF') await arquivoDemo(id, 'excluir');
+    throw erro;
+  }
   return { id };
 }

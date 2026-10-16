@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#181f2e">
+  <title>Conviva SP · Apresentação do sistema</title>
+  <link rel="icon" type="image/jpeg" href="assets/conviva-sp.jpeg">
+  <style>
+    @font-face { font-family: Montserrat; src: url('assets/montserrat-400.ttf'); font-weight: 400; }
+    @font-face { font-family: Montserrat; src: url('assets/montserrat-600.ttf'); font-weight: 600; }
+    * { box-sizing: border-box; } body { margin: 0; background: #edf2f5; color: #1b2a3d; font: 14px/1.6 Montserrat, sans-serif; }
+    .folha { max-width: 1240px; margin: 32px auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 40px #14263b0c; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 30px; background: #181f2e; color: white; padding: 28px 48px; border-bottom: 5px solid #2abfc3; }
+    header img { width: 230px; height: auto; } header p { max-width: 380px; margin: 0; font-size: 13px; color: #d6e1ed; }
+    main { padding: 35px 48px; } .etiqueta { color: #12636d; font-size: 10px; letter-spacing: 2px; font-weight: 600; margin: 0 0 8px; }
+    h1 { font-size: clamp(25px, 3vw, 35px); line-height: 1.2; margin: 0 0 12px; letter-spacing: -1px; } h2 { font-size: 18px; margin: 26px 0 12px; } .intro { color: #526477; margin-bottom: 26px; max-width: 850px; }
+    .etapas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; list-style: none; padding: 0; counter-reset: etapa; }
+    .etapas li { border: 1px solid #dbe5eb; border-radius: 10px; padding: 16px; counter-increment: etapa; }
+    .etapas li::before { content: '0' counter(etapa); display: block; color: #12636d; font-weight: 600; font-size: 12px; margin-bottom: 10px; }
+    .etapas strong { display: block; margin-bottom: 7px; } .etapas p { font-size: 12px; color: #526477; margin: 0; }
+    figure { margin: 0; background: #f7fafc; border: 1px solid #dbe5eb; border-radius: 12px; padding: 18px; }
+    svg { display: block; width: 100%; height: auto; } .texto-svg { font-family: Montserrat, sans-serif; } figcaption { color: #526477; font-size: 11px; margin: 10px 5px 0; }
+    .notas { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 20px; } .nota { padding: 16px 18px; background: #eef8f8; border-left: 3px solid #27b9be; border-radius: 5px; font-size: 12px; } .nota p { margin: 6px 0 0; }
+    .nota.demo { background: #fff8e8; border-left-color: #f5b22a; }
+    footer { display: flex; justify-content: space-between; gap: 20px; padding: 18px 48px; border-top: 1px solid #dbe5eb; color: #526477; font-size: 11px; }
+    button { font: inherit; padding: 10px 18px; border: 0; border-radius: 6px; background: #12636d; color: white; cursor: pointer; } button:focus-visible { outline: 3px solid #ffb51c; outline-offset: 3px; }
+    .acoes { text-align: center; padding: 0 0 30px; }
+    @media (max-width: 700px) { .folha { margin: 0; border-radius: 0; } header, main { padding: 24px; } header { flex-direction: column; align-items: flex-start; gap: 12px; } .etapas, .notas { grid-template-columns: 1fr; } .diagrama { overflow-x: auto; } svg { min-width: 800px; } footer { padding: 20px 24px; flex-direction: column; } }
+    @media print { @page { size: A4 landscape; margin: 9mm; } body { background: white; font-size: 11px; print-color-adjust: exact; -webkit-print-color-adjust: exact; } .folha { margin: 0; box-shadow: none; max-width: none; border-radius: 0; } header { padding: 8px 26px; } header img { width: 130px; } header p { font-size: 11px; } main { padding: 12px 26px; } h1 { font-size: 25px; margin-bottom: 8px; } h2 { margin: 10px 0 6px; font-size: 15px; } .intro { margin: 6px 0 8px; } .etapas { margin: 8px 0; } .etapas li { padding: 10px; } .etapas li::before { margin-bottom: 4px; font-size: 10px; } .etapas p, .nota { font-size: 10px; line-height: 1.4; } figure { padding: 8px 14px; } svg { max-height: 165px; min-width: 0; } .notas { margin-top: 10px; } .nota { padding: 10px 12px; } footer { padding: 8px 26px; font-size: 9px; } .acoes { display: none; } }
+  </style>
+</head>
+<body>
+  <article class="folha">
+    <header><img src="assets/conviva-sp.jpeg" width="2752" height="1536" alt="Conviva SP — Programa de Melhoria da Convivência e Proteção Escolar"><p>Gestão de ocorrências escolares<br>Visão de uso e arquitetura da aplicação</p></header>
+    <main>
+      <p class="etiqueta">DO REGISTRO À INFORMAÇÃO PARA DECIDIR</p>
+      <h1>Cada ocorrência, com seu contexto.</h1>
+      <p class="intro">A equipe escolar registra os fatos, vincula um documento e consulta o histórico. A gestão acompanha indicadores e relatórios da rede em um só lugar.</p>
+      <h2>Como a equipe usa o sistema</h2>
+      <ol class="etapas">
+        <li><strong>Identificar</strong><p>Selecionar a escola e a data. Informar o tipo e descrever os fatos.</p></li>
+        <li><strong>Classificar e anexar</strong><p>Escolher amarela ou vermelha. Adicionar um PDF de até 5 MB ou um link, se necessário.</p></li>
+        <li><strong>Registrar e consultar</strong><p>Informar o responsável. Receber o protocolo e acessar o anexo nos detalhes da ocorrência.</p></li>
+        <li><strong>Acompanhar a rede</strong><p>Usar busca e filtros, consultar indicadores e exportar relatórios em CSV.</p></li>
+      </ol>
+      <h2>Como as informações são armazenadas</h2>
+      <figure>
+        <div class="diagrama" tabindex="0" role="region" aria-label="Diagrama da arquitetura. Em telas pequenas, role horizontalmente.">
+          <svg viewBox="0 0 1100 280" role="img" aria-labelledby="titulo-diagrama descricao-diagrama" class="texto-svg">
+            <title id="titulo-diagrama">Arquitetura da aplicação com servidor</title>
+            <desc id="descricao-diagrama">Equipe escolar usa a interface TypeScript no navegador. A interface envia dados e PDF para a API Node.js e Express. A API valida e salva escolas, ocorrências e anexos no MySQL. Na consulta, o PDF é baixado pela API. Links abrem o documento no serviço de origem.</desc>
+            <defs><marker id="seta" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0 8 4 0 8Z" fill="#52758b"/></marker></defs>
+            <g fill="none" stroke="#52758b" stroke-width="2" marker-end="url(#seta)"><path d="M210 88H278"/><path d="M530 88H598"/><path d="M820 88H888"/><path d="M393 146V208H600" stroke-dasharray="5 5"/></g>
+            <g font-size="10" fill="#526477" text-anchor="middle"><text x="245" y="67">usa</text><text x="564" y="56">dados / PDF</text><text x="564" y="123">JSON / HTTP</text><text x="856" y="67">SQL</text><text x="489" y="195">abre em nova aba</text></g>
+            <rect x="8" y="28" width="202" height="118" rx="12" fill="#fff" stroke="#ccdce5"/><rect x="280" y="28" width="250" height="118" rx="12" fill="#eaf8f8" stroke="#2abfc3"/><rect x="600" y="28" width="220" height="118" rx="12" fill="#181f2e"/><rect x="890" y="28" width="202" height="118" rx="12" fill="#fff7e4" stroke="#e9b749"/>
+            <g text-anchor="middle"><g fill="#1b2a3d"><text x="109" y="64" font-size="14" font-weight="600">Equipe escolar</text><text x="109" y="90" font-size="11">Diretor, vice-diretor</text><text x="109" y="111" font-size="11">ou outro responsável</text><text x="405" y="64" font-size="14" font-weight="600">Aplicação web</text><text x="405" y="90" font-size="11">TypeScript + Vite</text><text x="405" y="111" font-size="11">Cadastro, consulta e indicadores</text><text x="991" y="64" font-size="14" font-weight="600">Banco MySQL</text><text x="991" y="90" font-size="11">Escolas + ocorrências</text><text x="991" y="111" font-size="11">PDFs e links vinculados</text></g><g fill="#fff"><text x="710" y="64" font-size="14" font-weight="600">API da aplicação</text><text x="710" y="90" font-size="11">Node.js + Express</text><text x="710" y="111" font-size="11">Validação e gravação conjunta</text></g></g>
+            <rect x="600" y="174" width="280" height="70" rx="10" fill="#fff" stroke="#ccdce5" stroke-dasharray="5 4"/><text x="740" y="202" text-anchor="middle" fill="#1b2a3d" font-size="12" font-weight="600">Documento em serviço externo</text><text x="740" y="224" text-anchor="middle" fill="#526477" font-size="10">O sistema armazena o link, sem copiar o arquivo</text>
+            <text x="10" y="270" fill="#526477" font-size="10">PDF: conteúdo no banco, download pela API. Relação: uma escola tem várias ocorrências; cada ocorrência tem até um anexo.</text>
+          </svg>
+        </div>
+        <figcaption>Na versão com servidor, ocorrência e anexo são gravados na mesma transação. A consulta carrega apenas os dados do anexo; o PDF é transferido ao baixar.</figcaption>
+      </figure>
+      <div class="notas">
+        <div class="nota"><strong>Uso claro, informação organizada</strong><p>Campos obrigatórios identificados, erros junto ao campo, protocolo de confirmação e navegação por teclado. Interface adaptada ao celular.</p></div>
+        <div class="nota demo"><strong>Demonstração e implantação</strong><p>Na demonstração, registros ficam no armazenamento local e PDFs no IndexedDB do navegador. O modo com servidor compartilha dados via MySQL. Autenticação e permissões ainda precisam ser implementadas para uso com dados reais.</p></div>
+      </div>
+    </main>
+    <footer><span><strong>Conviva SP</strong> · Gestão de ocorrências escolares</span><span>Arquitetura implementada · Outubro de 2026</span></footer>
+  </article>
+  <div class="acoes"><button type="button" onclick="window.print()">Imprimir ou salvar em PDF</button></div>
+</body>
+</html>
