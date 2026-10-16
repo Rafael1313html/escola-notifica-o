@@ -13,6 +13,7 @@ A entrada usa fotografia escolar, cartão branco, botão azul e fonte Montserrat
 - Um documento opcional por nova ocorrência: arquivo PDF de até 5 MB ou link HTTP/HTTPS. A consulta exibe o anexo nos detalhes, com download do PDF ou abertura do link.
 - Relatório de classificação vermelha por escola e exportação CSV dos resultados selecionados.
 - Navegação por teclado, suporte a celular, preferência por movimento reduzido e impressão.
+- Botão de tema claro/escuro na entrada e no topo do painel, com preferência salva por navegador. Na primeira visita, acompanha o tema do dispositivo. A impressão mantém fundo claro.
 
 A tela de entrada abre o painel da aplicação. Ela não autentica usuários nem integra o Gov.br. A identidade visual não indica homologação oficial. Antes do uso com dados reais, ainda é necessário implementar autenticação e controle de acesso.
 

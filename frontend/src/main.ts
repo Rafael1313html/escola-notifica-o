@@ -1,4 +1,6 @@
 import './styles.css';
+import './tema.css';
+import './tema';
 import { ApiError, baixarAnexo, criarOcorrencia, listarEscolas, listarIndicadores, listarOcorrencias, listarRelatorio, modoDemo } from './api';
 import { lerPDF, LIMITE_PDF, linkValido } from './anexos';
 import type { Escola, Gravidade, Indicadores, ItemRelatorio, NovaOcorrencia, Ocorrencia, Registrante } from './types';

@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f7ba6">
+  <script>
+    (() => {
+      let tema;
+      try { tema = localStorage.getItem('escola-notificacao:tema'); } catch {}
+      document.documentElement.dataset.tema = tema === 'claro' || tema === 'escuro'
+        ? tema : matchMedia('(prefers-color-scheme: dark)').matches ? 'escuro' : 'claro';
+    })();
+  </script>
   <meta name="description" content="Registro e acompanhamento de ocorrências escolares com a identidade Conviva SP.">
   <link rel="icon" type="image/jpeg" href="/assets/conviva-sp.jpeg">
   <title>Ocorrências escolares · Conviva SP</title>
@@ -28,11 +36,14 @@
     <symbol id="i-escudo" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z"/><path d="m8 12 3 3 5-6"/></symbol>
     <symbol id="i-relogio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
     <symbol id="i-olho" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/></symbol>
+    <symbol id="i-lua" viewBox="0 0 24 24"><path d="M20.5 13.2A8.5 8.5 0 0 1 10.8 3a8.5 8.5 0 1 0 9.7 10.2Z"/></symbol>
   </svg>
 
   <section id="inicio" class="entrada" aria-label="Acesso ao painel de ocorrências" hidden>
     <main class="entrada-fundo" id="entrada-conteudo" tabindex="-1">
       <div class="entrada-cartao">
+        <div class="entrada-tema"><button type="button" class="alternar-tema" data-alternar-tema aria-label="Tema claro ou escuro" aria-pressed="false"><svg class="icone" aria-hidden="true"><use href="#i-sol"/></svg><span data-tema-rotulo>Claro</span></button></div>
         <img class="entrada-logo" src="/assets/conviva-sp.jpeg" width="2752" height="1536" alt="Conviva SP">
         <div class="entrada-titulo"><p class="sobretitulo">CONVIVÊNCIA E CUIDADO ESCOLAR</p><h1>Gestão de ocorrências escolares</h1><p>Informações que conectam a rede.<br>Cuidado que transforma a convivência.</p></div>
         <button id="entrar-painel" type="button" class="botao principal"><svg class="icone"><use href="#i-seta"/></svg>Acessar painel de ocorrências</button>
@@ -68,7 +79,7 @@
   <div class="aplicacao">
     <header class="topo">
       <div class="caminho"><svg class="icone"><use href="#i-escola"/></svg><span>Gestão escolar</span><span class="separador">/</span><strong id="caminho-atual">Visão geral</strong></div>
-      <div class="topo-acoes"><span class="data-atual"><svg class="icone"><use href="#i-calendario"/></svg><time id="data-atual"></time></span><span class="ambiente" id="ambiente">Rede de ensino</span><a class="voltar-inicio" href="#inicio">Início</a></div>
+      <div class="topo-acoes"><span class="data-atual"><svg class="icone"><use href="#i-calendario"/></svg><time id="data-atual"></time></span><span class="ambiente" id="ambiente">Rede de ensino</span><button type="button" class="alternar-tema" data-alternar-tema aria-label="Tema claro ou escuro" aria-pressed="false"><svg class="icone" aria-hidden="true"><use href="#i-sol"/></svg><span data-tema-rotulo>Claro</span></button><a class="voltar-inicio" href="#inicio">Início</a></div>
     </header>
 
     <main id="conteudo" class="layout" tabindex="-1">
