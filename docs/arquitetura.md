@@ -4,6 +4,63 @@ A apresentação para o cliente está em [apresentacao.html](../frontend/public/
 
 Arquivos prontos para compartilhar: [PDF](apresentacao-sistema.pdf) e [imagem PNG](apresentacao-sistema.png).
 
+## Diagrama de classes UML interativo
+
+Abra [uml.html](https://escola-notificacao.pages.dev/uml.html) para selecionar as seis entidades e enumerações, consultar atributos e regras, ajustar zoom e baixar SVG/PNG. A apresentação também contém um link para o UML. O desenho representa o modelo de domínio; o código atual usa interfaces TypeScript e funções, sem classes JavaScript para cada entidade.
+
+Versões para compartilhar: [imagem PNG](classes-uml.png), [vetor SVG](classes-uml.svg) e [PDF](classes-uml.pdf).
+
+```mermaid
+classDiagram
+    Escola "1" -- "0..*" Ocorrencia : registra
+    Ocorrencia "1" *-- "0..1" Anexo : compõe
+    Ocorrencia ..> Gravidade
+    Ocorrencia ..> Registrante
+    Anexo ..> TipoAnexo
+    class Escola {
+        +int id
+        +string nome
+    }
+    class Ocorrencia {
+        +int id
+        +int escola_id
+        +date data_ocorrencia
+        +string tipo
+        +string descricao
+        +Gravidade gravidade
+        +Registrante registrado_por
+        +string registrado_por_outro
+        +string status
+        +timestamp criado_em
+    }
+    class Anexo {
+        +int ocorrencia_id
+        +TipoAnexo tipo
+        +string nome
+        +string url
+        +int tamanho
+        +MEDIUMBLOB arquivo
+    }
+    class Gravidade {
+        <<enumeration>>
+        AMARELO
+        VERMELHO
+    }
+    class Registrante {
+        <<enumeration>>
+        DIRETOR
+        VICE_DIRETOR
+        OUTROS
+    }
+    class TipoAnexo {
+        <<enumeration>>
+        PDF
+        LINK
+    }
+```
+
+O contador global de acessos fica fora do modelo das ocorrências: use o Cloudflare Web Analytics, com as [instruções de ativação e acesso do administrador](acessos-cloudflare.md).
+
 ## Fluxo de uso
 
 ```mermaid

@@ -72,6 +72,7 @@
       <p class="nav-legenda">APOIO À GESTÃO</p>
       <button class="nav-ajuda" id="abrir-orientacoes" type="button"><svg class="icone"><use href="#i-info"/></svg>Orientações de registro</button>
       <a class="apresentacao-link" href="%BASE_URL%apresentacao.html" target="_blank" rel="noopener">Como o sistema funciona (nova aba)</a>
+      <a class="apresentacao-link" href="%BASE_URL%uml.html" target="_blank" rel="noopener">Diagrama de classes UML (nova aba)</a>
     </div>
     <div class="lateral-rodape"><span class="rede-icone"><svg class="icone"><use href="#i-escudo"/></svg></span><div><strong>Convivência escolar</strong><span>Uma rede de cuidado e proteção</span></div></div>
   </aside>
@@ -148,6 +149,7 @@
       <!-- RELATORIO -->
       <section id="painel-relatorio" class="painel" role="tabpanel" aria-labelledby="aba-relatorio" tabindex="0" hidden>
         <div class="bloco"><div class="bloco-cabecalho"><div><h2>Classificação vermelha por escola</h2><p>Consolidado de todos os registros da rede.</p></div><button class="botao secundario" id="exportar-relatorio" type="button"><svg class="icone"><use href="#i-download"/></svg>Exportar CSV</button></div><div class="relatorio-resumo"><span class="icone-fundo vermelho"><svg class="icone"><use href="#i-grafico"/></svg></span><p id="resumo" class="resumo">Consultando informações…</p></div><div class="relatorio-filtros"><label class="interruptor"><input type="checkbox" id="mostrar-zeradas"><span>Incluir escolas sem ocorrências vermelhas</span></label><span class="periodo">Todo o histórico</span></div><p id="rel-status" class="status" role="status" aria-live="polite"></p><ol id="relatorio" class="ranking"></ol></div>
+      <article class="bloco acessos-bloco"><div class="bloco-cabecalho"><div><h2>Estatísticas de acesso</h2><p>Visitas e visualizações do site, com consulta privada na conta Cloudflare do administrador.</p></div></div><div class="acessos-conteudo"><p>Web Analytics habilitado no Cloudflare. Entre na conta proprietária para consultar visitas, visualizações de página e o período desejado. Os dados podem levar alguns minutos para aparecer.</p><a class="botao secundario" id="acessos-cloudflare" href="https://dash.cloudflare.com/4f629e0de9a41d35b1e4d2bbb042738e/web-analytics" target="_blank" rel="noopener noreferrer">Abrir métricas no Cloudflare (nova aba)</a><a class="link" href="https://developers.cloudflare.com/pages/how-to/web-analytics/" target="_blank" rel="noopener noreferrer">Sobre a medição (guia oficial)</a></div></article>
       </section>
       <footer class="rodape"><span><strong>Conviva SP</strong> · Gestão de ocorrências escolares</span><span>Informação para orientar. Cuidado para transformar.</span></footer>
     </main>

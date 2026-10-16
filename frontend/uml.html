@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f7ba6">
+  <meta name="description" content="Diagrama de classes UML interativo do Conviva SP: entidades, atributos e relações do sistema.">
+  <title>Classes UML · Conviva SP</title>
+  <link rel="icon" type="image/jpeg" href="/assets/conviva-sp.jpeg">
+  <script>(()=>{let t;try{t=localStorage.getItem('escola-notificacao:tema')}catch{}document.documentElement.dataset.tema=t==='claro'||t==='escuro'?t:matchMedia('(prefers-color-scheme: dark)').matches?'escuro':'claro'})();</script>
+</head>
+<body class="uml-pagina">
+  <a class="uml-pular" href="#uml-conteudo">Ir para o diagrama</a>
+  <svg class="uml-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><symbol id="i-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/></symbol><symbol id="i-lua" viewBox="0 0 24 24"><path d="M20.5 13.2A8.5 8.5 0 0 1 10.8 3a8.5 8.5 0 1 0 9.7 10.2Z"/></symbol></svg>
+  <header class="uml-topo"><a href="%BASE_URL%" aria-label="Conviva SP — início"><img src="/assets/conviva-sp.jpeg" width="2752" height="1536" alt="Conviva SP"></a><nav aria-label="Documentação"><a href="%BASE_URL%#visao-geral">Aplicação</a><a href="%BASE_URL%apresentacao.html">Apresentação</a><button type="button" class="alternar-tema" data-alternar-tema aria-label="Tema claro ou escuro" aria-pressed="false"><svg class="icone" aria-hidden="true"><use href="#i-sol"/></svg><span data-tema-rotulo>Claro</span></button></nav></header>
+  <main id="uml-conteudo" tabindex="-1">
+    <div class="uml-introducao"><div><p class="uml-etiqueta">DOCUMENTAÇÃO INTERATIVA</p><h1>Classes do sistema</h1><p>Explore como escolas, ocorrências e documentos se relacionam.</p></div><div class="uml-exportar"><button type="button" id="uml-svg">Baixar SVG</button><button type="button" id="uml-png">Baixar PNG</button><button type="button" id="uml-imprimir">Imprimir / PDF</button></div></div>
+    <div class="uml-layout">
+      <section class="uml-visualizador" aria-label="Explorar diagrama UML">
+        <div class="uml-ferramentas" role="group" aria-label="Controles do diagrama"><button type="button" id="uml-menos" aria-label="Diminuir zoom">−</button><output id="uml-zoom" aria-live="polite" aria-label="Zoom do diagrama">100%</output><button type="button" id="uml-mais" aria-label="Aumentar zoom">+</button><button type="button" id="uml-ajustar">Ajustar à tela</button><button type="button" id="uml-tela-cheia">Tela cheia</button></div>
+        <p id="uml-instrucoes" class="uml-ajuda">Selecione uma classe para ver detalhes. Arraste o fundo para mover; use +, − ou 0 com o diagrama em foco.</p>
+        <div id="uml-mapa" tabindex="0" role="region" aria-label="Diagrama de classes UML interativo" aria-describedby="uml-instrucoes"></div>
+        <div class="uml-seletores" role="group" aria-label="Selecionar classe"><button type="button" data-selecionar="Escola" aria-pressed="true">Escola</button><button type="button" data-selecionar="Ocorrencia" aria-pressed="false">Ocorrencia</button><button type="button" data-selecionar="Anexo" aria-pressed="false">Anexo</button><button type="button" data-selecionar="Registrante" aria-pressed="false">Registrante</button><button type="button" data-selecionar="Gravidade" aria-pressed="false">Gravidade</button><button type="button" data-selecionar="TipoAnexo" aria-pressed="false">TipoAnexo</button></div>
+      </section>
+      <aside class="uml-inspecao" aria-labelledby="uml-classe-nome"><p class="uml-etiqueta" id="uml-classe-tipo">ENTIDADE</p><h2 id="uml-classe-nome">Escola</h2><p id="uml-classe-descricao"></p><h3>Atributos</h3><dl id="uml-atributos"></dl><h3>Regras e relações</h3><ul id="uml-regras"></ul><p class="uml-observacao">Modelo de domínio baseado nas tabelas MySQL e tipos TypeScript. Não representa classes JavaScript com métodos próprios.</p></aside>
+    </div>
+    <section class="uml-notas" aria-label="Leitura do modelo"><div><h2>Como ler</h2><p><strong>1 para 0..*</strong>: uma escola pode ter várias ocorrências. <strong>1 para 0..1</strong>: cada ocorrência pode ter um anexo. O losango representa composição.</p></div><div><h2>Documento de apoio</h2><p>PDF e link são alternativas do mesmo anexo. O arquivo fica no banco na versão com servidor; na demonstração, fica no navegador.</p></div></section>
+    <p id="uml-status" class="uml-status" role="status" aria-live="polite"></p>
+  </main>
+  <footer class="uml-rodape">Conviva SP · Diagrama de classes do sistema implementado</footer>
+  <script type="module" src="/src/uml.ts"></script>
+</body>
+</html>

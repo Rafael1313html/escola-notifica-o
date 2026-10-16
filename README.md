@@ -21,6 +21,12 @@ A tela de entrada abre o painel da aplicação. Ela não autentica usuários nem
 
 Abra `/apresentacao.html` com a aplicação iniciada, ou use **Como o sistema funciona** na lateral. A página traz o fluxo de uso, o diagrama da arquitetura e um botão para imprimir ou salvar em PDF. Veja os diagramas Mermaid e detalhes técnicos em [docs/arquitetura.md](docs/arquitetura.md).
 
+O diagrama de classes UML interativo fica em `/uml.html`. Ele permite selecionar entidades, ler atributos e regras, ampliar, mover e exportar SVG/PNG, além de imprimir em PDF.
+
+## Contador de acessos para o administrador
+
+Use **Cloudflare Web Analytics** para medir acessos globais, com consulta privada pelo login da conta Cloudflare. A ativação é feita em **Workers & Pages → escola-notificacao → Metrics → Enable Web Analytics**, seguida de nova publicação. Consulte [docs/acessos-cloudflare.md](docs/acessos-cloudflare.md) para os links, os limites das métricas e o estado de ativação verificado. Um total salvo no navegador não é tratado como contador global.
+
 ## Armazenamento de documentos
 
 No modo com servidor, o PDF fica na tabela `ocorrencia_anexos` do MySQL, vinculado ao ID da ocorrência. A gravação usa uma transação para salvar ocorrência e anexo juntos. Listagens carregam somente metadados; o arquivo é transferido ao baixar. Links são armazenados como endereços, sem copiar o documento da origem.

@@ -480,4 +480,9 @@ dialog::backdrop { background: #182e256b; backdrop-filter: blur(3px); }
 .anexo-nome { font-size: 12px; overflow-wrap: anywhere; margin: 12px 0; }
 .detalhes-anexo .botao { white-space: normal; text-align: center; }
 .apresentacao-link { display: flex; gap: 9px; align-items: center; color: #315a87; font-size: 11px; margin-top: 16px; text-underline-offset: 3px; }
+.acessos-bloco { margin-top: 20px; }
+.acessos-conteudo { padding: 0 24px 24px; color: var(--suave); font-size: 12px; }
+.acessos-conteudo p { margin-bottom: 16px; }
+.acessos-conteudo .botao { white-space: normal; text-align: center; }
+.acessos-conteudo .link { display: block; width: fit-content; margin-top: 12px; }
 @media (max-width: 699px) { .marca { height: 80px; padding: 9px 18px; } .marca img { width: 111px; } }

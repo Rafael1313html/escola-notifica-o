@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" role="img" aria-labelledby="uml-titulo uml-descricao">
+  <title id="uml-titulo">Diagrama de classes UML do Conviva SP</title>
+  <desc id="uml-descricao">Uma Escola possui zero ou várias Ocorrências. Cada Ocorrência pertence a uma Escola e compõe zero ou um Anexo. Gravidade, Registrante e TipoAnexo são enumerações. As classes representam o modelo de domínio implementado.</desc>
+  <style>
+    text { font-family: Arial, sans-serif; fill: #24364b; }
+    .moldura { fill: #fff; stroke: #6b879e; stroke-width: 1.5; }
+    .cabecalho { fill: #e7f5f5; }
+    .enum-cabecalho { fill: #fff3d8; }
+    .titulo { font-size: 24px; font-weight: bold; text-anchor: middle; }
+    .estereotipo { font-size: 14px; text-anchor: middle; fill: #456177; }
+    .atributo { font: 17px monospace; }
+    .relacao { fill: none; stroke: #456177; stroke-width: 2; }
+    .rotulo { font-size: 16px; }
+    .nota { font-size: 16px; fill: #456177; }
+    .classe:focus { outline: none; }
+    .classe:focus .moldura, .classe:hover .moldura { stroke: #12636d; stroke-width: 4; }
+    .classe { cursor: pointer; }
+  </style>
+  <defs><marker id="uml-dependencia" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M1 1 11 6 1 11" fill="none" stroke="#456177" stroke-width="1.5"/></marker></defs>
+  <rect width="1400" height="900" fill="#f5f8fb"/>
+  <text x="40" y="44" font-size="16" font-weight="bold" fill="#12636d">CONVIVA SP · MODELO DE DOMÍNIO</text>
+  <text x="40" y="74" class="nota">Selecione uma entidade ou enumeração para explorar seus atributos e regras.</text>
+  <g class="relacao"><path d="M370 240H520"/><path d="M938 240H1040"/><path d="M715 520V650" stroke-dasharray="7 5" marker-end="url(#uml-dependencia)"/><path d="M590 520V575H205V650" stroke-dasharray="7 5" marker-end="url(#uml-dependencia)"/><path d="M1200 430V650" stroke-dasharray="7 5" marker-end="url(#uml-dependencia)"/></g>
+  <path d="m910 240 14-9 14 9-14 9Z" fill="#456177"/>
+  <text x="383" y="225" class="rotulo">1</text><text x="474" y="225" class="rotulo">0..*</text><text x="396" y="268" class="rotulo">registra</text>
+  <text x="950" y="225" class="rotulo">1</text><text x="995" y="225" class="rotulo">0..1</text><text x="946" y="268" class="rotulo">compõe</text>
+  <g class="classe" data-classe="Escola" transform="translate(40 140)">
+    <rect class="moldura" width="330" height="170" rx="8"/><path class="cabecalho" d="M8 1h314q7 0 7 7v65H1V8q0-7 7-7"/>
+    <text class="estereotipo" x="165" y="26">«entidade»</text><text class="titulo" x="165" y="56">Escola</text><path class="relacao" d="M0 74H330"/>
+    <text class="atributo" x="18" y="110">+ id: int {PK}</text><text class="atributo" x="18" y="142">+ nome: string [150] {único}</text>
+  </g>
+  <g class="classe" data-classe="Ocorrencia" transform="translate(520 100)">
+    <rect class="moldura" width="390" height="420" rx="8"/><path class="cabecalho" d="M8 1h374q7 0 7 7v65H1V8q0-7 7-7"/>
+    <text class="estereotipo" x="195" y="26">«entidade»</text><text class="titulo" x="195" y="56">Ocorrencia</text><path class="relacao" d="M0 74H390"/>
+    <g class="atributo"><text x="18" y="110">+ id: int {PK}</text><text x="18" y="138">+ escola_id: int {FK}</text><text x="18" y="166">+ data_ocorrencia: date</text><text x="18" y="194">+ tipo: string [100] ?</text><text x="18" y="222">+ descricao: string [5000] ?</text><text x="18" y="250">+ gravidade: Gravidade</text><text x="18" y="278">+ registrado_por: Registrante</text><text x="18" y="306">+ registrado_por_outro: string ?</text><text x="18" y="334">+ status: string = ABERTA</text><text x="18" y="362">+ criado_em: timestamp</text></g>
+    <text class="nota" x="18" y="399">Resumo na interface: até 300 caracteres</text>
+  </g>
+  <g class="classe" data-classe="Anexo" transform="translate(1040 140)">
+    <rect class="moldura" width="320" height="290" rx="8"/><path class="cabecalho" d="M8 1h304q7 0 7 7v65H1V8q0-7 7-7"/>
+    <text class="estereotipo" x="160" y="26">«entidade»</text><text class="titulo" x="160" y="56">Anexo</text><path class="relacao" d="M0 74H320"/>
+    <g class="atributo"><text x="18" y="110">+ ocorrencia_id: int {PK,FK}</text><text x="18" y="138">+ tipo: TipoAnexo</text><text x="18" y="166">+ nome: string [180] ?</text><text x="18" y="194">+ url: string [2048] ?</text><text x="18" y="222">+ tamanho: int ?</text><text x="18" y="250">+ arquivo: MEDIUMBLOB ?</text></g>
+    <text class="nota" x="18" y="276">PDF até 5 MB ou link HTTP/HTTPS</text>
+  </g>
+  <g class="classe" data-classe="Registrante" transform="translate(40 650)">
+    <rect class="moldura" width="330" height="180" rx="8"/><path class="enum-cabecalho" d="M8 1h314q7 0 7 7v65H1V8q0-7 7-7"/>
+    <text class="estereotipo" x="165" y="26">«enumeration»</text><text class="titulo" x="165" y="56">Registrante</text><path class="relacao" d="M0 74H330"/>
+    <g class="atributo"><text x="18" y="107">DIRETOR</text><text x="18" y="135">VICE_DIRETOR</text><text x="18" y="163">OUTROS</text></g>
+  </g>
+  <g class="classe" data-classe="Gravidade" transform="translate(540 650)">
+    <rect class="moldura" width="350" height="150" rx="8"/><path class="enum-cabecalho" d="M8 1h334q7 0 7 7v65H1V8q0-7 7-7"/>
+    <text class="estereotipo" x="175" y="26">«enumeration»</text><text class="titulo" x="175" y="56">Gravidade</text><path class="relacao" d="M0 74H350"/>
+    <g class="atributo"><text x="18" y="107">AMARELO</text><text x="18" y="135">VERMELHO</text></g>
+  </g>
+  <g class="classe" data-classe="TipoAnexo" transform="translate(1040 650)">
+    <rect class="moldura" width="320" height="150" rx="8"/><path class="enum-cabecalho" d="M8 1h304q7 0 7 7v65H1V8q0-7 7-7"/>
+    <text class="estereotipo" x="160" y="26">«enumeration»</text><text class="titulo" x="160" y="56">TipoAnexo</text><path class="relacao" d="M0 74H320"/>
+    <g class="atributo"><text x="18" y="107">PDF</text><text x="18" y="135">LINK</text></g>
+  </g>
+  <text x="40" y="875" class="nota">+ atributo público · ? opcional · PK chave primária · FK chave estrangeira · losango: composição · tracejado: dependência de tipo</text>
+</svg>

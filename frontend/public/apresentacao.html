@@ -26,6 +26,7 @@
     footer { display: flex; justify-content: space-between; gap: 20px; padding: 18px 48px; border-top: 1px solid #dbe5eb; color: #526477; font-size: 11px; }
     button { font: inherit; padding: 10px 18px; border: 0; border-radius: 6px; background: #12636d; color: white; cursor: pointer; } button:focus-visible { outline: 3px solid #ffb51c; outline-offset: 3px; }
     .acoes { text-align: center; padding: 0 0 30px; }
+    .acoes a { display: inline-block; padding: 10px 18px; margin: 8px; border-radius: 6px; background: #e0f2f2; color: #12515c; text-underline-offset: 4px; }
     @media (max-width: 700px) { .folha { margin: 0; border-radius: 0; } header, main { padding: 24px; } header { flex-direction: column; align-items: flex-start; gap: 12px; } .etapas, .notas { grid-template-columns: 1fr; } .diagrama { overflow-x: auto; } svg { min-width: 800px; } footer { padding: 20px 24px; flex-direction: column; } }
     @media print { @page { size: A4 landscape; margin: 9mm; } body { background: white; font-size: 11px; print-color-adjust: exact; -webkit-print-color-adjust: exact; } .folha { margin: 0; box-shadow: none; max-width: none; border-radius: 0; } header { padding: 8px 26px; } header img { width: 130px; } header p { font-size: 11px; } main { padding: 12px 26px; } h1 { font-size: 25px; margin-bottom: 8px; } h2 { margin: 10px 0 6px; font-size: 15px; } .intro { margin: 6px 0 8px; } .etapas { margin: 8px 0; } .etapas li { padding: 10px; } .etapas li::before { margin-bottom: 4px; font-size: 10px; } .etapas p, .nota { font-size: 10px; line-height: 1.4; } figure { padding: 8px 14px; } svg { max-height: 165px; min-width: 0; } .notas { margin-top: 10px; } .nota { padding: 10px 12px; } footer { padding: 8px 26px; font-size: 9px; } .acoes { display: none; } }
   </style>
@@ -68,6 +69,6 @@
     </main>
     <footer><span><strong>Conviva SP</strong> · Gestão de ocorrências escolares</span><span>Arquitetura implementada · Outubro de 2026</span></footer>
   </article>
-  <div class="acoes"><button type="button" onclick="window.print()">Imprimir ou salvar em PDF</button></div>
+  <div class="acoes"><a href="uml.html">Explorar diagrama de classes UML</a><button type="button" onclick="window.print()">Imprimir ou salvar em PDF</button></div>
 </body>
 </html>

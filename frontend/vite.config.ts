@@ -14,6 +14,6 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       proxy: { "/api": env.VITE_API_PROXY_TARGET || "http://localhost:3000" },
     },
-    build: { outDir: "dist" },
+    build: { outDir: "dist", rollupOptions: { input: { app: "index.html", uml: "uml.html" } } },
   };
 });
