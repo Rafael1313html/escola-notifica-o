@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { hojeISO, gerarCSV } from '../src/utils';
+import { abrirComoADM, entrarADM } from './helpers/adm';
 
 test('entrada exibe a logo, abre orientações e permite acessar o painel', async ({ page }) => {
   const erros: string[] = [];
@@ -13,14 +14,14 @@ test('entrada exibe a logo, abre orientações e permite acessar o painel', asyn
   await page.getByRole('button', { name: 'Orientações para o registro' }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.getByRole('button', { name: 'Entendi' }).click();
-  await page.getByRole('button', { name: 'Acessar painel de ocorrências' }).click();
-  await expect(page.locator('#metrica-total')).toHaveText('0');
-  await expect(page.getByRole('heading', { name: 'Visão geral', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Registrar ocorrência da escola' }).click();
+  await expect(page.getByRole('heading', { name: 'Nova ocorrência', exact: true })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Ocorrências' })).toHaveCount(0);
   expect(erros).toEqual([]);
 });
 
 test('valida formulário, registra, atualiza indicadores e preserva dados no navegador', async ({ page }) => {
-  await page.goto('/#registrar');
+  await abrirComoADM(page, '/#registrar');
   await expect(page.locator('#enviar')).toBeEnabled();
   await page.locator('#enviar').click();
   await expect(page.locator('#erro-escola')).toContainText('Escolha a escola');
@@ -49,7 +50,7 @@ test('valida formulário, registra, atualiza indicadores e preserva dados no nav
   await expect(page.locator('#detalhes-conteudo img')).toHaveCount(0);
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).not.toBeVisible();
-  await page.reload();
+  await page.reload(); await entrarADM(page, '#ocorrencias');
   await expect(page.locator('#lista')).toContainText('EN-000001');
   await page.getByRole('tab', { name: 'Relatórios' }).click();
   await expect(page.locator('#resumo')).toHaveText('1 ocorrência vermelha em 1 escola.');
@@ -63,7 +64,7 @@ test('filtra, pagina e exporta os registros selecionados', async ({ page }) => {
       registrado_por: 'DIRETOR', registrado_por_outro: null, status: 'ABERTA', criado_em: new Date().toISOString(),
     }))));
   }, hojeISO());
-  await page.goto('/#ocorrencias');
+  await abrirComoADM(page, '/#ocorrencias');
   await expect(page.locator('#lista tbody tr')).toHaveCount(10);
   await page.getByRole('button', { name: 'Próxima página' }).click();
   await expect(page.locator('#lista tbody tr')).toHaveCount(3);
@@ -96,7 +97,7 @@ test('datas e escola filtram os registros sem alterar os indicadores globais', a
       { id: 2, escola: 'ALBERTO SANTOS DUMONT', data_ocorrencia: '2020-01-01', gravidade: 'VERMELHO', registrado_por: 'DIRETOR', tipo: null, descricao: null, status: 'ABERTA' },
     ]));
   }, hojeISO());
-  await page.goto('/#ocorrencias');
+  await abrirComoADM(page, '/#ocorrencias');
   await expect(page.locator('#lista tbody tr')).toHaveCount(2);
   await page.locator('#filtro-periodo').selectOption('7');
   await expect(page.locator('#lista tbody tr')).toHaveCount(1);
@@ -107,17 +108,17 @@ test('datas e escola filtram os registros sem alterar os indicadores globais', a
 });
 
 test('navegação por teclado, layout responsivo e estados vazios acessíveis', async ({ page }) => {
-  test.setTimeout(60000); // Seis páginas passam pela análise completa de acessibilidade.
-  await page.goto('/#visao-geral');
+  test.setTimeout(60000); // Seis páginas passam por login e análise completa de acessibilidade.
+  await abrirComoADM(page, '/#visao-geral');
   await expect(page.locator('#metrica-total')).toHaveText('0');
   await page.getByRole('tab', { name: 'Visão geral' }).focus();
   await page.keyboard.press('ArrowRight');
   await expect(page.getByRole('tab', { name: 'Ocorrências' })).toBeFocused();
   await expect(page.locator('#painel-ocorrencias')).toBeVisible();
   await page.keyboard.press('End');
-  await expect(page.getByRole('tab', { name: 'Novo registro' })).toBeFocused();
+  await expect(page.getByRole('tab', { name: 'Canal direto com a diretoria' })).toBeFocused();
   for (const rota of ['inicio', 'visao-geral', 'ocorrencias', 'registrar', 'relatorio', 'whatsapp']) {
-    await page.goto(`/#${rota}`);
+    await abrirComoADM(page, `/#${rota}`);
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     const resultados = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
     expect(resultados.violations.map((v) => ({ id: v.id, descricao: v.description, elementos: v.nodes.map((n) => n.target) }))).toEqual([]);
@@ -136,7 +137,7 @@ test('gera CSV compatível com planilhas e protege células com fórmulas', () =
 
 test('PDF fica vinculado à ocorrência e pode ser baixado após recarregar', async ({ page }) => {
   const pdf = Buffer.from('%PDF-1.7\n1 0 obj<</Type/Catalog>>endobj\n%%EOF');
-  await page.goto('/#registrar');
+  await abrirComoADM(page, '/#registrar');
   await expect(page.locator('#enviar')).toBeEnabled();
   await page.locator('#escola').fill('ABEL DOS REIS');
   await page.locator('label[for="g-amarelo"]').click();
@@ -152,7 +153,7 @@ test('PDF fica vinculado à ocorrência e pode ser baixado após recarregar', as
   await expect(page.locator('#aviso')).toContainText('EN-000001 registrada com sucesso');
   await expect(page.locator('#anexo-tipo')).toHaveValue('');
   await page.getByRole('tab', { name: 'Ocorrências' }).click();
-  await page.reload();
+  await page.reload(); await entrarADM(page, '#ocorrencias');
   await expect(page.locator('#lista')).toContainText('PDF anexado');
   await page.getByRole('button', { name: 'Ver detalhes do registro EN-000001' }).click();
   await expect(page.getByRole('dialog')).toContainText('relatorio.pdf');
@@ -167,7 +168,7 @@ test('PDF fica vinculado à ocorrência e pode ser baixado após recarregar', as
 });
 
 test('link é validado, salvo e aberto pelo registro após recarregar', async ({ page }) => {
-  await page.goto('/#registrar');
+  await abrirComoADM(page, '/#registrar');
   await expect(page.locator('#enviar')).toBeEnabled();
   await page.locator('#escola').fill('ABEL DOS REIS');
   await page.locator('label[for="g-amarelo"]').click();
@@ -180,7 +181,7 @@ test('link é validado, salvo e aberto pelo registro após recarregar', async ({
   await page.locator('#enviar').click();
   await expect(page.locator('#aviso')).toContainText('EN-000001 registrada com sucesso');
   await page.getByRole('tab', { name: 'Ocorrências' }).click();
-  await page.reload();
+  await page.reload(); await entrarADM(page, '#ocorrencias');
   await expect(page.locator('#lista')).toContainText('Link anexado');
   await page.getByRole('button', { name: 'Ver detalhes do registro EN-000001' }).click();
   const link = page.getByRole('link', { name: 'Abrir documento (nova aba)' });
@@ -201,7 +202,7 @@ test('apresentação do cliente mostra fluxo e arquitetura sem recursos externos
 
 test('descrição aceita 5000 caracteres e o painel resume em até 300 sem perder o texto completo', async ({ page }) => {
   const descricao = 'A'.repeat(5000);
-  await page.goto('/#registrar');
+  await abrirComoADM(page, '/#registrar');
   await expect(page.locator('#enviar')).toBeEnabled();
   await page.locator('#escola').fill('ABEL DOS REIS');
   await page.locator('label[for="g-amarelo"]').click();
@@ -212,7 +213,7 @@ test('descrição aceita 5000 caracteres e o painel resume em até 300 sem perde
   await page.locator('#enviar').click();
   await expect(page.locator('#aviso')).toContainText('EN-000001 registrada com sucesso');
   await page.getByRole('tab', { name: 'Ocorrências' }).click();
-  await page.reload();
+  await page.reload(); await entrarADM(page, '#ocorrencias');
   await expect(page.locator('#lista .descricao-resumo')).toHaveText('A'.repeat(299) + '…');
   await page.getByRole('button', { name: 'Ver detalhes do registro EN-000001' }).click();
   await expect(page.locator('.detalhes-descricao')).toHaveText(descricao);

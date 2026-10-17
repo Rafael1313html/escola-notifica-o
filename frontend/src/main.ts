@@ -2,6 +2,7 @@ import './styles.css';
 import './tema.css';
 import './tema';
 import { iniciarWhatsApp, mensagemWhatsApp } from './whatsapp';
+import { cabecalhoAcesso, entrarPeloLink, perfilAtual, podeConsultar, versaoAcesso } from './acesso';
 import { ApiError, baixarAnexo, buscarOcorrencia, criarOcorrencia, listarEscolas, listarIndicadores, listarOcorrencias, listarRelatorio, modoDemo } from './api';
 import { lerPDF, LIMITE_PDF, linkValido } from './anexos';
 import type { Escola, Gravidade, Indicadores, ItemRelatorio, NovaOcorrencia, Ocorrencia, Registrante } from './types';
@@ -123,6 +124,7 @@ let painelAtivo: Painel = 'visao-geral';
 const telaMovel = window.matchMedia('(max-width: 699px)');
 
 function ativar(painel: Painel, moverFoco = false, registroId?: number): void {
+  if (['visao-geral', 'ocorrencias', 'relatorio'].includes(painel) && !podeConsultar()) painel = 'registrar';
   if (painel === 'whatsapp' && !acessoADM?.autenticado()) {
     ativar('visao-geral');
     acessoADM?.solicitarAcesso();
@@ -178,8 +180,28 @@ function sincronizarRota(): void {
   q<HTMLDialogElement>('#detalhes-dialog').close();
   if (location.hash.startsWith('#ocorrencias/')) {
     const hash = location.hash;
-    const valor = hash.slice('#ocorrencias/'.length);
+    const [valor, parametros = ''] = hash.slice('#ocorrencias/'.length).split('?');
     const id = Number(valor);
+    const memoria = window as Window & { __convivaLink?: string };
+    const token = new URLSearchParams(parametros).get('acesso') || memoria.__convivaLink;
+    delete memoria.__convivaLink;
+    if (token) {
+      const limpo = `#ocorrencias/${valor}`;
+      history.replaceState(null, '', limpo);
+      ativar('registrar');
+      history.replaceState(null, '', limpo);
+      status.textContent = 'Validando link de acesso…';
+      void entrarPeloLink(token).then(() => {
+        history.replaceState(null, '', limpo);
+        sincronizarRota();
+      }).catch((erro) => { mostrarAviso(erro instanceof Error ? erro.message : 'Não foi possível validar o link.'); });
+      return;
+    }
+    if (!podeConsultar()) {
+      ativar('registrar');
+      mostrarAviso('Consulta restrita ao ADM ou ao link pessoal recebido no WhatsApp.');
+      return;
+    }
     if (!/^[1-9]\d*$/.test(valor) || !Number.isSafeInteger(id)) {
       ativar('ocorrencias');
       status.textContent = 'O link da ocorrência é inválido.';
@@ -621,6 +643,51 @@ function abrirDetalhes(o: Ocorrencia): void {
     documentos.append(el('p', 'anexo-nome', anexo.url), link);
   } else documentos.append(el('p', 'ajuda', 'Nenhum documento anexado a esta ocorrência.'));
   conteudo.append(documentos);
+  if (perfilAtual() === 'ADM' && !modoDemo) {
+    const editar = el('button', 'botao secundario', 'Editar registro'); editar.type = 'button';
+    editar.addEventListener('click', () => editarRegistro(o));
+    const apagar = el('button', 'botao secundario', 'Apagar registro'); apagar.type = 'button';
+    const confirmacao = el('div'); confirmacao.hidden = true;
+    const pergunta = el('p', '', 'Apagar este registro, seus documentos e o histórico de avisos?');
+    const confirmar = el('button', 'botao principal', 'Confirmar exclusão'); confirmar.type = 'button';
+    const cancelar = el('button', 'botao secundario', 'Cancelar exclusão'); cancelar.type = 'button';
+    cancelar.addEventListener('click', () => { confirmacao.hidden = true; });
+    const erro = el('p', 'erro'); erro.setAttribute('role', 'alert');
+    confirmacao.append(pergunta, confirmar, cancelar, erro);
+    apagar.addEventListener('click', () => { confirmacao.hidden = false; confirmar.focus(); });
+    confirmar.addEventListener('click', async () => {
+      confirmar.disabled = true;
+      try {
+        await gerenciarRegistro(o.id, 'DELETE');
+        q<HTMLDialogElement>('#detalhes-dialog').close();
+        history.replaceState(null, '', '#ocorrencias');
+        await atualizarDados(); mostrarAviso('Registro excluído.');
+      } catch (e) { erro.textContent = e instanceof Error ? e.message : 'Falha ao excluir o registro.'; }
+      finally { confirmar.disabled = false; }
+    });
+    conteudo.append(editar, apagar, confirmacao);
+    const gerar = el('button', 'botao secundario', 'Gerar links dos responsáveis'); gerar.type = 'button';
+    const links = el('div', 'links-responsaveis');
+    const mensagem = el('p', 'ajuda', 'Links pessoais permitem consultar toda a rede por sete dias. Compartilhe somente com o responsável indicado.');
+    gerar.addEventListener('click', async () => {
+      const versao = versaoAcesso(); gerar.disabled = true;
+      try {
+        const r = await fetch(`/api/admin/ocorrencias/${o.id}/links`, { method: 'POST', headers: cabecalhoAcesso(), cache: 'no-store', signal: AbortSignal.timeout(15000) });
+        const corpo = await r.json();
+        if (versao !== versaoAcesso()) return;
+        if (!r.ok) throw new Error(corpo.erros?.join(' ') || 'Não foi possível gerar os links.');
+        links.replaceChildren();
+        for (const item of corpo.links) {
+          const label = el('label', 'campo', item.destinatario);
+          const input = el('input'); input.type = 'text'; input.readOnly = true; input.value = item.url;
+          label.append(input); links.append(label);
+        }
+        mensagem.textContent = corpo.links.length ? 'Cada link permite consultar toda a rede por sete dias. Envie somente ao responsável indicado.' : 'Cadastre primeiro os números no acesso ADM.';
+      } catch (erro) { mensagem.textContent = erro instanceof Error ? erro.message : 'Falha ao gerar links.'; }
+      finally { gerar.disabled = false; }
+    });
+    conteudo.append(gerar, mensagem, links);
+  }
   q<HTMLDialogElement>('#detalhes-dialog').showModal();
 }
 q('#abrir-orientacoes').addEventListener('click', () => q<HTMLDialogElement>('#orientacoes-dialog').showModal());
@@ -638,6 +705,7 @@ document.querySelectorAll<HTMLDialogElement>('dialog').forEach((dialog) => {
 async function atualizarDados(): Promise<void> {
   if (estado.carregando) return;
   estado.carregando = true;
+  const versao = versaoAcesso();
   botaoAtualizar.disabled = true;
   botaoEnviar.disabled = true;
   q<HTMLButtonElement>('#exportar-lista').disabled = true;
@@ -646,12 +714,19 @@ async function atualizarDados(): Promise<void> {
   q('#ultima-atualizacao').textContent = 'Atualizando informações da rede…';
   const tarefas = [
     carregarEscolas(),
+    ...(podeConsultar() ? [
     listarOcorrencias('').then((dados) => { estado.ocorrencias = dados.slice(0, 200); }),
     listarIndicadores().then((dados) => { estado.indicadores = dados; }),
     listarRelatorio().then((dados) => { estado.relatorio = dados; }),
+    ] : []),
   ];
   const resultados = await Promise.allSettled(tarefas);
   estado.carregando = false;
+  if (versao !== versaoAcesso()) {
+    estado.ocorrencias = null; estado.relatorio = null; estado.indicadores = null;
+    await atualizarDados();
+    return;
+  }
   botaoAtualizar.disabled = false;
   botaoEnviar.disabled = estado.enviando || estado.escolas.size === 0;
   q('#conteudo').removeAttribute('aria-busy');
@@ -672,6 +747,60 @@ async function atualizarDados(): Promise<void> {
 }
 botaoAtualizar.addEventListener('click', () => { void atualizarDados(); });
 
+async function gerenciarRegistro(id: number, method: 'PATCH' | 'DELETE', dados?: NovaOcorrencia): Promise<void> {
+  const versao = versaoAcesso();
+  const r = await fetch(`/api/admin/ocorrencias/${id}`, { method,
+    headers: { ...cabecalhoAcesso(), 'Content-Type': 'application/json' },
+    body: dados ? JSON.stringify(dados) : undefined, cache: 'no-store', signal: AbortSignal.timeout(15000) });
+  const corpo = await r.json();
+  if (versao !== versaoAcesso()) throw new Error('O acesso foi encerrado.');
+  if (!r.ok) throw new Error(corpo.erros?.join(' ') || 'Não foi possível atualizar o registro.');
+}
+
+function editarRegistro(o: Ocorrencia): void {
+  const conteudo = q('#detalhes-conteudo');
+  const edicao = el('form'); edicao.className = 'form-edicao';
+  const campo = (nome: string, rotulo: string, controle: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement) => {
+    const div = el('div', 'campo'); const label = el('label', '', rotulo);
+    controle.id = `editar-${nome}`; controle.name = nome; label.htmlFor = controle.id;
+    div.append(label, controle); edicao.append(div); return controle;
+  };
+  const escola = campo('escola', 'Escola', el('select')) as HTMLSelectElement;
+  for (const opcao of q<HTMLDataListElement>('#lista-escolas').options) {
+    const id = estado.escolas.get(normalizar(opcao.value));
+    escola.add(new Option(opcao.value, String(id), false, opcao.value === o.escola));
+  }
+  const data = campo('data', 'Data da ocorrência', el('input')) as HTMLInputElement;
+  data.type = 'date'; data.required = true; data.min = '1000-01-01'; data.max = hojeISO(); data.value = o.data_ocorrencia.slice(0, 10);
+  const tipo = campo('tipo', 'Tipo', el('input')) as HTMLInputElement; tipo.maxLength = 100; tipo.value = o.tipo || '';
+  const descricao = campo('descricao', 'Descrição', el('textarea')) as HTMLTextAreaElement;
+  descricao.maxLength = 5000; descricao.rows = 5; descricao.value = o.descricao || '';
+  const gravidade = campo('gravidade', 'Classificação', el('select')) as HTMLSelectElement;
+  gravidade.add(new Option('Amarela', 'AMARELO')); gravidade.add(new Option('Vermelha', 'VERMELHO')); gravidade.value = o.gravidade;
+  const registrante = campo('registrado_por', 'Responsável pelo registro', el('select')) as HTMLSelectElement;
+  for (const [valor, rotulo] of Object.entries(ROTULO_REGISTRANTE)) registrante.add(new Option(rotulo, valor));
+  registrante.value = o.registrado_por;
+  const outro = campo('outro', 'Nome ou cargo (obrigatório para Outros)', el('input')) as HTMLInputElement;
+  outro.maxLength = 100; outro.value = o.registrado_por_outro || '';
+  const erro = el('p', 'erro'); erro.setAttribute('role', 'alert');
+  const salvar = el('button', 'botao principal', 'Salvar alterações'); salvar.type = 'submit';
+  const cancelar = el('button', 'botao secundario', 'Cancelar edição'); cancelar.type = 'button';
+  cancelar.addEventListener('click', () => abrirDetalhes(o));
+  edicao.append(erro, salvar, cancelar);
+  edicao.addEventListener('submit', async (e) => {
+    e.preventDefault(); salvar.disabled = true; erro.textContent = '';
+    try {
+      await gerenciarRegistro(o.id, 'PATCH', { escola_id: Number(escola.value), data_ocorrencia: data.value,
+        tipo: tipo.value, descricao: descricao.value, gravidade: gravidade.value as Gravidade,
+        registrado_por: registrante.value as Registrante, registrado_por_outro: outro.value });
+      q<HTMLDialogElement>('#detalhes-dialog').close();
+      await atualizarDados(); mostrarAviso('Registro alterado.');
+    } catch (e) { erro.textContent = e instanceof Error ? e.message : 'Falha ao alterar o registro.'; }
+    finally { salvar.disabled = false; }
+  });
+  conteudo.replaceChildren(el('h3', '', 'Editar registro'), edicao); escola.focus();
+}
+
 /* ---------- início ---------- */
 
 campoData.value = hojeISO();
@@ -689,6 +818,34 @@ acessoADM = iniciarWhatsApp(() => {
   if (painelAtivo === 'whatsapp') ativar('visao-geral');
   q('#abrir-acesso-adm').focus();
 });
+let interfacePronta = false;
+function ajustarAcesso(): void {
+  const consultar = podeConsultar();
+  for (const aba of abas) {
+    if (['visao-geral', 'ocorrencias', 'relatorio'].includes(aba.dataset.painel || '')) aba.hidden = !consultar;
+  }
+  document.querySelectorAll<HTMLElement>('[data-abrir="ocorrencias"], [data-abrir="relatorio"], [data-abrir="visao-geral"]').forEach((e) => { e.hidden = !consultar; });
+  q('#entrar-painel').textContent = consultar ? 'Acessar painel' : 'Registrar ocorrência';
+  q('#entrar-painel').setAttribute('aria-label', consultar ? 'Acessar painel de ocorrências' : 'Registrar ocorrência da escola');
+  q('.abas-lista').classList.toggle('somente-registro', !consultar);
+  q('#ambiente').textContent = perfilAtual() === 'ADM' ? 'Administrador' : perfilAtual() === 'RESPONSAVEL' ? 'Responsável · consulta da rede' : 'Escola · registro de ocorrência';
+  if (!consultar) {
+    acessoADM?.encerrar();
+    estado.ocorrencias = null; estado.relatorio = null; estado.indicadores = null;
+    q<HTMLDialogElement>('#detalhes-dialog').close();
+    q('#detalhes-conteudo').replaceChildren();
+    desenharLista(); desenharRelatorio(); desenharIndicadores();
+    if (interfacePronta && painelAtivo !== 'registrar' && painelAtivo !== 'whatsapp') ativar('registrar');
+  }
+  sairAcesso.hidden = !consultar;
+  if (consultar) void atualizarDados();
+}
+const sairAcesso = el('button', 'botao secundario', 'Sair do acesso');
+sairAcesso.type = 'button';
+sairAcesso.addEventListener('click', () => acessoADM.encerrar());
+q('#abrir-acesso-adm').after(sairAcesso);
+window.addEventListener('conviva:acesso', ajustarAcesso);
+ajustarAcesso();
 q('#abrir-acesso-adm').addEventListener('click', () => acessoADM.solicitarAcesso());
 q('#aviso-demo').hidden = !modoDemo;
 q('#entrada-demo').hidden = !modoDemo;
@@ -698,5 +855,6 @@ if (preferido === 'DIRETOR' || preferido === 'VICE_DIRETOR') {
   const radio = form.querySelector<HTMLInputElement>(`input[name="registrado_por"][value="${preferido}"]`);
   if (radio) radio.checked = true;
 }
+interfacePronta = true;
 sincronizarRota();
 void atualizarDados();

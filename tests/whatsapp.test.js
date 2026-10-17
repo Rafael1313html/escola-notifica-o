@@ -125,7 +125,8 @@ test('processador envia modelo aprovado sem descrição, registra aceite, falha 
   for (const resultado of ['aceito', 'falha', 'timeout', 'sem-id']) {
     const atualizacoes = [];
     const pool = { query: async (sql, valores) => {
-      if (/SELECT w.id/.test(sql)) return [[{ id: 7, ocorrencia_id: 42, numero: '5511999990000',
+      if (/SELECT numero, acesso_versao/.test(sql)) return [[{ numero: '5511999990000', acesso_versao: 0 }]];
+      if (/SELECT w.id/.test(sql)) return [[{ id: 7, ocorrencia_id: 42, destinatario_id: 'marcela', acesso_versao: 0, numero: '5511999990000',
         escola: 'Escola exemplo', data_ocorrencia: '2024-02-29', gravidade: 'VERMELHO', descricao: 'Dado que não deve sair' }]];
       if (/mensagem_id =/.test(sql)) atualizacoes.push(valores);
       return [{ affectedRows: 1 }];
@@ -135,8 +136,12 @@ test('processador envia modelo aprovado sem descrição, registra aceite, falha 
       assert.equal(opcoes.headers.Authorization, 'Bearer token-secreto');
       const corpo = JSON.parse(opcoes.body);
       assert.equal(corpo.template.name, 'ocorrencia_registrada');
-      assert.deepEqual(corpo.template.components[0].parameters.map((p) => p.text),
-        ['42', 'Escola exemplo', '2024-02-29', 'VERMELHO', 'https://escola.example.com/#ocorrencias/42']);
+      const parametros = corpo.template.components[0].parameters.map((p) => p.text);
+      assert.deepEqual(parametros.slice(0, 4), ['42', 'Escola exemplo', '2024-02-29', 'VERMELHO']);
+      const { lerToken } = require('../src/acesso');
+      const token = new URLSearchParams(new URL(parametros[4]).hash.split('?')[1]).get('acesso');
+      assert.equal(lerToken(token, env).o, 42);
+      assert.equal(lerToken(token, env).d, 'marcela');
       assert.equal(opcoes.body.includes('Dado que não deve sair'), false);
       if (resultado === 'timeout') throw new Error('timeout');
       return { ok: resultado !== 'falha', json: async () => resultado === 'sem-id' ? {} : { messages: [{ id: 'wamid.exemplo' }] } };
@@ -151,7 +156,8 @@ test('processadores concorrentes não enviam aviso já assumido', async () => {
   let envios = 0;
   let assumido = false;
   const pool = { query: async (sql) => {
-    if (/SELECT w.id/.test(sql)) return [[{ id: 7 }]];
+    if (/SELECT w.id/.test(sql)) return [[{ id: 7, ocorrencia_id: 42, destinatario_id: 'marcela', numero: '5511999990000', acesso_versao: 0 }]];
+    if (/SELECT numero, acesso_versao/.test(sql)) return [[{ numero: '5511999990000', acesso_versao: 0 }]];
     if (/SET status = 'PROCESSANDO'/.test(sql)) { const anterior = assumido; assumido = true; return [{ affectedRows: anterior ? 0 : 1 }]; }
     return [{ affectedRows: 1 }];
   } };

@@ -19,8 +19,8 @@
   <text x="710" y="453" font-size="15" font-weight="bold">loop · cron a cada minuto · integração ativa · um aviso por número preenchido</text>
   <path d="M1030 500H730" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="880" y="487" text-anchor="middle" font-size="17">5. Buscar e assumir pendente</text>
   <path d="M730 550H1030" fill="none" stroke="#456177" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#seq-seta)"/><text x="880" y="537" text-anchor="middle" font-size="17">6. Dados do aviso</text>
-  <path d="M1030 600H1330" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="1180" y="587" text-anchor="middle" font-size="17">7. Modelo aprovado + link</text>
+  <path d="M1030 600H1330" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="1180" y="587" text-anchor="middle" font-size="17">7. Modelo + link assinado</text>
   <path d="M1330 650H1630" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="1480" y="637" text-anchor="middle" font-size="17">8. Aviso no WhatsApp pessoal</text>
-  <path d="M1630 755H430" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="1030" y="742" text-anchor="middle" font-size="17">9. Tocar no link e consultar a ocorrência no navegador</text>
-  <text x="35" y="863" class="nota">Somente envio · sem respostas, webhook de mensagens ou chat interno · integração depende da ativação na Meta</text>
+  <path d="M1630 755H430" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="1030" y="742" text-anchor="middle" font-size="17">9. Validar assinatura, prazo e número ativo; liberar consulta das ocorrências e relatórios da rede</text>
+  <text x="35" y="863" class="nota">API verifica cada consulta e documento · escola sem acesso ao histórico · ADM com acesso à rede · envio depende da Meta</text>
 </svg>

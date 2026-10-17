@@ -79,17 +79,18 @@
 <text class="atributo" x="18" y="128">LINK</text>
   </g>
 <g class="classe" data-classe="DestinatarioWhatsApp" transform="translate(40 760)">
-    <rect class="moldura" width="390" height="220" rx="10"/>
+    <rect class="moldura" width="390" height="245" rx="10"/>
     <path fill="#e7efff" d="M10 1h370q9 0 9 9v64H1V10q0-9 9-9"/>
     <text class="estereotipo" x="195" y="25">«entidade»</text>
     <text class="titulo" x="195" y="55">DestinatarioWhatsApp</text><path class="relacao" d="M0 74H390"/>
     <text class="atributo" x="18" y="103">+ id: string {PK}</text>
 <text class="atributo" x="18" y="128">+ numero: string [15]</text>
-<text class="atributo" x="18" y="153">/ nome: string {derivado}</text>
-<text class="atributo" x="18" y="178">/ cargo: string {derivado}</text>
+<text class="atributo" x="18" y="153">+ acesso_versao: int</text>
+<text class="atributo" x="18" y="178">/ nome: string {derivado}</text>
+<text class="atributo" x="18" y="203">/ cargo: string {derivado}</text>
   </g>
 <g class="classe" data-classe="AvisoWhatsApp" transform="translate(620 760)">
-    <rect class="moldura" width="500" height="270" rx="10"/>
+    <rect class="moldura" width="500" height="295" rx="10"/>
     <path fill="#e7efff" d="M10 1h480q9 0 9 9v64H1V10q0-9 9-9"/>
     <text class="estereotipo" x="250" y="25">«entidade»</text>
     <text class="titulo" x="250" y="55">AvisoWhatsApp</text><path class="relacao" d="M0 74H500"/>
@@ -97,9 +98,10 @@
 <text class="atributo" x="18" y="128">+ ocorrencia_id: int {FK}</text>
 <text class="atributo" x="18" y="153">+ destinatario_id: string {FK}</text>
 <text class="atributo" x="18" y="178">+ numero: string [15]</text>
-<text class="atributo" x="18" y="203">+ status: StatusEnvioWhatsApp</text>
-<text class="atributo" x="18" y="228">+ mensagem_id: string ?</text>
-<text class="atributo" x="18" y="253">+ atualizado_em: timestamp</text>
+<text class="atributo" x="18" y="203">+ acesso_versao: int</text>
+<text class="atributo" x="18" y="228">+ status: StatusEnvioWhatsApp</text>
+<text class="atributo" x="18" y="253">+ mensagem_id: string ?</text>
+<text class="atributo" x="18" y="278">+ atualizado_em: timestamp</text>
   </g>
 <g class="classe" data-classe="StatusEnvioWhatsApp" transform="translate(1360 690)">
     <rect class="moldura" width="380" height="230" rx="10"/>

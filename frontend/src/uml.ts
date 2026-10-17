@@ -26,7 +26,7 @@ const classes: Record<string, ClasseUML> = {
   Registrante: {
     tipo: 'Enumeração', descricao: 'Função de quem preencheu o registro; não representa uma conta autenticada.',
     atributos: [['DIRETOR', 'Diretor'], ['VICE_DIRETOR', 'Vice-diretor'], ['OUTROS', 'Outra função, com nome ou cargo obrigatório']],
-    regras: ['Uma única opção por ocorrência.', 'O cadastro e as consultas não têm login. A configuração dos números exige uma senha ADM.'],
+    regras: ['Uma única opção por ocorrência.', 'A escola somente cadastra. O ADM e os seis responsáveis com links pessoais válidos consultam toda a rede. Somente o ADM altera ou exclui registros.'],
   },
   Gravidade: {
     tipo: 'Enumeração', descricao: 'Classificação usada nos indicadores, filtros e relatórios da rede.',
@@ -40,12 +40,12 @@ const classes: Record<string, ClasseUML> = {
   },
   DestinatarioWhatsApp: {
     tipo: 'Configuração de mensageria', descricao: 'Um dos seis responsáveis que podem receber o link da ocorrência no WhatsApp pessoal.',
-    atributos: [['id', 'Identificador fixo · chave primária'], ['numero', 'DDI, DDD e telefone · até 15 dígitos'], ['/ nome', 'Derivado do cadastro fixo da aplicação'], ['/ cargo', 'Derivado do cadastro fixo da aplicação']],
+    atributos: [['id', 'Identificador fixo · chave primária'], ['numero', 'DDI, DDD e telefone · até 15 dígitos'], ['acesso_versao', 'Inteiro · muda ao trocar ou remover número; revoga links anteriores'], ['/ nome', 'Derivado do cadastro fixo da aplicação'], ['/ cargo', 'Derivado do cadastro fixo da aplicação']],
     regras: ['Marcela: dirigente. Alexandra e Susana: supervisoras. Mercia: PEC / ADM. Monica: PEC. Camila: CEC.', 'O ADM altera os seis números usando uma senha de acesso.', 'Campo vazio desativa o destinatário; números repetidos são recusados.', 'Pode receber avisos de várias ocorrências.', 'Tabela: whatsapp_destinatarios.'],
   },
   AvisoWhatsApp: {
     tipo: 'Entidade da fila', descricao: 'Aviso individual persistido após o cadastro e enviado pela API da Meta.',
-    atributos: [['id', 'Inteiro longo · chave primária'], ['ocorrencia_id', 'Referência à ocorrência'], ['destinatario_id', 'Referência ao responsável'], ['numero', 'Cópia do telefone no momento do registro'], ['status', 'Enumeração StatusEnvioWhatsApp'], ['mensagem_id', 'ID retornado pela Meta · opcional'], ['atualizado_em', 'Data e hora da última atualização']],
+    atributos: [['id', 'Inteiro longo · chave primária'], ['ocorrencia_id', 'Referência à ocorrência'], ['destinatario_id', 'Referência ao responsável'], ['numero', 'Cópia do telefone no momento do registro'], ['acesso_versao', 'Versão do cadastro quando o aviso foi criado'], ['status', 'Enumeração StatusEnvioWhatsApp'], ['mensagem_id', 'ID retornado pela Meta · opcional'], ['atualizado_em', 'Data e hora da última atualização']],
     regras: ['Um aviso por ocorrência e destinatário; a combinação é única no banco.', 'Protocolo, escola, data, classificação e link direto seguem no modelo aprovado.', 'Descrição e documentos ficam no sistema.', 'A fila é processada após a gravação, sem esperar pela Meta durante o cadastro.', 'Somente envio: sem respostas, webhook de mensagens ou chat interno.', 'Tabela: whatsapp_envios.'],
   },
   StatusEnvioWhatsApp: {

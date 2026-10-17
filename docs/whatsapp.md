@@ -24,7 +24,7 @@ flowchart LR
     Meta --> Camila[Camila: CEC]
 ```
 
-A apresentação visual em `/mensageria.html` pode ser impressa ou salva em PDF. Arquivos prontos: [PDF](mensageria-arquitetura.pdf), [PNG](mensageria-arquitetura.png) e [prévia da configuração ADM](whatsapp-adm.png). O acesso à configuração exige uma chave ADM no servidor. A chave fica apenas na memória da página e é descartada ao recarregar ou bloquear a configuração. Essa proteção cobre os números e o histórico de mensagens; o cadastro e as consultas existentes continuam sem autenticação.
+A apresentação visual em `/mensageria.html` pode ser impressa ou salva em PDF. Arquivos prontos: [PDF](mensageria-arquitetura.pdf), [PNG](mensageria-arquitetura.png) e [prévia da configuração ADM](whatsapp-adm.png). O acesso à configuração exige uma chave ADM no servidor. A chave fica apenas na memória da página e é descartada ao recarregar ou bloquear a configuração. A escola somente registra. O ADM e os seis responsáveis com links pessoais válidos consultam toda a rede. Somente o ADM altera ou apaga registros e configura números.
 
 ## Preparar o servidor
 
@@ -67,7 +67,7 @@ Referências: [Pages Functions](https://developers.cloudflare.com/pages/function
 
 - O cadastro não espera chamadas externas. Ocorrência, anexo e avisos são persistidos na mesma transação. Uma falha ao gravar a fila desfaz o cadastro; falha posterior da Meta preserva a ocorrência já salva.
 - A fila é processada a cada minuto no Cloudflare, ou a cada cinco segundos no Node.js, em lotes de até seis avisos. A atualização condicional de status impede dois processadores de assumirem o mesmo aviso.
-- O aviso envia protocolo, escola, data, classificação e link direto. Descrição, nome do registrante e anexos não são enviados à Meta. O link consulta a ocorrência pelo ID, inclusive quando ela não está mais entre os 200 registros recentes. Os detalhes seguem as mesmas regras de acesso do sistema; o link não cria uma autorização adicional.
+- O aviso envia protocolo, escola, data, classificação e link direto. Descrição, nome do registrante e anexos não são enviados à Meta. O link consulta a ocorrência pelo ID, inclusive quando ela não está mais entre os 200 registros recentes. O link pessoal assinado libera consulta da rede por sete dias; a API confere prazo e número ativo a cada pedido. Alterar ou remover o número revoga seus links anteriores.
 - `PENDENTE`: na fila; `PROCESSANDO`: tentativa em curso; `ACEITO`: Meta retornou um ID de mensagem; `FALHOU`: resposta de erro da API; `INCERTO`: timeout, resposta sem ID ou processamento interrompido.
 - O painel mostra os últimos 30 avisos. Não há confirmação de entrega ou leitura, pois webhooks ainda não fazem parte desta integração.
 - Não há reenvio automático de falhas ou resultados incertos. Consulte o provedor antes de uma intervenção manual para evitar mensagens duplicadas. Processamentos interrompidos há mais de dez minutos passam a `INCERTO` quando o processador volta a rodar.

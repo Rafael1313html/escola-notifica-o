@@ -4,6 +4,9 @@ const { once } = require('node:events');
 const { criarApp } = require('../src/app');
 const { hojeISO, dataValida, validarOcorrencia } = require('../src/validacao');
 const { LIMITE_PDF, validarAnexo } = require('../src/anexos');
+const envTeste = { ADMIN_WHATSAPP_KEY: 'senha-adm-isolada-para-testes-com-32' };
+const fetch = (url, opcoes = {}) => globalThis.fetch(url, { ...opcoes,
+  headers: { Authorization: `Bearer ${envTeste.ADMIN_WHATSAPP_KEY}`, ...opcoes.headers } });
 
 const dadosValidos = {
   escola_id: 1, data_ocorrencia: '2024-02-29', gravidade: 'AMARELO',
@@ -11,7 +14,7 @@ const dadosValidos = {
 };
 
 async function servidorTeste(t, query = async () => { throw new Error('Consulta inesperada'); }) {
-  const servidor = criarApp(typeof query === 'function' ? { query } : query).listen(0, '127.0.0.1');
+  const servidor = criarApp(typeof query === 'function' ? { query } : query, { env: envTeste }).listen(0, '127.0.0.1');
   await once(servidor, 'listening');
   t.after(() => new Promise((resolve) => {
     servidor.closeAllConnections();
@@ -115,6 +118,16 @@ test('rotas da API desconhecidas retornam JSON e respostas não permitem cache',
   assert.equal(resposta.headers.get('cache-control'), 'no-store');
   assert.equal(resposta.headers.get('x-content-type-options'), 'nosniff');
   assert.equal(resposta.headers.get('x-powered-by'), null);
+});
+
+test('Node nega consultas anônimas, inclusive HEAD e variações de rota', async (t) => {
+  const base = await servidorTeste(t);
+  for (const rota of ['ocorrencias', 'ocorrencias/1', 'ocorrencias/1/anexo', 'indicadores', 'relatorios/vermelhas-por-escola', 'indicadores/', 'INDICADORES']) {
+    for (const method of ['GET', 'HEAD']) {
+      const resposta = await globalThis.fetch(`${base}/api/${rota}`, { method });
+      assert.ok([401, 404].includes(resposta.status), `${method} ${rota}: ${resposta.status}`);
+    }
+  }
 });
 
 test('valida PDF, base64, limite de tamanho e links seguros antes da persistência', () => {

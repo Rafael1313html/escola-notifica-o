@@ -1,6 +1,7 @@
 import type { Escola, Gravidade, Indicadores, ItemRelatorio, NovaOcorrencia, Ocorrencia, ResultadoRegistro } from './types';
 import { criarOcorrenciaDemo, escolasDemo, listarIndicadoresDemo, listarOcorrenciasDemo, listarRelatorioDemo } from './demo';
 import { arquivoDemo } from './arquivos-demo';
+import { cabecalhoAcesso, encerrarAcesso, versaoAcesso } from './acesso';
 
 export const modoDemo = import.meta.env.VITE_DEMO_MODE === 'true';
 
@@ -13,16 +14,20 @@ export class ApiError extends Error {
 }
 
 async function pedir<T>(url: string, opcoes?: RequestInit): Promise<T> {
+  const versao = versaoAcesso();
+  const privado = url !== '/api/escolas' && (opcoes?.method || 'GET') === 'GET';
   let resp: Response;
   try {
-    resp = await fetch(url, { ...opcoes, signal: AbortSignal.timeout(15000), cache: 'no-store' });
+    resp = await fetch(url, { ...opcoes, headers: { ...opcoes?.headers, ...cabecalhoAcesso() }, signal: AbortSignal.timeout(15000), cache: 'no-store' });
   } catch (erro) {
     throw new ApiError([erro instanceof DOMException && erro.name === 'TimeoutError'
       ? 'O servidor demorou para responder. Tente novamente.'
       : 'Sem conexão com o servidor. Verifique a conexão e tente novamente.']);
   }
   const corpo: unknown = await resp.json().catch(() => null);
+  if (privado && versao !== versaoAcesso()) throw new ApiError(['O acesso foi encerrado.']);
   if (!resp.ok) {
+    if (privado && [401, 403].includes(resp.status)) encerrarAcesso();
     const erros = (corpo as { erros?: string[] } | null)?.erros;
     throw new ApiError(Array.isArray(erros) && erros.length && erros.every((erro) => typeof erro === 'string')
       ? erros : ['Não foi possível concluir a operação. Tente novamente.']);
@@ -66,9 +71,11 @@ export async function baixarAnexo(id: number, nome: string): Promise<void> {
     if (!conteudo) throw new Error('PDF não encontrado neste navegador.');
     arquivo = new Blob([Uint8Array.from(atob(conteudo), (letra) => letra.charCodeAt(0))], { type: 'application/pdf' });
   } else {
-    const resposta = await fetch(`/api/ocorrencias/${id}/anexo`, { signal: AbortSignal.timeout(30000), cache: 'no-store' });
+    const versao = versaoAcesso();
+    const resposta = await fetch(`/api/ocorrencias/${id}/anexo`, { headers: cabecalhoAcesso(), signal: AbortSignal.timeout(30000), cache: 'no-store' });
     if (!resposta.ok) throw new Error('Não foi possível baixar o PDF desta ocorrência. Tente novamente.');
     arquivo = await resposta.blob();
+    if (versao !== versaoAcesso()) throw new Error('O acesso foi encerrado.');
   }
   const url = URL.createObjectURL(arquivo);
   const link = document.createElement('a');

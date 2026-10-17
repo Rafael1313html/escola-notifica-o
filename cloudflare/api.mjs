@@ -2,10 +2,12 @@ import { Buffer } from 'node:buffer';
 import { timingSafeEqual } from 'node:crypto';
 import validacao from '../src/validacao.js';
 import anexos from '../src/anexos.js';
+import acesso from '../src/acesso.js';
 import { DESTINATARIOS, validarDestinatarios, pronto } from './whatsapp.mjs';
 
 const { GRAVIDADES, hojeISO, idValido, validarOcorrencia } = validacao;
 const { validarAnexo } = anexos;
+const { admValido, lerToken, criarLink } = acesso;
 const cabecalhos = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store',
   'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin', 'X-Frame-Options': 'DENY' };
 const json = (corpo, status = 200) => new Response(JSON.stringify(corpo), { status, headers: cabecalhos });
@@ -45,6 +47,21 @@ export async function atenderAPI(request, env) {
     const db = env.DB;
     if (!db) return falha('O banco compartilhado ainda não foi configurado no Cloudflare.', 503);
 
+    const autorizacao = request.headers.get('Authorization') || '';
+    const adm = admValido(autorizacao, env);
+    if (caminho.startsWith('/api/admin/') && (env.ADMIN_WHATSAPP_KEY || '').length < 32) return falha('O acesso ADM ainda não foi configurado no servidor.', 503);
+    let origemLink = null;
+    const publico = metodo === 'GET' && caminho === '/api/escolas'
+      || metodo === 'POST' && caminho === '/api/ocorrencias';
+    if (!publico && !adm) {
+      const token = autorizacao.startsWith('Link ') ? lerToken(autorizacao.slice(5), env) : null;
+      if (token && !caminho.startsWith('/api/admin/')) {
+        const pessoa = await db.prepare('SELECT numero, acesso_versao FROM whatsapp_destinatarios WHERE id = ?').bind(token.d).first();
+        if (pessoa?.numero && pessoa.acesso_versao === token.r) origemLink = token.o;
+      }
+      if (!origemLink) return falha('Acesso restrito ao ADM ou ao link recebido pelo responsável.', 401);
+    }
+
     // A autorização acontece no servidor antes de consultar ou alterar números.
     if (caminho.startsWith('/api/admin/')) {
       const senha = env.ADMIN_WHATSAPP_KEY || '';
@@ -65,8 +82,34 @@ export async function atenderAPI(request, env) {
       const { erros, dados } = validarDestinatarios(await lerJSON(request, 32768));
       if (erros.length) return json({ erros }, 400);
       await db.batch(dados.map((p) => db.prepare(`INSERT INTO whatsapp_destinatarios (id, numero) VALUES (?, ?)
-        ON CONFLICT(id) DO UPDATE SET numero = excluded.numero`).bind(p.id, p.numero)));
+        ON CONFLICT(id) DO UPDATE SET acesso_versao = whatsapp_destinatarios.acesso_versao
+          + CASE WHEN whatsapp_destinatarios.numero <> excluded.numero THEN 1 ELSE 0 END,
+        numero = excluded.numero`).bind(p.id, p.numero)));
       return json({ salvo: true });
+    }
+    if (caminho === '/api/acesso' && metodo === 'GET') return json({ perfil: adm ? 'ADM' : 'RESPONSAVEL', ocorrencia_id: origemLink, escopo: 'REDE' });
+    const gerenciar = caminho.match(/^\/api\/admin\/ocorrencias\/([1-9]\d*)$/);
+    if (gerenciar && ['PATCH', 'DELETE'].includes(metodo)) {
+      const id = Number(gerenciar[1]);
+      if (!idValido(id)) return falha('Registro inválido.', 400);
+      if (metodo === 'DELETE') {
+        const resultado = await db.prepare('DELETE FROM ocorrencias WHERE id = ?').bind(id).run();
+        return resultado.meta.changes ? json({ excluido: true }) : falha('Ocorrência não encontrada.', 404);
+      }
+      const { erros, dados } = validarOcorrencia(await lerJSON(request, 32768));
+      if (erros.length) return json({ erros }, 400);
+      const resultado = await db.prepare(`UPDATE ocorrencias SET escola_id = ?, data_ocorrencia = ?, tipo = ?, descricao = ?,
+        gravidade = ?, registrado_por = ?, registrado_por_outro = ? WHERE id = ?`).bind(dados.escola_id, dados.data_ocorrencia,
+        dados.tipo, dados.descricao, dados.gravidade, dados.registrado_por, dados.registrado_por_outro, id).run();
+      return resultado.meta.changes ? json({ alterado: true }) : falha('Ocorrência não encontrada.', 404);
+    }
+    const links = caminho.match(/^\/api\/admin\/ocorrencias\/([1-9]\d*)\/links$/);
+    if (links && metodo === 'POST') {
+      const id = Number(links[1]);
+      if (!idValido(id)) return falha('Registro inválido.', 400);
+      if (!await db.prepare('SELECT id FROM ocorrencias WHERE id = ?').bind(id).first()) return falha('Ocorrência não encontrada.', 404);
+      const { results } = await db.prepare("SELECT id, acesso_versao FROM whatsapp_destinatarios WHERE numero <> ''").all();
+      return json({ links: results.map((p) => ({ destinatario: p.id, url: criarLink(env, id, p.id, p.acesso_versao) })), validade_dias: 7 });
     }
     if (caminho === '/api/escolas' && metodo === 'GET') {
       return json((await db.prepare('SELECT id, nome FROM escolas ORDER BY nome').all()).results);
@@ -97,8 +140,8 @@ export async function atenderAPI(request, env) {
         }
       }
       const ativo = pronto(env);
-      if (ativo) comandos.push(db.prepare(`INSERT INTO whatsapp_envios (ocorrencia_id, destinatario_id, numero)
-        SELECT ${idSQL}, id, numero FROM whatsapp_destinatarios WHERE numero <> ''`).bind(pedido));
+      if (ativo) comandos.push(db.prepare(`INSERT INTO whatsapp_envios (ocorrencia_id, destinatario_id, numero, acesso_versao)
+        SELECT ${idSQL}, id, numero, acesso_versao FROM whatsapp_destinatarios WHERE numero <> ''`).bind(pedido));
       const resultados = await db.batch(comandos);
       const id = resultados[0].results[0].id;
       const total = ativo ? resultados.at(-1).meta.changes : 0;
@@ -146,7 +189,8 @@ export async function atenderAPI(request, env) {
           (SELECT COUNT(*) FROM escolas) AS total_escolas FROM ocorrencias`),
         db.prepare(`SELECT substr(data_ocorrencia, 1, 7) AS mes, COUNT(*) AS total,
           SUM(gravidade = 'VERMELHO') AS vermelhas, SUM(gravidade = 'AMARELO') AS amarelas FROM ocorrencias
-          WHERE data_ocorrencia >= ? AND data_ocorrencia <= ? GROUP BY mes ORDER BY mes`).bind(inicio.toISOString().slice(0, 10), hoje),
+          WHERE data_ocorrencia >= ? AND data_ocorrencia <= ? GROUP BY mes ORDER BY mes`)
+          .bind(inicio.toISOString().slice(0, 10), hoje),
       ]);
       return json({ ...totais.results[0], meses: meses.results });
     }

@@ -11,8 +11,8 @@ const modelo = [
   ['Registrante', 40, 390, 300, 170, 'enum', ['DIRETOR', 'VICE_DIRETOR', 'OUTROS']],
   ['Gravidade', 480, 530, 280, 145, 'enum', ['AMARELO', 'VERMELHO']],
   ['TipoAnexo', 1170, 440, 280, 145, 'enum', ['PDF', 'LINK']],
-  ['DestinatarioWhatsApp', 40, 760, 390, 220, 'mensageria', ['+ id: string {PK}', '+ numero: string [15]', '/ nome: string {derivado}', '/ cargo: string {derivado}']],
-  ['AvisoWhatsApp', 620, 760, 500, 270, 'mensageria', ['+ id: bigint {PK}', '+ ocorrencia_id: int {FK}', '+ destinatario_id: string {FK}', '+ numero: string [15]', '+ status: StatusEnvioWhatsApp', '+ mensagem_id: string ?', '+ atualizado_em: timestamp']],
+  ['DestinatarioWhatsApp', 40, 760, 390, 245, 'mensageria', ['+ id: string {PK}', '+ numero: string [15]', '+ acesso_versao: int', '/ nome: string {derivado}', '/ cargo: string {derivado}']],
+  ['AvisoWhatsApp', 620, 760, 500, 295, 'mensageria', ['+ id: bigint {PK}', '+ ocorrencia_id: int {FK}', '+ destinatario_id: string {FK}', '+ numero: string [15]', '+ acesso_versao: int', '+ status: StatusEnvioWhatsApp', '+ mensagem_id: string ?', '+ atualizado_em: timestamp']],
   ['StatusEnvioWhatsApp', 1360, 690, 380, 230, 'enum', ['PENDENTE', 'PROCESSANDO', 'ACEITO', 'FALHOU', 'INCERTO']],
 ];
 function card([nome, x, y, largura, altura, tipo, atributos]) {
@@ -56,7 +56,7 @@ const ator = (x, y, nome) => `<g fill="none" stroke="#456177" stroke-width="2"><
 const caso = (x, y, rx, nome) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="52" fill="#fff" stroke="#6b879e" stroke-width="2"/><text x="${x}" y="${y + 7}" text-anchor="middle" font-size="22">${nome}</text>`;
 const casos = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="casos-titulo casos-descricao">
   <title id="casos-titulo">Casos de uso UML: escola, administrador e responsáveis</title>
-  <desc id="casos-descricao">A escola registra ocorrências. Os responsáveis consultam o registro pelo link recebido no WhatsApp. Só o administrador pode configurar os seis números e consultar os envios, após autenticar sua senha no servidor. A API WhatsApp participa somente do envio. O disparo é uma extensão do registro quando a integração está ativa.</desc>
+  <desc id="casos-descricao">A escola somente registra ocorrências e não consulta o histórico de nenhuma escola. O ADM autentica sua senha para consultar todas as ocorrências e relatórios, configurar seis números e consultar envios. O responsável cadastrado recebe um link assinado, válido por sete dias, que permite consultar todas as ocorrências e relatórios da rede. A API verifica a permissão a cada pedido. A API WhatsApp participa somente do envio.</desc>
   ${estilo}<defs><marker id="casos-seta" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M1 1 11 6 1 11" fill="none" stroke="#456177" stroke-width="1.5"/></marker></defs>
   <rect width="1600" height="1000" fill="#f5f8fb"/>
   <text x="40" y="45" font-size="24" font-weight="bold">QUEM USA O SISTEMA E O QUE PODE FAZER</text>
@@ -64,22 +64,29 @@ const casos = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" r
   <text x="800" y="140" text-anchor="middle" font-size="23" font-weight="bold">escola-notificação · Conviva SP</text>
   <rect x="330" y="550" width="940" height="320" rx="10" fill="#e7efff" stroke="#6b879e" stroke-dasharray="6 5"/>
   <text x="800" y="577" text-anchor="middle" font-size="18" font-weight="bold">ÁREA EXCLUSIVA DO ADM</text>
-  <g fill="none" stroke="#456177" stroke-width="2"><path d="M143 235 370 270"/><path d="M1452 235 1240 270"/><path d="M143 655 360 640"/><path d="M143 655H240V790H360"/><path d="M1380 675H1340V460H1050"/></g>
+  <g fill="none" stroke="#456177" stroke-width="2"><path d="M143 235 370 270"/><path d="M1452 235 1240 270"/><path d="M143 655 360 640"/><path d="M143 655H240V790H360"/><path d="M143 655H260V375H1040V322"/><path d="M1380 675H1340V460H1050"/></g>
   ${ator(115, 200, 'Equipe escolar')}${ator(115, 620, 'ADM')}${ator(1480, 200, 'Responsável')}
-  ${caso(570, 270, 200, 'Registrar ocorrência')}${caso(1040, 270, 200, 'Consultar ocorrência')}
+  ${caso(570, 270, 200, 'Registrar ocorrência')}${caso(1040, 270, 200, 'Consultar e relatar')}
+  <text x="480" y="400" text-anchor="middle" font-size="18">Escola: somente cadastrar</text>
+  <text x="1040" y="185" text-anchor="middle" font-size="18">ADM: toda a rede</text>
+  <text x="1040" y="205" text-anchor="middle" font-size="18">Responsável: consulta de toda a rede</text>
   ${caso(800, 460, 250, 'Enviar aviso com link')}
   ${caso(570, 640, 210, 'Configurar seis números')}${caso(1050, 650, 210, 'Autenticar ADM')}${caso(570, 790, 210, 'Consultar envios')}
+  ${caso(1050, 790, 210, 'Alterar / apagar registro')}
+  <path d="M1050 738V702" class="relacao" stroke-dasharray="7 5" marker-end="url(#casos-seta)"/>
+  <text x="1160" y="724" text-anchor="middle" font-size="16">«include»</text>
+  <path d="M240 790V855H1050V842" class="relacao"/>
   <path d="M740 409 620 321" class="relacao" stroke-dasharray="7 5" marker-end="url(#casos-seta)"/>
-  <text x="690" y="351" text-anchor="middle" font-size="17">«extend»</text>
-  <text x="870" y="384" text-anchor="middle" font-size="17">[integração ativa]</text>
+  <text x="770" y="351" text-anchor="middle" font-size="17">«extend»</text>
+  <text x="870" y="399" text-anchor="middle" font-size="17">[integração ativa]</text>
   <path d="M780 640 840 650" class="relacao" stroke-dasharray="7 5" marker-end="url(#casos-seta)"/>
   <text x="812" y="623" text-anchor="middle" font-size="16">«include»</text>
-  <path d="M780 790H1050V702" class="relacao" stroke-dasharray="7 5" marker-end="url(#casos-seta)"/>
-  <text x="891" y="779" text-anchor="middle" font-size="16">«include»</text>
-  <text x="1050" y="832" text-anchor="middle" font-size="16">Senha validada na API</text>
+  <path d="M780 790H810V730H980V700" class="relacao" stroke-dasharray="7 5" marker-end="url(#casos-seta)"/>
+  <text x="900" y="723" text-anchor="middle" font-size="16">«include»</text>
+  <text x="800" y="887" text-anchor="middle" font-size="16">Somente o ADM altera, apaga ou configura destinatários.</text>
   <rect x="1380" y="630" width="200" height="90" rx="8" fill="#fff" stroke="#6b879e"/>
   <text x="1480" y="660" text-anchor="middle" font-size="15">«serviço externo»</text><text x="1480" y="690" text-anchor="middle" font-size="21" font-weight="bold">API WhatsApp</text>
-  <text x="40" y="953" class="nota">Somente o ADM cadastra os destinatários. Os responsáveis recebem o link no WhatsApp pessoal e abrem o registro no navegador.</text>
+  <text x="40" y="953" class="nota">Link pessoal: validade de sete dias · alterar ou remover número revoga acesso · escola sem acesso ao histórico.</text>
 </svg>\n`;
 const seta = (x1, x2, y, texto, tracejada = false) => `<path d="M${x1} ${y}H${x2}" fill="none" stroke="#456177" stroke-width="2" ${tracejada ? 'stroke-dasharray="7 5"' : ''} marker-end="url(#seq-seta)"/><text x="${(x1 + x2) / 2}" y="${y - 13}" text-anchor="middle" font-size="17">${texto}</text>`;
 const sequencia = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 900" role="img" aria-labelledby="seq-titulo seq-descricao">
@@ -98,10 +105,10 @@ const sequencia = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 900
   <text x="710" y="453" font-size="15" font-weight="bold">loop · cron a cada minuto · integração ativa · um aviso por número preenchido</text>
   ${seta(1030, 730, 500, '5. Buscar e assumir pendente')}
   ${seta(730, 1030, 550, '6. Dados do aviso', true)}
-  ${seta(1030, 1330, 600, '7. Modelo aprovado + link')}
+  ${seta(1030, 1330, 600, '7. Modelo + link assinado')}
   ${seta(1330, 1630, 650, '8. Aviso no WhatsApp pessoal')}
-  ${seta(1630, 430, 755, '9. Tocar no link e consultar a ocorrência no navegador')}
-  <text x="35" y="863" class="nota">Somente envio · sem respostas, webhook de mensagens ou chat interno · integração depende da ativação na Meta</text>
+  ${seta(1630, 430, 755, '9. Validar assinatura, prazo e número ativo; liberar consulta das ocorrências e relatórios da rede')}
+  <text x="35" y="863" class="nota">API verifica cada consulta e documento · escola sem acesso ao histórico · ADM com acesso à rede · envio depende da Meta</text>
 </svg>\n`;
 for (const [arquivo, conteudo] of [['frontend/src/uml-diagrama.svg', classes], ['docs/classes-uml.svg', classes],
   ['frontend/src/uml-casos.svg', casos], ['docs/casos-uso-uml.svg', casos],

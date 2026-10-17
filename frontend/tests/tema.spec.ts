@@ -1,3 +1,4 @@
+import { abrirComoADM } from './helpers/adm';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { hojeISO } from '../src/utils';
@@ -40,7 +41,7 @@ test('segue o tema do dispositivo e funciona quando o armazenamento está bloque
       return original.call(this, chave, valor);
     };
   });
-  await page.goto('/#visao-geral');
+  await abrirComoADM(page, '/#visao-geral');
   await expect(page.locator('html')).toHaveAttribute('data-tema', 'escuro');
   await page.emulateMedia({ colorScheme: 'light' });
   await expect(page.locator('html')).toHaveAttribute('data-tema', 'claro');
@@ -52,6 +53,7 @@ test('segue o tema do dispositivo e funciona quando o armazenamento está bloque
 });
 
 test('tema escuro mantém contraste, formulário, detalhes e layout acessíveis', async ({ page }) => {
+  test.setTimeout(60000); // Cinco páginas passam por autenticação e análise de acessibilidade.
   await page.addInitScript((hoje) => {
     localStorage.setItem('escola-notificacao:tema', 'escuro');
     localStorage.setItem('escola-notificacao:demo:ocorrencias', JSON.stringify([{
@@ -66,7 +68,7 @@ test('tema escuro mantém contraste, formulário, detalhes e layout acessíveis'
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   }
   for (const rota of ['inicio', 'visao-geral', 'registrar', 'ocorrencias', 'relatorio']) {
-    await page.goto(`/#${rota}`);
+    await abrirComoADM(page, `/#${rota}`);
     await expect(page.locator('html')).toHaveAttribute('data-tema', 'escuro');
     if (rota !== 'inicio') await expect(page.locator('#metrica-total')).toHaveText('1');
     if (rota === 'registrar') {

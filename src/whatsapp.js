@@ -1,4 +1,5 @@
 const { timingSafeEqual } = require('node:crypto');
+const { criarLink } = require('./acesso');
 
 const DESTINATARIOS = [
   { id: 'marcela', nome: 'Marcela', cargo: 'Dirigente' },
@@ -42,7 +43,8 @@ function criarMensageria(pool, env = process.env, enviar = fetch) {
   }
   const pronto = () => env.WHATSAPP_ENABLED === 'true'
     && Boolean(env.WHATSAPP_TOKEN && /^\d+$/.test(env.WHATSAPP_PHONE_NUMBER_ID || '')
-      && /^v\d+\.\d+$/.test(env.WHATSAPP_API_VERSION || '') && env.WHATSAPP_TEMPLATE && linkOcorrencia(1));
+      && /^v\d+\.\d+$/.test(env.WHATSAPP_API_VERSION || '') && env.WHATSAPP_TEMPLATE
+      && (env.ADMIN_WHATSAPP_KEY || '').length >= 32 && linkOcorrencia(1));
 
   function proteger(req, res, next) {
     const chave = env.ADMIN_WHATSAPP_KEY || '';
@@ -69,7 +71,7 @@ function criarMensageria(pool, env = process.env, enviar = fetch) {
       await conexao.beginTransaction();
       for (const item of dados) {
         await conexao.query(`INSERT INTO whatsapp_destinatarios (id, numero) VALUES (?, ?)
-          ON DUPLICATE KEY UPDATE numero = VALUES(numero)`, [item.id, item.numero]);
+          ON DUPLICATE KEY UPDATE acesso_versao = acesso_versao + (numero <> VALUES(numero)), numero = VALUES(numero)`, [item.id, item.numero]);
       }
       await conexao.commit();
     } catch (erro) { await conexao.rollback(); throw erro; }
@@ -78,8 +80,8 @@ function criarMensageria(pool, env = process.env, enviar = fetch) {
 
   async function enfileirar(conexao, id) {
     if (!pronto()) return { status: 'NAO_CONFIGURADO', total: 0 };
-    const [resultado] = await conexao.query(`INSERT INTO whatsapp_envios (ocorrencia_id, destinatario_id, numero)
-      SELECT ?, id, numero FROM whatsapp_destinatarios WHERE numero <> ''`, [id]);
+    const [resultado] = await conexao.query(`INSERT INTO whatsapp_envios (ocorrencia_id, destinatario_id, numero, acesso_versao)
+      SELECT ?, id, numero, acesso_versao FROM whatsapp_destinatarios WHERE numero <> ''`, [id]);
     return { status: resultado.affectedRows ? 'PENDENTE' : 'SEM_DESTINATARIOS', total: resultado.affectedRows };
   }
 
@@ -91,7 +93,7 @@ function criarMensageria(pool, env = process.env, enviar = fetch) {
       // Uma interrupção após o envio pode deixar o resultado desconhecido. Não reenviar automaticamente.
       await pool.query(`UPDATE whatsapp_envios SET status = 'INCERTO'
         WHERE status = 'PROCESSANDO' AND atualizado_em < DATE_SUB(NOW(), INTERVAL 10 MINUTE)`);
-      const [pendentes] = await pool.query(`SELECT w.id, w.numero, w.ocorrencia_id, e.nome AS escola,
+      const [pendentes] = await pool.query(`SELECT w.id, w.numero, w.ocorrencia_id, w.destinatario_id, w.acesso_versao, e.nome AS escola,
         o.data_ocorrencia, o.gravidade FROM whatsapp_envios w
         JOIN ocorrencias o ON o.id = w.ocorrencia_id JOIN escolas e ON e.id = o.escola_id
         WHERE w.status = 'PENDENTE' ORDER BY w.id LIMIT 6`);
@@ -99,6 +101,11 @@ function criarMensageria(pool, env = process.env, enviar = fetch) {
         const [claim] = await pool.query(`UPDATE whatsapp_envios SET status = 'PROCESSANDO'
           WHERE id = ? AND status = 'PENDENTE'`, [item.id]);
         if (!claim.affectedRows) return;
+        const [pessoas] = await pool.query('SELECT numero, acesso_versao FROM whatsapp_destinatarios WHERE id = ?', [item.destinatario_id]);
+        if (!pessoas[0]?.numero || pessoas[0].numero !== item.numero || pessoas[0].acesso_versao !== item.acesso_versao) {
+          await pool.query('UPDATE whatsapp_envios SET status = ?, mensagem_id = ? WHERE id = ?', ['FALHOU', null, item.id]);
+          return;
+        }
         let status = 'INCERTO';
         let mensagemId = null;
         try {
@@ -108,7 +115,7 @@ function criarMensageria(pool, env = process.env, enviar = fetch) {
             body: JSON.stringify({ messaging_product: 'whatsapp', to: item.numero, type: 'template',
               template: { name: env.WHATSAPP_TEMPLATE, language: { code: env.WHATSAPP_TEMPLATE_LANGUAGE || 'pt_BR' },
                 components: [{ type: 'body', parameters: [String(item.ocorrencia_id), item.escola,
-                  item.data_ocorrencia, item.gravidade, linkOcorrencia(item.ocorrencia_id)].map((text) => ({ type: 'text', text })) }] } }),
+                  item.data_ocorrencia, item.gravidade, criarLink(env, item.ocorrencia_id, item.destinatario_id, item.acesso_versao)].map((text) => ({ type: 'text', text })) }] } }),
           });
           if (resposta.ok) {
             const corpo = await resposta.json();

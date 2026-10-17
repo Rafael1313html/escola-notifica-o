@@ -4,9 +4,13 @@ O frontend do projeto `escola-notificacao` usa Cloudflare Pages. As Pages Functi
 
 ## Acessos
 
-- **Comum:** abrir o sistema, registrar e consultar ocorrências, indicadores, documentos e relatórios. Esse acesso não exige senha.
-- **ADM:** clicar em **ADM**, informar a senha e configurar os seis números. A API exige a senha em toda consulta e alteração administrativa. A senha é um secret `ADMIN_WHATSAPP_KEY` do Worker, com pelo menos 32 caracteres, e não faz parte do Git nem do frontend.
-- **Sair:** usar **Bloquear configuração** ou recarregar a página. O navegador descarta a senha e remove os campos administrativos.
+- **Escola:** registrar uma ocorrência e receber seu protocolo. Não pode consultar histórico, indicadores, relatórios ou documentos de nenhuma escola, nem editar ou excluir registros.
+- **Responsáveis:** Marcela, Alexandra, Susana, Mercia, Monica e Camila recebem links pessoais após cadastrar seus números. Um link válido libera consulta de todas as ocorrências, documentos, indicadores e relatórios da rede. Não permite alterar ou excluir registros nem configurar números.
+- **ADM:** clicar em **ADM** e informar a senha. Pode consultar a rede, editar e apagar registros, configurar os seis números e gerar links pessoais nos detalhes de uma ocorrência. A senha é um secret `ADMIN_WHATSAPP_KEY` do Worker, com pelo menos 32 caracteres, fora do Git e do frontend.
+- **Links pessoais:** assinatura HMAC-SHA256, validade de sete dias e versão do cadastro do destinatário. A API confere assinatura, prazo e número ativo a cada consulta. Alterar ou remover um número revoga seus links anteriores; trocar a senha ADM revoga todos. O link é uma credencial de consulta da rede: encaminhá-lo também permite acesso a quem o recebe. Compartilhe apenas com o responsável indicado.
+- **Sair:** usar **Sair do acesso**, **Bloquear configuração** ou recarregar a página. O navegador descarta credenciais e dados privados. Para entrar novamente, o responsável reabre o link original; o ADM informa a senha. A credencial do link é retirada da URL antes do carregamento de recursos externos e não fica em armazenamento do navegador.
+
+O cadastro continua público, mas todas as consultas são autorizadas no servidor, inclusive PDFs, exportações e indicadores. Ocultar abas não concede nem substitui autorização. Os endpoints `PATCH /api/admin/ocorrencias/:id` e `DELETE /api/admin/ocorrencias/:id` exigem senha ADM. A edição valida novamente os campos e preserva o documento; a exclusão remove o registro, documento e avisos vinculados. Alterar ou excluir um registro não dispara mensagens adicionais.
 
 ## Implantação
 
@@ -56,5 +60,7 @@ npm run cloudflare:dev
 ```
 
 Para testar o ADM localmente, coloque o secret em `cloudflare/.dev.vars`, ignorado pelo Git. Execute antes as migrações com `npx wrangler d1 migrations apply DB --local --config cloudflare/wrangler.jsonc`. Os testes de D1 usam SQLite isolado e validam transações, PDF de 5 MB, proteção ADM e concorrência da fila. Não alteram o banco publicado.
+
+Com o Worker local na porta 8787, execute `npm run test:cloudflare`. Esse teste abre Chrome em desktop e celular, verifica os três perfis e testa edição e exclusão pelo ADM. Os registros de teste e a configuração temporária são removidos ou restaurados ao terminar. Ele usa somente o banco local.
 
 Referências: [D1 e batches transacionais](https://developers.cloudflare.com/d1/worker-api/d1-database/), [limites do D1](https://developers.cloudflare.com/d1/platform/limits/), [cron do Worker](https://developers.cloudflare.com/workers/configuration/cron-triggers/).

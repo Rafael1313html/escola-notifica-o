@@ -64,7 +64,7 @@ Essa demonstração funciona sem servidor e sem MySQL. Os registros ficam no arm
 
 ## Publicar o backend no Cloudflare
 
-O backend nativo usa Worker, D1 e cron. O acesso comum registra e consulta ocorrências; o ADM entra com senha para configurar os seis números. Consulte [publicação e acessos no Cloudflare](docs/cloudflare.md) para configuração, migrações e comandos. A senha fica como secret do Worker, fora do Git e do frontend.
+O backend nativo usa Worker, D1 e cron. As escolas somente registram; o ADM e os seis responsáveis consultam a rede. Somente o ADM altera ou exclui registros e configura números. Consulte [publicação e acessos no Cloudflare](docs/cloudflare.md) para configuração, migrações e comandos. A senha fica como secret do Worker, fora do Git e do frontend.
 
 ## Alternativa: backend Node.js/MySQL no Railway
 
@@ -85,7 +85,7 @@ O `railway.json` configura o build, o início da aplicação e a rota de saúde.
 4. Gere um domínio público para o serviço da aplicação nas configurações de rede do Railway.
 5. Abra o domínio para testar o backend compartilhado e persistente.
 
-O acesso comum permite consultar e criar registros sem senha. A configuração dos números exige senha ADM validada pelo backend. Nunca envie o arquivo `.env` ao GitHub.
+As escolas somente registram ocorrências. O ADM e os seis responsáveis com links pessoais válidos consultam os dados da rede. Somente o ADM configura números, altera ou exclui registros. A API verifica a autorização em toda consulta e operação administrativa. Nunca envie o arquivo `.env` ao GitHub.
 
 ## Rotas da API
 

@@ -156,7 +156,8 @@ INSERT IGNORE INTO escolas (id, nome) VALUES
 -- Configuração compartilhada e fila persistente. Não contém credenciais do provedor.
 CREATE TABLE IF NOT EXISTS whatsapp_destinatarios (
     id VARCHAR(20) NOT NULL PRIMARY KEY,
-    numero VARCHAR(15) NOT NULL DEFAULT ''
+    numero VARCHAR(15) NOT NULL DEFAULT '',
+    acesso_versao INT NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT IGNORE INTO whatsapp_destinatarios (id) VALUES
@@ -167,6 +168,7 @@ CREATE TABLE IF NOT EXISTS whatsapp_envios (
     ocorrencia_id INT NOT NULL,
     destinatario_id VARCHAR(20) NOT NULL,
     numero VARCHAR(15) NOT NULL,
+    acesso_versao INT NOT NULL DEFAULT 0,
     status VARCHAR(15) NOT NULL DEFAULT 'PENDENTE',
     mensagem_id VARCHAR(255) NULL,
     atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

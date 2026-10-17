@@ -4,14 +4,17 @@ const express = require('express');
 const { GRAVIDADES, hojeISO, idValido, validarOcorrencia } = require('./validacao');
 const { validarAnexo } = require('./anexos');
 const { validarDestinatarios } = require('./whatsapp');
+const { admValido, lerToken, criarLink } = require('./acesso');
 
 function comAnexo({ anexo_tipo, anexo_nome, anexo_url, anexo_tamanho, ...ocorrencia }) {
   return { ...ocorrencia,
     anexo: anexo_tipo ? { tipo: anexo_tipo, nome: anexo_nome, url: anexo_url, tamanho: anexo_tamanho } : null };
 }
 
-function criarApp(pool, { mensageria } = {}) {
+function criarApp(pool, { mensageria, env = process.env } = {}) {
   const app = express();
+  app.set('case sensitive routing', true);
+  app.set('strict routing', true);
   app.disable('x-powered-by');
   app.use((req, res, next) => {
     res.set({ 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin', 'X-Frame-Options': 'DENY' });
@@ -21,7 +24,43 @@ function criarApp(pool, { mensageria } = {}) {
   app.use('/api/ocorrencias', express.json({ limit: '8mb' }));
   app.use(express.json({ limit: '32kb' }));
   app.get('/health', (req, res) => res.status(200).send('ok'));
+  app.use(async (req, res, next) => {
+    if (!['GET', 'HEAD'].includes(req.method) || !/^\/api\/(ocorrencias(?:\/|$)|indicadores$|relatorios\/|acesso$)/.test(req.path)) return next();
+    const autorizacao = req.get('Authorization') || '';
+    if (admValido(autorizacao, env)) { req.perfil = 'ADM'; return next(); }
+    const token = autorizacao.startsWith('Link ') ? lerToken(autorizacao.slice(5), env) : null;
+    if (token) {
+      try {
+        const [pessoas] = await pool.query('SELECT numero, acesso_versao FROM whatsapp_destinatarios WHERE id = ?', [token.d]);
+        if (pessoas[0]?.numero && pessoas[0].acesso_versao === token.r) {
+          req.ocorrenciaInicial = token.o; req.perfil = 'RESPONSAVEL'; return next();
+        }
+      } catch (erro) { return next(erro); }
+    }
+    return res.status(401).json({ erros: ['Acesso restrito ao ADM ou ao link recebido pelo responsável.'] });
+  });
+  app.get('/api/acesso', (req, res) => res.json({ perfil: req.perfil, ocorrencia_id: req.ocorrenciaInicial || null, escopo: 'REDE' }));
   if (mensageria) {
+    app.patch('/api/admin/ocorrencias/:id', mensageria.proteger, async (req, res, next) => {
+      if (!idValido(req.params.id)) return res.status(400).json({ erros: ['Registro inválido.'] });
+      const { erros, dados } = validarOcorrencia(req.body);
+      if (erros.length) return res.status(400).json({ erros });
+      try {
+        const [resultado] = await pool.query(`UPDATE ocorrencias SET escola_id = ?, data_ocorrencia = ?, tipo = ?, descricao = ?,
+          gravidade = ?, registrado_por = ?, registrado_por_outro = ? WHERE id = ?`, [dados.escola_id, dados.data_ocorrencia,
+          dados.tipo, dados.descricao, dados.gravidade, dados.registrado_por, dados.registrado_por_outro, Number(req.params.id)]);
+        if (!resultado.affectedRows) return res.status(404).json({ erros: ['Ocorrência não encontrada.'] });
+        res.json({ alterado: true });
+      } catch (erro) { next(erro); }
+    });
+    app.delete('/api/admin/ocorrencias/:id', mensageria.proteger, async (req, res, next) => {
+      if (!idValido(req.params.id)) return res.status(400).json({ erros: ['Registro inválido.'] });
+      try {
+        const [resultado] = await pool.query('DELETE FROM ocorrencias WHERE id = ?', [Number(req.params.id)]);
+        if (!resultado.affectedRows) return res.status(404).json({ erros: ['Ocorrência não encontrada.'] });
+        res.json({ excluido: true });
+      } catch (erro) { next(erro); }
+    });
     app.get('/api/admin/whatsapp', mensageria.proteger, async (req, res, next) => {
       try { res.json(await mensageria.configuracao()); } catch (erro) { next(erro); }
     });
@@ -29,6 +68,15 @@ function criarApp(pool, { mensageria } = {}) {
       const { erros, dados } = validarDestinatarios(req.body);
       if (erros.length) return res.status(400).json({ erros });
       try { await mensageria.salvar(dados); res.json({ salvo: true }); } catch (erro) { next(erro); }
+    });
+    app.post('/api/admin/ocorrencias/:id/links', mensageria.proteger, async (req, res, next) => {
+      if (!idValido(req.params.id)) return res.status(400).json({ erros: ['Registro inválido.'] });
+      try {
+        const [registros] = await pool.query('SELECT id FROM ocorrencias WHERE id = ?', [Number(req.params.id)]);
+        if (!registros.length) return res.status(404).json({ erros: ['Ocorrência não encontrada.'] });
+        const [pessoas] = await pool.query("SELECT id, acesso_versao FROM whatsapp_destinatarios WHERE numero <> ''");
+        res.json({ links: pessoas.map((p) => ({ destinatario: p.id, url: criarLink(env, Number(req.params.id), p.id, p.acesso_versao) })), validade_dias: 7 });
+      } catch (erro) { next(erro); }
     });
   }
   // Serve o front-end compilado (frontend/dist). Se ainda não foi gerado, usa a página simples em public/.

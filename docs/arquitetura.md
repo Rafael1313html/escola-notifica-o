@@ -148,4 +148,4 @@ Os registros e os metadados dos anexos ficam em `localStorage`. O conteúdo dos 
 
 ## Escopo atual
 
-O sistema oferece cadastro, consulta dos 200 registros mais recentes, busca, filtros, detalhes, download de PDF, abertura de links, indicadores do histórico, relatório por escola e exportação CSV. O acesso comum não exige login. A configuração dos números e o histórico dos avisos exigem senha ADM validada pela API. No Cloudflare, PDFs são divididos em partes de 512 KB no D1; na instalação MySQL, usam MEDIUMBLOB. Ambos preservam o limite de 5 MB.
+O sistema oferece cadastro, consulta dos 200 registros mais recentes, busca, filtros, detalhes, download de PDF, abertura de links, indicadores do histórico, relatório por escola e exportação CSV. As escolas somente registram. Consultas, relatórios e documentos exigem senha ADM ou link pessoal válido de um dos seis responsáveis. Somente o ADM altera ou apaga registros. No Cloudflare, PDFs são divididos em partes de 512 KB no D1; na instalação MySQL, usam MEDIUMBLOB. Ambos preservam o limite de 5 MB.

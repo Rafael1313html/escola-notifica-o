@@ -1,188 +1,1249 @@
-<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0f7ba6">
-  <script>
-    (() => {
-      let tema;
-      try { tema = localStorage.getItem('escola-notificacao:tema'); } catch {}
-      document.documentElement.dataset.tema = tema === 'claro' || tema === 'escuro'
-        ? tema : matchMedia('(prefers-color-scheme: dark)').matches ? 'escuro' : 'claro';
-    })();
-  </script>
-  <meta name="description" content="Registro e acompanhamento de ocorrências escolares com a identidade Conviva SP.">
-  <link rel="icon" type="image/jpeg" href="/assets/conviva-sp.jpeg">
-  <link rel="stylesheet" href="/assets/bni-rodape.css">
-  <title>Ocorrências escolares · Conviva SP</title>
-</head>
-<body>
-  <a class="pular" href="#conteudo">Ir para o conteúdo</a>
-  <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <symbol id="i-escola" viewBox="0 0 24 24"><path d="m3 10 9-6 9 6M5 9v11h14V9M9 20v-6h6v6M9 10h.01M15 10h.01M12 4V2"/></symbol>
-    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
-    <symbol id="i-lista" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3h6v3H9zM9 11h6M9 15h6"/></symbol>
-    <symbol id="i-grafico" viewBox="0 0 24 24"><path d="M4 3v17h17M8 16v-5M13 16V7M18 16v-8"/></symbol>
-    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
-    <symbol id="i-seta" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
-    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4"/></symbol>
-    <symbol id="i-calendario" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 11h18M7 15h3M14 15h3"/></symbol>
-    <symbol id="i-busca" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
-    <symbol id="i-alerta" viewBox="0 0 24 24"><path d="m10.3 4-8 14a2 2 0 0 0 1.7 3h16a2 2 0 0 0 1.7-3l-8-14a2 2 0 0 0-3.4 0ZM12 9v4M12 17h.01"/></symbol>
-    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></symbol>
-    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
-    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
-    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M6.1 7a7 7 0 0 1 11.8-1L20 9M4 15l2.1 3A7 7 0 0 0 17.9 17"/></symbol>
-    <symbol id="i-escudo" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z"/><path d="m8 12 3 3 5-6"/></symbol>
-    <symbol id="i-relogio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
-    <symbol id="i-olho" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
-    <symbol id="i-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/></symbol>
-    <symbol id="i-lua" viewBox="0 0 24 24"><path d="M20.5 13.2A8.5 8.5 0 0 1 10.8 3a8.5 8.5 0 1 0 9.7 10.2Z"/></symbol>
-  </svg>
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      // Retira a credencial da URL antes de carregar recursos externos ou analytics.
+      (() => {
+        const [rota, consulta = ''] = location.hash.split('?');
+        const token = new URLSearchParams(consulta).get('acesso');
+        if (token && /^#ocorrencias\/[1-9]\d*$/.test(rota)) {
+          Object.defineProperty(window, '__convivaLink', { value: token, configurable: true });
+          history.replaceState(null, '', location.pathname + location.search + rota);
+        }
+      })();
+    </script>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0f7ba6" />
+    <script>
+      (() => {
+        let tema;
+        try {
+          tema = localStorage.getItem("escola-notificacao:tema");
+        } catch {}
+        document.documentElement.dataset.tema =
+          tema === "claro" || tema === "escuro"
+            ? tema
+            : matchMedia("(prefers-color-scheme: dark)").matches
+              ? "escuro"
+              : "claro";
+      })();
+    </script>
+    <meta
+      name="description"
+      content="Registro e acompanhamento de ocorrências escolares com a identidade Conviva SP."
+    />
+    <link rel="icon" type="image/jpeg" href="/assets/conviva-sp.jpeg" />
+    <link rel="stylesheet" href="/assets/bni-rodape.css" />
+    <title>Ocorrências escolares · Conviva SP</title>
+  </head>
+  <body>
+    <a class="pular" href="#conteudo">Ir para o conteúdo</a>
+    <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <symbol id="i-escola" viewBox="0 0 24 24">
+        <path
+          d="m3 10 9-6 9 6M5 9v11h14V9M9 20v-6h6v6M9 10h.01M15 10h.01M12 4V2"
+        />
+      </symbol>
+      <symbol id="i-grid" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7" rx="1.5" />
+        <rect x="14" y="3" width="7" height="7" rx="1.5" />
+        <rect x="3" y="14" width="7" height="7" rx="1.5" />
+        <rect x="14" y="14" width="7" height="7" rx="1.5" />
+      </symbol>
+      <symbol id="i-lista" viewBox="0 0 24 24">
+        <rect x="5" y="4" width="14" height="17" rx="2" />
+        <path d="M9 3h6v3H9zM9 11h6M9 15h6" />
+      </symbol>
+      <symbol id="i-grafico" viewBox="0 0 24 24">
+        <path d="M4 3v17h17M8 16v-5M13 16V7M18 16v-8" />
+      </symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24">
+        <path d="M12 5v14M5 12h14" />
+      </symbol>
+      <symbol id="i-seta" viewBox="0 0 24 24">
+        <path d="M5 12h14m-5-5 5 5-5 5" />
+      </symbol>
+      <symbol id="i-download" viewBox="0 0 24 24">
+        <path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4" />
+      </symbol>
+      <symbol id="i-calendario" viewBox="0 0 24 24">
+        <rect x="3" y="5" width="18" height="16" rx="2" />
+        <path d="M7 3v4M17 3v4M3 11h18M7 15h3M14 15h3" />
+      </symbol>
+      <symbol id="i-busca" viewBox="0 0 24 24">
+        <circle cx="10.5" cy="10.5" r="6.5" />
+        <path d="m16 16 5 5" />
+      </symbol>
+      <symbol id="i-alerta" viewBox="0 0 24 24">
+        <path
+          d="m10.3 4-8 14a2 2 0 0 0 1.7 3h16a2 2 0 0 0 1.7-3l-8-14a2 2 0 0 0-3.4 0ZM12 9v4M12 17h.01"
+        />
+      </symbol>
+      <symbol id="i-info" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 11v6M12 7h.01" />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24">
+        <path d="m5 12 4 4L19 6" />
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24">
+        <path d="m6 6 12 12M6 18 18 6" />
+      </symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24">
+        <path
+          d="M20 7v5h-5M4 17v-5h5M6.1 7a7 7 0 0 1 11.8-1L20 9M4 15l2.1 3A7 7 0 0 0 17.9 17"
+        />
+      </symbol>
+      <symbol id="i-escudo" viewBox="0 0 24 24">
+        <path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z" />
+        <path d="m8 12 3 3 5-6" />
+      </symbol>
+      <symbol id="i-relogio" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3 2" />
+      </symbol>
+      <symbol id="i-olho" viewBox="0 0 24 24">
+        <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z" />
+        <circle cx="12" cy="12" r="3" />
+      </symbol>
+      <symbol id="i-sol" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4" />
+        <path
+          d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"
+        />
+      </symbol>
+      <symbol id="i-lua" viewBox="0 0 24 24">
+        <path d="M20.5 13.2A8.5 8.5 0 0 1 10.8 3a8.5 8.5 0 1 0 9.7 10.2Z" />
+      </symbol>
+    </svg>
 
-  <section id="inicio" class="entrada" aria-label="Acesso ao painel de ocorrências" hidden>
-    <main class="entrada-fundo" id="entrada-conteudo" tabindex="-1">
-      <div class="entrada-cartao">
-        <div class="entrada-tema"><button type="button" class="alternar-tema" data-alternar-tema aria-label="Tema claro ou escuro" aria-pressed="false"><svg class="icone" aria-hidden="true"><use href="#i-sol"/></svg><span data-tema-rotulo>Claro</span></button></div>
-        <img class="entrada-logo" src="/assets/conviva-sp.jpeg" width="2752" height="1536" alt="Conviva SP">
-        <div class="entrada-titulo"><p class="sobretitulo">CONVIVÊNCIA E CUIDADO ESCOLAR</p><h1>Gestão de ocorrências escolares</h1><p>Informações que conectam a rede.<br>Cuidado que transforma a convivência.</p></div>
-        <button id="entrar-painel" type="button" class="botao principal"><svg class="icone"><use href="#i-seta"/></svg>Acessar painel de ocorrências</button>
-        <button type="button" id="orientacoes-entrada" class="link">Orientações para o registro</button>
-        <p id="entrada-demo" class="entrada-demo" hidden>Demonstração · Utilize somente dados fictícios.</p>
-      </div>
-    </main>
-    <footer class="bni-rodape bni-rodape-entrada"><div class="bni-identidade"><p class="bni-legenda">DESENVOLVIDO POR</p><div class="bni-marca"><img src="/assets/bni-simbolo.svg" width="36" height="36" alt=""><strong>bni·tecnologia</strong></div><p class="bni-descricao">Software sob medida, código próprio e soluções pensadas para o longo prazo.</p></div><div class="bni-base"><span>© 2026 BNI Tecnologia — todos os direitos reservados.</span></div></footer>
-  </section>
+    <section
+      id="inicio"
+      class="entrada"
+      aria-label="Acesso ao painel de ocorrências"
+      hidden
+    >
+      <main class="entrada-fundo" id="entrada-conteudo" tabindex="-1">
+        <div class="entrada-cartao">
+          <div class="entrada-tema">
+            <button
+              type="button"
+              class="alternar-tema"
+              data-alternar-tema
+              aria-label="Tema claro ou escuro"
+              aria-pressed="false"
+            >
+              <svg class="icone" aria-hidden="true"><use href="#i-sol" /></svg
+              ><span data-tema-rotulo>Claro</span>
+            </button>
+          </div>
+          <img
+            class="entrada-logo"
+            src="/assets/conviva-sp.jpeg"
+            width="2752"
+            height="1536"
+            alt="Conviva SP"
+          />
+          <div class="entrada-titulo">
+            <p class="sobretitulo">CONVIVÊNCIA E CUIDADO ESCOLAR</p>
+            <h1>Gestão de ocorrências escolares</h1>
+            <p>
+              Informações que conectam a rede.<br />Cuidado que transforma a
+              convivência.
+            </p>
+          </div>
+          <button id="entrar-painel" type="button" class="botao principal">
+            <svg class="icone"><use href="#i-seta" /></svg>Acessar painel de
+            ocorrências
+          </button>
+          <button type="button" id="orientacoes-entrada" class="link">
+            Orientações para o registro
+          </button>
+          <p id="entrada-demo" class="entrada-demo" hidden>
+            Demonstração · Utilize somente dados fictícios.
+          </p>
+        </div>
+      </main>
+      <footer class="bni-rodape bni-rodape-entrada">
+        <div class="bni-identidade">
+          <p class="bni-legenda">DESENVOLVIDO POR</p>
+          <div class="bni-marca">
+            <img
+              src="/assets/bni-simbolo.svg"
+              width="36"
+              height="36"
+              alt=""
+            /><strong>bni·tecnologia</strong>
+          </div>
+          <p class="bni-descricao">
+            Software sob medida, código próprio e soluções pensadas para o longo
+            prazo.
+          </p>
+        </div>
+        <div class="bni-base">
+          <span>© 2026 BNI Tecnologia — todos os direitos reservados.</span>
+        </div>
+      </footer>
+    </section>
 
-  <aside class="lateral">
-    <a class="marca" href="#inicio" aria-label="Conviva SP — início">
-      <img src="/assets/conviva-sp.jpeg" alt="Conviva SP" width="2752" height="1536">
-    </a>
-    <p class="marca-descricao">GESTÃO DE OCORRÊNCIAS ESCOLARES</p>
-    <p class="nav-legenda">ÁREA DE GESTÃO</p>
-    <nav class="abas" aria-label="Navegação principal">
-      <div role="tablist" aria-label="Seções" aria-orientation="vertical" class="abas-lista">
-        <button role="tab" id="aba-visao-geral" data-painel="visao-geral" aria-controls="painel-visao-geral" aria-selected="true" type="button"><svg class="icone"><use href="#i-grid"/></svg><span>Visão geral</span></button>
-        <button role="tab" id="aba-ocorrencias" data-painel="ocorrencias" aria-controls="painel-ocorrencias" aria-selected="false" tabindex="-1" type="button"><svg class="icone"><use href="#i-lista"/></svg><span>Ocorrências</span><span class="nav-contagem" id="nav-total">—</span></button>
-        <button role="tab" id="aba-relatorio" data-painel="relatorio" aria-controls="painel-relatorio" aria-selected="false" tabindex="-1" type="button"><svg class="icone"><use href="#i-grafico"/></svg><span>Relatórios</span></button>
-        <button role="tab" id="aba-registrar" data-painel="registrar" aria-controls="painel-registrar" aria-selected="false" tabindex="-1" type="button"><svg class="icone"><use href="#i-plus"/></svg><span>Novo registro</span></button>
-        <button role="tab" id="aba-whatsapp" data-painel="whatsapp" aria-controls="painel-whatsapp" aria-selected="false" tabindex="-1" type="button" hidden><svg class="icone"><use href="#i-escudo"/></svg><span>Canal direto com a diretoria</span></button>
+    <aside class="lateral" aria-label="Navegação do sistema">
+      <a class="marca" href="#inicio" aria-label="Conviva SP — início">
+        <img
+          src="/assets/conviva-sp.jpeg"
+          alt="Conviva SP"
+          width="2752"
+          height="1536"
+        />
+      </a>
+      <p class="marca-descricao">GESTÃO DE OCORRÊNCIAS ESCOLARES</p>
+      <p class="nav-legenda">ÁREA DE GESTÃO</p>
+      <nav class="abas" aria-label="Navegação principal">
+        <div
+          role="tablist"
+          aria-label="Seções"
+          aria-orientation="vertical"
+          class="abas-lista"
+        >
+          <button
+            role="tab"
+            id="aba-visao-geral"
+            data-painel="visao-geral"
+            aria-controls="painel-visao-geral"
+            aria-selected="true"
+            type="button"
+          >
+            <svg class="icone"><use href="#i-grid" /></svg
+            ><span>Visão geral</span>
+          </button>
+          <button
+            role="tab"
+            id="aba-ocorrencias"
+            data-painel="ocorrencias"
+            aria-controls="painel-ocorrencias"
+            aria-selected="false"
+            tabindex="-1"
+            type="button"
+          >
+            <svg class="icone"><use href="#i-lista" /></svg
+            ><span>Ocorrências</span
+            ><span class="nav-contagem" id="nav-total">—</span>
+          </button>
+          <button
+            role="tab"
+            id="aba-relatorio"
+            data-painel="relatorio"
+            aria-controls="painel-relatorio"
+            aria-selected="false"
+            tabindex="-1"
+            type="button"
+          >
+            <svg class="icone"><use href="#i-grafico" /></svg
+            ><span>Relatórios</span>
+          </button>
+          <button
+            role="tab"
+            id="aba-registrar"
+            data-painel="registrar"
+            aria-controls="painel-registrar"
+            aria-selected="false"
+            tabindex="-1"
+            type="button"
+          >
+            <svg class="icone"><use href="#i-plus" /></svg
+            ><span>Novo registro</span>
+          </button>
+          <button
+            role="tab"
+            id="aba-whatsapp"
+            data-painel="whatsapp"
+            aria-controls="painel-whatsapp"
+            aria-selected="false"
+            tabindex="-1"
+            type="button"
+            hidden
+          >
+            <svg class="icone"><use href="#i-escudo" /></svg
+            ><span>Canal direto com a diretoria</span>
+          </button>
+        </div>
+      </nav>
+      <div class="lateral-apoio">
+        <p class="nav-legenda">APOIO À GESTÃO</p>
+        <button class="nav-ajuda" id="abrir-orientacoes" type="button">
+          <svg class="icone"><use href="#i-info" /></svg>Orientações de registro
+        </button>
+        <a
+          class="apresentacao-link"
+          href="%BASE_URL%apresentacao.html"
+          target="_blank"
+          rel="noopener"
+          >Como o sistema funciona (nova aba)</a
+        >
+        <a
+          class="apresentacao-link"
+          href="%BASE_URL%uml.html"
+          target="_blank"
+          rel="noopener"
+          >Diagrama de classes UML (nova aba)</a
+        >
+        <a
+          class="apresentacao-link"
+          href="%BASE_URL%mensageria.html"
+          target="_blank"
+          rel="noopener"
+          >Registro e WhatsApp (nova aba)</a
+        >
       </div>
-    </nav>
-    <div class="lateral-apoio">
-      <p class="nav-legenda">APOIO À GESTÃO</p>
-      <button class="nav-ajuda" id="abrir-orientacoes" type="button"><svg class="icone"><use href="#i-info"/></svg>Orientações de registro</button>
-      <a class="apresentacao-link" href="%BASE_URL%apresentacao.html" target="_blank" rel="noopener">Como o sistema funciona (nova aba)</a>
-      <a class="apresentacao-link" href="%BASE_URL%uml.html" target="_blank" rel="noopener">Diagrama de classes UML (nova aba)</a>
-      <a class="apresentacao-link" href="%BASE_URL%mensageria.html" target="_blank" rel="noopener">Registro e WhatsApp (nova aba)</a>
+      <div class="lateral-rodape">
+        <span class="rede-icone"
+          ><svg class="icone"><use href="#i-escudo" /></svg
+        ></span>
+        <div>
+          <strong>Convivência escolar</strong
+          ><span>Uma rede de cuidado e proteção</span>
+        </div>
+      </div>
+    </aside>
+
+    <div class="aplicacao">
+      <header class="topo">
+        <div class="caminho">
+          <svg class="icone"><use href="#i-escola" /></svg
+          ><span>Gestão escolar</span><span class="separador">/</span
+          ><strong id="caminho-atual">Visão geral</strong>
+        </div>
+        <div class="topo-acoes">
+          <span class="data-atual"
+            ><svg class="icone"><use href="#i-calendario" /></svg
+            ><time id="data-atual"></time></span
+          ><span class="ambiente" id="ambiente">Rede de ensino</span
+          ><button
+            type="button"
+            class="alternar-tema"
+            data-alternar-tema
+            aria-label="Tema claro ou escuro"
+            aria-pressed="false"
+          >
+            <svg class="icone" aria-hidden="true"><use href="#i-sol" /></svg
+            ><span data-tema-rotulo>Claro</span></button
+          ><button
+            type="button"
+            class="acesso-adm"
+            id="abrir-acesso-adm"
+            aria-label="ADM: acesso do administrador"
+          >
+            ADM</button
+          ><a class="voltar-inicio" href="#inicio">Início</a>
+        </div>
+      </header>
+
+      <main id="conteudo" class="layout" tabindex="-1">
+        <div id="aviso-demo" class="aviso-demo" hidden>
+          <svg class="icone"><use href="#i-info" /></svg>
+          <p>
+            <strong>Ambiente de demonstração.</strong> Use dados fictícios. Os
+            registros ficam somente neste navegador.
+          </p>
+        </div>
+        <div class="cabecalho-pagina">
+          <div>
+            <p class="sobretitulo">ACOMPANHAMENTO ESCOLAR</p>
+            <h1 id="titulo-pagina">Visão geral</h1>
+            <p id="subtitulo-pagina" class="subtitulo">
+              Informações da rede para uma gestão mais atenta e integrada.
+            </p>
+          </div>
+          <div class="acoes-pagina">
+            <button
+              type="button"
+              class="botao secundario"
+              id="atualizar"
+              aria-label="Atualizar informações"
+            >
+              <svg class="icone"><use href="#i-refresh" /></svg
+              ><span>Atualizar</span></button
+            ><button
+              type="button"
+              class="botao principal"
+              data-abrir="registrar"
+            >
+              <svg class="icone"><use href="#i-plus" /></svg>Nova ocorrência
+            </button>
+          </div>
+        </div>
+
+        <div id="falha-dados" class="falha-dados" role="alert" hidden></div>
+
+        <section
+          id="painel-visao-geral"
+          class="painel"
+          role="tabpanel"
+          aria-labelledby="aba-visao-geral"
+          tabindex="0"
+        >
+          <div class="mensagem-rede">
+            <div>
+              <span class="etiqueta">INFORMAÇÃO QUE ORIENTA O CUIDADO</span>
+              <h2>Um olhar atento para cada escola.</h2>
+              <p>
+                Centralize os registros e acompanhe as ocorrências da sua rede
+                de ensino.
+              </p>
+            </div>
+            <svg
+              class="ilustracao-rede"
+              viewBox="0 0 210 120"
+              aria-hidden="true"
+            >
+              <circle cx="117" cy="60" r="54" fill="#e0ebe5" />
+              <g
+                fill="none"
+                stroke="#72968a"
+                stroke-width="1.5"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="m63 55 47-29 47 29M72 51v49h76V51M100 100V72h21v28M84 63h7v10h-7zM131 63h7v10h-7zM84 82h7v10h-7zM131 82h7v10h-7zM109 26V12h23v11h-23M49 100h117"
+                />
+                <path
+                  d="m163 47 22 8v17c0 16-22 29-22 29s-22-13-22-29V55l22-8Z"
+                  fill="#f1f6f3"
+                  stroke="#356755"
+                />
+                <path d="m152 72 7 7 14-16" stroke="#356755" stroke-width="3" />
+              </g>
+              <circle cx="48" cy="39" r="4" fill="#c3a263" />
+              <circle cx="173" cy="23" r="3" fill="#c3a263" />
+            </svg>
+          </div>
+
+          <div class="indicadores" aria-label="Indicadores de todo o histórico">
+            <article class="indicador">
+              <div class="indicador-topo">
+                <span>Total de ocorrências</span
+                ><span class="icone-fundo verde"
+                  ><svg class="icone"><use href="#i-lista" /></svg
+                ></span>
+              </div>
+              <strong id="metrica-total">—</strong>
+              <p>Registros em todo o histórico</p>
+            </article>
+            <article class="indicador">
+              <div class="indicador-topo">
+                <span>Classificação vermelha</span
+                ><span class="icone-fundo vermelho"
+                  ><svg class="icone"><use href="#i-alerta" /></svg
+                ></span>
+              </div>
+              <strong id="metrica-vermelhas">—</strong>
+              <p>
+                <span class="ponto vermelho"></span>Acompanhamento prioritário
+              </p>
+            </article>
+            <article class="indicador">
+              <div class="indicador-topo">
+                <span>Classificação amarela</span
+                ><span class="icone-fundo amarelo"
+                  ><svg class="icone"><use href="#i-info" /></svg
+                ></span>
+              </div>
+              <strong id="metrica-amarelas">—</strong>
+              <p><span class="ponto amarelo"></span>Atenção e monitoramento</p>
+            </article>
+            <article class="indicador">
+              <div class="indicador-topo">
+                <span>Escolas com registros</span
+                ><span class="icone-fundo azul"
+                  ><svg class="icone"><use href="#i-escola" /></svg
+                ></span>
+              </div>
+              <strong id="metrica-escolas">—</strong>
+              <p id="metrica-rede">Consultando a rede de ensino</p>
+            </article>
+          </div>
+
+          <div class="grade-analise">
+            <article class="bloco grafico-bloco">
+              <div class="bloco-cabecalho">
+                <div>
+                  <h2>Evolução das ocorrências</h2>
+                  <p>Registros mensais por classificação</p>
+                </div>
+                <span class="periodo">Últimos 6 meses</span>
+              </div>
+              <div class="legenda">
+                <span><i class="ponto amarelo"></i>Amarelas</span
+                ><span><i class="ponto vermelho"></i>Vermelhas</span>
+              </div>
+              <div
+                id="grafico-mensal"
+                class="grafico-mensal"
+                aria-label="Evolução mensal das ocorrências"
+              ></div>
+              <p id="grafico-nota" class="nota-grafico">
+                Consultando registros…
+              </p>
+            </article>
+            <article class="bloco distribuicao-bloco">
+              <div class="bloco-cabecalho">
+                <div>
+                  <h2>Por classificação</h2>
+                  <p>Distribuição de todo o histórico</p>
+                </div>
+              </div>
+              <div id="distribuicao" class="distribuicao"></div>
+              <div class="nota-informativa">
+                <svg class="icone"><use href="#i-info" /></svg>
+                <p>
+                  A classificação deve seguir os protocolos da rede de ensino.
+                </p>
+              </div>
+              <button
+                type="button"
+                class="link com-icone"
+                data-abrir="relatorio"
+              >
+                Consultar relatório<svg class="icone">
+                  <use href="#i-seta" />
+                </svg>
+              </button>
+            </article>
+          </div>
+
+          <article class="bloco recentes">
+            <div class="bloco-cabecalho">
+              <div>
+                <h2>Ocorrências recentes</h2>
+                <p>Últimos registros da rede de ensino</p>
+              </div>
+              <button
+                type="button"
+                class="link com-icone"
+                data-abrir="ocorrencias"
+              >
+                Ver todas<svg class="icone"><use href="#i-seta" /></svg>
+              </button>
+            </div>
+            <div id="recentes-lista"></div>
+          </article>
+          <div class="atualizacao">
+            <span class="ponto verde"></span
+            ><span id="ultima-atualizacao" role="status"
+              >Carregando informações da rede…</span
+            ><span
+              >Indicadores: histórico completo · Lista: até 200 registros</span
+            >
+          </div>
+        </section>
+
+        <!-- REGISTRAR -->
+        <section
+          id="painel-registrar"
+          class="painel"
+          role="tabpanel"
+          aria-labelledby="aba-registrar"
+          tabindex="0"
+          hidden
+        >
+          <div class="formulario-layout">
+            <div class="bloco formulario-bloco">
+              <div class="bloco-cabecalho">
+                <div>
+                  <h2>Dados da ocorrência</h2>
+                  <p>Campos marcados com * são obrigatórios.</p>
+                </div>
+                <span class="icone-fundo verde"
+                  ><svg class="icone"><use href="#i-lista" /></svg
+                ></span>
+              </div>
+              <p
+                id="registro-mensageria"
+                class="status"
+                role="status"
+                aria-live="polite"
+              ></p>
+              <form id="form" novalidate autocomplete="off">
+                <p
+                  id="erro-geral"
+                  class="erro-geral"
+                  role="alert"
+                  tabindex="-1"
+                  hidden
+                ></p>
+                <div class="form-secao">
+                  <h3><span>01</span>Identificação</h3>
+                  <div class="campo">
+                    <label for="escola"
+                      >Unidade escolar <span aria-hidden="true">*</span></label
+                    ><input
+                      id="escola"
+                      type="text"
+                      list="lista-escolas"
+                      placeholder="Digite e selecione o nome da escola"
+                      aria-describedby="ajuda-escola erro-escola"
+                      required
+                      enterkeyhint="next"
+                    /><datalist id="lista-escolas"></datalist>
+                    <p id="ajuda-escola" class="ajuda">
+                      Selecione uma unidade da lista de sugestões.
+                    </p>
+                    <p class="erro" id="erro-escola"></p>
+                  </div>
+                  <div class="campos-duplos">
+                    <div class="campo">
+                      <label for="data"
+                        >Data da ocorrência
+                        <span aria-hidden="true">*</span></label
+                      ><input
+                        id="data"
+                        type="date"
+                        aria-describedby="erro-data"
+                        required
+                      />
+                      <p class="erro" id="erro-data"></p>
+                    </div>
+                    <div class="campo">
+                      <label for="tipo"
+                        >Tipo <span class="opcional">(opcional)</span></label
+                      ><input
+                        id="tipo"
+                        type="text"
+                        list="lista-tipos"
+                        maxlength="100"
+                        placeholder="Selecione ou descreva"
+                      /><datalist id="lista-tipos">
+                        <option value="Briga"></option>
+                        <option value="Agressão"></option>
+                        <option value="Dano ao patrimônio"></option>
+                        <option value="Falta de segurança"></option>
+                        <option value="Invasão"></option>
+                        <option value="Ameaça"></option>
+                      </datalist>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-secao">
+                  <h3><span>02</span>Classificação e descrição</h3>
+                  <fieldset class="campo" aria-describedby="erro-gravidade">
+                    <legend>Gravidade <span aria-hidden="true">*</span></legend>
+                    <div class="gravidade">
+                      <input
+                        type="radio"
+                        id="g-amarelo"
+                        name="gravidade"
+                        value="AMARELO"
+                        required
+                      /><label class="g amarelo" for="g-amarelo"
+                        ><span class="ponto amarelo"></span
+                        ><span
+                          ><strong>Amarela</strong
+                          ><small>Atenção e monitoramento</small></span
+                        ><span class="radio-indicador"></span></label
+                      ><input
+                        type="radio"
+                        id="g-vermelho"
+                        name="gravidade"
+                        value="VERMELHO"
+                        required
+                      /><label class="g vermelho" for="g-vermelho"
+                        ><span class="ponto vermelho"></span
+                        ><span
+                          ><strong>Vermelha</strong
+                          ><small>Acompanhamento prioritário</small></span
+                        ><span class="radio-indicador"></span
+                      ></label>
+                    </div>
+                    <p class="erro" id="erro-gravidade"></p>
+                  </fieldset>
+                  <div class="campo">
+                    <label for="descricao"
+                      >Descrição <span class="opcional">(opcional)</span></label
+                    ><textarea
+                      id="descricao"
+                      maxlength="5000"
+                      rows="5"
+                      placeholder="Descreva os fatos de forma objetiva, com as informações necessárias ao acompanhamento."
+                      aria-describedby="ajuda-descricao contador"
+                    ></textarea>
+                    <div class="campo-rodape">
+                      <p id="ajuda-descricao" class="ajuda">
+                        Evite dados pessoais desnecessários.
+                      </p>
+                      <p class="contador" id="contador">0 / 5000</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-secao">
+                  <h3>
+                    <span>03</span>Documento de apoio
+                    <span class="opcional">(opcional)</span>
+                  </h3>
+                  <div class="campo">
+                    <label for="anexo-tipo">Anexar à ocorrência</label
+                    ><select id="anexo-tipo" aria-describedby="ajuda-anexo">
+                      <option value="">Sem anexo</option>
+                      <option value="PDF">Arquivo PDF</option>
+                      <option value="LINK">Link de documento</option>
+                    </select>
+                    <p id="ajuda-anexo" class="ajuda">
+                      Escolha um PDF ou link. O documento ficará vinculado a
+                      este registro.
+                    </p>
+                  </div>
+                  <div id="anexo-pdf-campo" class="campo" hidden>
+                    <label for="anexo-pdf">Arquivo PDF</label
+                    ><input
+                      id="anexo-pdf"
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      aria-describedby="ajuda-pdf erro-anexo-pdf"
+                    />
+                    <p id="ajuda-pdf" class="ajuda">
+                      Um arquivo de até 5 MB. Para trocar, selecione outro PDF.
+                    </p>
+                    <p id="erro-anexo-pdf" class="erro"></p>
+                  </div>
+                  <div id="anexo-link-campo" class="campo" hidden>
+                    <label for="anexo-link">Link do documento</label
+                    ><input
+                      id="anexo-link"
+                      type="url"
+                      maxlength="2048"
+                      placeholder="https://exemplo.com/documento"
+                      aria-describedby="ajuda-link erro-anexo-link"
+                    />
+                    <p id="ajuda-link" class="ajuda">
+                      Use http:// ou https://. O sistema guarda o endereço; o
+                      acesso depende das permissões na origem.
+                    </p>
+                    <p id="erro-anexo-link" class="erro"></p>
+                  </div>
+                </div>
+                <div class="form-secao">
+                  <h3><span>04</span>Responsável pelo registro</h3>
+                  <fieldset
+                    class="campo"
+                    aria-describedby="erro-registrado_por"
+                  >
+                    <legend>
+                      Função do responsável <span aria-hidden="true">*</span>
+                    </legend>
+                    <div class="opcoes">
+                      <input
+                        type="radio"
+                        id="r-diretor"
+                        name="registrado_por"
+                        value="DIRETOR"
+                        required
+                      /><label for="r-diretor">Diretor</label
+                      ><input
+                        type="radio"
+                        id="r-vice"
+                        name="registrado_por"
+                        value="VICE_DIRETOR"
+                        required
+                      /><label for="r-vice">Vice-diretor</label
+                      ><input
+                        type="radio"
+                        id="r-outros"
+                        name="registrado_por"
+                        value="OUTROS"
+                        required
+                      /><label for="r-outros">Outros</label>
+                    </div>
+                    <p class="erro" id="erro-registrado_por"></p>
+                    <div id="outro-campo" class="campo-outro" hidden>
+                      <label for="outro"
+                        >Nome ou cargo <span aria-hidden="true">*</span></label
+                      ><input
+                        id="outro"
+                        type="text"
+                        maxlength="100"
+                        aria-describedby="erro-outro"
+                      />
+                      <p class="erro" id="erro-outro"></p>
+                    </div>
+                  </fieldset>
+                </div>
+                <div class="form-acoes">
+                  <button
+                    type="button"
+                    class="botao secundario"
+                    data-abrir="ocorrencias"
+                  >
+                    Voltar à consulta</button
+                  ><button type="submit" id="enviar" class="botao principal">
+                    <svg class="icone"><use href="#i-check" /></svg
+                    ><span>Registrar ocorrência</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+                <aside class="orientacao-registro" id="orientacoes-registro" aria-label="Orientações para registrar ocorrência">
+              <span class="icone-fundo verde"
+                ><svg class="icone"><use href="#i-escudo" /></svg
+              ></span>
+              <h2>Um registro bem feito faz a diferença.</h2>
+              <p>
+                Informações claras ajudam a rede a compreender o contexto e
+                definir os próximos passos.
+              </p>
+              <ol>
+                <li>
+                  <strong>Informe os fatos</strong
+                  ><span
+                    >Descreva o que aconteceu, quando e onde, de forma
+                    objetiva.</span
+                  >
+                </li>
+                <li>
+                  <strong>Classifique com atenção</strong
+                  ><span
+                    >Considere as orientações e os protocolos da sua rede.</span
+                  >
+                </li>
+                <li>
+                  <strong>Cuide das informações</strong
+                  ><span
+                    >Inclua somente dados necessários ao acompanhamento.</span
+                  >
+                </li>
+              </ol>
+              <div class="nota-informativa">
+                <svg class="icone"><use href="#i-info" /></svg>
+                <p>
+                  O registro não substitui os canais de atendimento de
+                  emergência.
+                </p>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- OCORRENCIAS -->
+        <section
+          id="painel-ocorrencias"
+          class="painel"
+          role="tabpanel"
+          aria-labelledby="aba-ocorrencias"
+          tabindex="0"
+          hidden
+        >
+          <p
+            id="registro-link-status"
+            class="status"
+            role="status"
+            aria-live="polite"
+          ></p>
+          <div class="bloco">
+            <div class="bloco-cabecalho">
+              <div>
+                <h2>Consulta de ocorrências</h2>
+                <p>Pesquise nos 200 registros mais recentes da rede.</p>
+              </div>
+              <button
+                class="botao secundario"
+                id="exportar-lista"
+                type="button"
+              >
+                <svg class="icone"><use href="#i-download" /></svg>Exportar CSV
+              </button>
+            </div>
+            <div class="filtros">
+              <div class="campo busca-campo">
+                <label for="busca">Buscar registro</label>
+                <div class="input-icone">
+                  <svg class="icone"><use href="#i-busca" /></svg
+                  ><input
+                    id="busca"
+                    type="search"
+                    placeholder="Escola, tipo ou número do registro"
+                  />
+                </div>
+              </div>
+              <div class="campo">
+                <label for="filtro-escola">Unidade escolar</label
+                ><select id="filtro-escola">
+                  <option value="">Todas as escolas</option>
+                </select>
+              </div>
+              <div class="campo">
+                <label for="filtro-periodo">Período</label
+                ><select id="filtro-periodo">
+                  <option value="">Todo o período</option>
+                  <option value="7">Últimos 7 dias</option>
+                  <option value="30">Últimos 30 dias</option>
+                  <option value="90">Últimos 90 dias</option>
+                </select>
+              </div>
+            </div>
+            <div class="filtros-rodape">
+              <div
+                class="chips"
+                role="group"
+                aria-label="Filtrar por gravidade"
+              >
+                <button
+                  type="button"
+                  class="chip"
+                  aria-pressed="true"
+                  data-grav=""
+                >
+                  Todas</button
+                ><button
+                  type="button"
+                  class="chip"
+                  aria-pressed="false"
+                  data-grav="AMARELO"
+                >
+                  <span class="ponto amarelo"></span>Amarelas</button
+                ><button
+                  type="button"
+                  class="chip"
+                  aria-pressed="false"
+                  data-grav="VERMELHO"
+                >
+                  <span class="ponto vermelho"></span>Vermelhas
+                </button>
+              </div>
+              <button type="button" class="link" id="limpar-filtros">
+                Limpar filtros
+              </button>
+            </div>
+            <p
+              id="lista-status"
+              class="status"
+              role="status"
+              aria-live="polite"
+            ></p>
+            <div id="lista" class="cartoes"></div>
+            <div class="paginacao">
+              <span id="pagina-info"></span>
+              <div>
+                <button
+                  class="botao secundario compacto"
+                  id="pagina-anterior"
+                  type="button"
+                  aria-label="Página anterior"
+                >
+                  Anterior</button
+                ><button
+                  class="botao secundario compacto"
+                  id="pagina-proxima"
+                  type="button"
+                  aria-label="Próxima página"
+                >
+                  Próxima
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- RELATORIO -->
+        <section
+          id="painel-relatorio"
+          class="painel"
+          role="tabpanel"
+          aria-labelledby="aba-relatorio"
+          tabindex="0"
+          hidden
+        >
+          <div class="bloco">
+            <div class="bloco-cabecalho">
+              <div>
+                <h2>Classificação vermelha por escola</h2>
+                <p>Consolidado de todos os registros da rede.</p>
+              </div>
+              <button
+                class="botao secundario"
+                id="exportar-relatorio"
+                type="button"
+              >
+                <svg class="icone"><use href="#i-download" /></svg>Exportar CSV
+              </button>
+            </div>
+            <div class="relatorio-resumo">
+              <span class="icone-fundo vermelho"
+                ><svg class="icone"><use href="#i-grafico" /></svg
+              ></span>
+              <p id="resumo" class="resumo">Consultando informações…</p>
+            </div>
+            <div class="relatorio-filtros">
+              <label class="interruptor"
+                ><input type="checkbox" id="mostrar-zeradas" /><span
+                  >Incluir escolas sem ocorrências vermelhas</span
+                ></label
+              ><span class="periodo">Todo o histórico</span>
+            </div>
+            <p
+              id="rel-status"
+              class="status"
+              role="status"
+              aria-live="polite"
+            ></p>
+            <ol id="relatorio" class="ranking"></ol>
+          </div>
+          <article class="bloco acessos-bloco">
+            <div class="bloco-cabecalho">
+              <div>
+                <h2>Estatísticas de acesso</h2>
+                <p>
+                  Visitas e visualizações do site, com consulta privada na conta
+                  Cloudflare do administrador.
+                </p>
+              </div>
+            </div>
+            <div class="acessos-conteudo">
+              <p>
+                Web Analytics habilitado no Cloudflare. Entre na conta
+                proprietária para consultar visitas, visualizações de página e o
+                período desejado. Os dados podem levar alguns minutos para
+                aparecer.
+              </p>
+              <a
+                class="botao secundario"
+                id="acessos-cloudflare"
+                href="https://dash.cloudflare.com/4f629e0de9a41d35b1e4d2bbb042738e/web-analytics"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Abrir métricas no Cloudflare (nova aba)</a
+              ><a
+                class="link"
+                href="https://developers.cloudflare.com/pages/how-to/web-analytics/"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Sobre a medição (guia oficial)</a
+              >
+            </div>
+          </article>
+        </section>
+        <section
+          id="painel-whatsapp"
+          class="painel"
+          role="tabpanel"
+          aria-labelledby="aba-whatsapp"
+          tabindex="0"
+          hidden
+        >
+          <div class="bloco formulario-bloco">
+            <div class="bloco-cabecalho">
+              <div>
+                <h2>Destinatários dos avisos</h2>
+                <p>
+                  Ao registrar uma ocorrência, o sistema prepara um aviso
+                  individual para cada número configurado.
+                </p>
+              </div>
+            </div>
+            <p
+              id="whatsapp-status"
+              class="status"
+              role="status"
+              aria-live="polite"
+            >
+              Cadastro de números exclusivo do ADM.
+            </p>
+            <form id="whatsapp-form" hidden>
+              <p id="whatsapp-ajuda" class="ajuda">
+                Informe DDI, DDD e número, por exemplo +55 (11) 99999-9999.
+                Campo vazio desativa o destinatário. Cadastre somente quem
+                autorizou receber os avisos.
+              </p>
+              <div
+                id="whatsapp-campos"
+                class="campos-duplos whatsapp-campos"
+              ></div>
+              <div class="form-acoes">
+                <button
+                  class="botao secundario"
+                  id="whatsapp-recarregar"
+                  type="button"
+                >
+                  Atualizar situação</button
+                ><button
+                  class="botao principal"
+                  id="whatsapp-salvar"
+                  type="submit"
+                >
+                  Salvar números
+                </button>
+              </div>
+            </form>
+            <button
+              class="botao secundario"
+              id="whatsapp-bloquear"
+              type="button"
+              hidden
+            >
+              Bloquear configuração
+            </button>
+            <div id="whatsapp-historico" class="whatsapp-historico"></div>
+          </div>
+          <article class="bloco whatsapp-arquitetura">
+            <h2>Do registro ao WhatsApp</h2>
+            <ol class="whatsapp-fluxo">
+              <li>
+                <strong>1. Registrar</strong
+                ><span>A escola preenche e confirma a ocorrência.</span>
+              </li>
+              <li>
+                <strong>2. Salvar e enfileirar</strong
+                ><span>O servidor salva o registro e os avisos no banco.</span>
+              </li>
+              <li>
+                <strong>3. Disparar</strong
+                ><span
+                  >A API do WhatsApp recebe um aviso por destinatário.</span
+                >
+              </li>
+            </ol>
+            <p>
+              O aviso informa protocolo, escola, data, classificação e link
+              direto da ocorrência. Ao tocar no link recebido no WhatsApp
+              pessoal, o responsável abre o registro no sistema.
+            </p>
+            <p>
+              Somente envio de avisos. O sistema não recebe respostas e não tem
+              uma interface de conversa.
+            </p>
+            <p>
+              O envio automático depende da ativação do WhatsApp Business pelo
+              responsável técnico.
+            </p>
+            <a
+              class="link"
+              href="%BASE_URL%mensageria.html"
+              target="_blank"
+              rel="noopener"
+              >Ver arquitetura simplificada (nova aba)</a
+            >
+          </article>
+        </section>
+        <footer class="bni-rodape">
+          <div class="bni-identidade">
+            <p class="bni-legenda">DESENVOLVIDO POR</p>
+            <div class="bni-marca">
+              <img
+                src="/assets/bni-simbolo.svg"
+                width="36"
+                height="36"
+                alt=""
+              /><strong>bni·tecnologia</strong>
+            </div>
+            <p class="bni-descricao">
+              Software sob medida, código próprio e soluções pensadas para o
+              longo prazo.
+            </p>
+          </div>
+          <div class="bni-base">
+            <span>© 2026 BNI Tecnologia — todos os direitos reservados.</span>
+          </div>
+        </footer>
+      </main>
     </div>
-    <div class="lateral-rodape"><span class="rede-icone"><svg class="icone"><use href="#i-escudo"/></svg></span><div><strong>Convivência escolar</strong><span>Uma rede de cuidado e proteção</span></div></div>
-  </aside>
-
-  <div class="aplicacao">
-    <header class="topo">
-      <div class="caminho"><svg class="icone"><use href="#i-escola"/></svg><span>Gestão escolar</span><span class="separador">/</span><strong id="caminho-atual">Visão geral</strong></div>
-      <div class="topo-acoes"><span class="data-atual"><svg class="icone"><use href="#i-calendario"/></svg><time id="data-atual"></time></span><span class="ambiente" id="ambiente">Rede de ensino</span><button type="button" class="alternar-tema" data-alternar-tema aria-label="Tema claro ou escuro" aria-pressed="false"><svg class="icone" aria-hidden="true"><use href="#i-sol"/></svg><span data-tema-rotulo>Claro</span></button><button type="button" class="acesso-adm" id="abrir-acesso-adm" aria-label="ADM: acesso do administrador">ADM</button><a class="voltar-inicio" href="#inicio">Início</a></div>
-    </header>
-
-    <main id="conteudo" class="layout" tabindex="-1">
-      <div id="aviso-demo" class="aviso-demo" hidden><svg class="icone"><use href="#i-info"/></svg><p><strong>Ambiente de demonstração.</strong> Use dados fictícios. Os registros ficam somente neste navegador.</p></div>
-      <div class="cabecalho-pagina">
-        <div><p class="sobretitulo">ACOMPANHAMENTO ESCOLAR</p><h1 id="titulo-pagina">Visão geral</h1><p id="subtitulo-pagina" class="subtitulo">Informações da rede para uma gestão mais atenta e integrada.</p></div>
-        <div class="acoes-pagina"><button type="button" class="botao secundario" id="atualizar" aria-label="Atualizar informações"><svg class="icone"><use href="#i-refresh"/></svg><span>Atualizar</span></button><button type="button" class="botao principal" data-abrir="registrar"><svg class="icone"><use href="#i-plus"/></svg>Nova ocorrência</button></div>
+    <dialog
+      id="whatsapp-acesso-dialog"
+      aria-labelledby="whatsapp-acesso-titulo"
+    >
+      <div class="dialog-cabecalho">
+        <h2 id="whatsapp-acesso-titulo">Acesso do administrador</h2>
+        <button
+          type="button"
+          class="botao-icone"
+          data-fechar
+          aria-label="Fechar acesso ADM"
+        >
+          <svg class="icone"><use href="#i-close" /></svg>
+        </button>
       </div>
-
-      <div id="falha-dados" class="falha-dados" role="alert" hidden></div>
-
-      <section id="painel-visao-geral" class="painel" role="tabpanel" aria-labelledby="aba-visao-geral" tabindex="0">
-        <div class="mensagem-rede"><div><span class="etiqueta">INFORMAÇÃO QUE ORIENTA O CUIDADO</span><h2>Um olhar atento para cada escola.</h2><p>Centralize os registros e acompanhe as ocorrências da sua rede de ensino.</p></div><svg class="ilustracao-rede" viewBox="0 0 210 120" aria-hidden="true"><circle cx="117" cy="60" r="54" fill="#e0ebe5"/><g fill="none" stroke="#72968a" stroke-width="1.5" stroke-linejoin="round"><path d="m63 55 47-29 47 29M72 51v49h76V51M100 100V72h21v28M84 63h7v10h-7zM131 63h7v10h-7zM84 82h7v10h-7zM131 82h7v10h-7zM109 26V12h23v11h-23M49 100h117"/><path d="m163 47 22 8v17c0 16-22 29-22 29s-22-13-22-29V55l22-8Z" fill="#f1f6f3" stroke="#356755"/><path d="m152 72 7 7 14-16" stroke="#356755" stroke-width="3"/></g><circle cx="48" cy="39" r="4" fill="#c3a263"/><circle cx="173" cy="23" r="3" fill="#c3a263"/></svg></div>
-
-        <div class="indicadores" aria-label="Indicadores de todo o histórico">
-          <article class="indicador"><div class="indicador-topo"><span>Total de ocorrências</span><span class="icone-fundo verde"><svg class="icone"><use href="#i-lista"/></svg></span></div><strong id="metrica-total">—</strong><p>Registros em todo o histórico</p></article>
-          <article class="indicador"><div class="indicador-topo"><span>Classificação vermelha</span><span class="icone-fundo vermelho"><svg class="icone"><use href="#i-alerta"/></svg></span></div><strong id="metrica-vermelhas">—</strong><p><span class="ponto vermelho"></span>Acompanhamento prioritário</p></article>
-          <article class="indicador"><div class="indicador-topo"><span>Classificação amarela</span><span class="icone-fundo amarelo"><svg class="icone"><use href="#i-info"/></svg></span></div><strong id="metrica-amarelas">—</strong><p><span class="ponto amarelo"></span>Atenção e monitoramento</p></article>
-          <article class="indicador"><div class="indicador-topo"><span>Escolas com registros</span><span class="icone-fundo azul"><svg class="icone"><use href="#i-escola"/></svg></span></div><strong id="metrica-escolas">—</strong><p id="metrica-rede">Consultando a rede de ensino</p></article>
+      <div class="dialog-corpo">
+        <p id="whatsapp-acesso-status" role="alert">Área exclusiva do ADM.</p>
+        <form id="whatsapp-acesso">
+          <div class="campo">
+            <label for="whatsapp-chave">Senha do ADM</label
+            ><input
+              id="whatsapp-chave"
+              type="password"
+              required
+              autocomplete="off"
+              aria-describedby="whatsapp-chave-ajuda"
+            />
+            <p id="whatsapp-chave-ajuda" class="ajuda">
+              Use a senha fornecida pelo responsável pelo sistema. Ela não fica
+              salva neste navegador.
+            </p>
+          </div>
+          <button class="botao principal" type="submit">
+            Acessar configuração
+          </button>
+        </form>
+      </div>
+    </dialog>
+    <dialog id="detalhes-dialog" aria-labelledby="detalhes-titulo">
+      <div class="dialog-cabecalho">
+        <div>
+          <p class="sobretitulo">CONSULTA DO REGISTRO</p>
+          <h2 id="detalhes-titulo">Detalhes da ocorrência</h2>
         </div>
-
-        <div class="grade-analise">
-          <article class="bloco grafico-bloco"><div class="bloco-cabecalho"><div><h2>Evolução das ocorrências</h2><p>Registros mensais por classificação</p></div><span class="periodo">Últimos 6 meses</span></div><div class="legenda"><span><i class="ponto amarelo"></i>Amarelas</span><span><i class="ponto vermelho"></i>Vermelhas</span></div><div id="grafico-mensal" class="grafico-mensal" aria-label="Evolução mensal das ocorrências"></div><p id="grafico-nota" class="nota-grafico">Consultando registros…</p></article>
-          <article class="bloco distribuicao-bloco"><div class="bloco-cabecalho"><div><h2>Por classificação</h2><p>Distribuição de todo o histórico</p></div></div><div id="distribuicao" class="distribuicao"></div><div class="nota-informativa"><svg class="icone"><use href="#i-info"/></svg><p>A classificação deve seguir os protocolos da rede de ensino.</p></div><button type="button" class="link com-icone" data-abrir="relatorio">Consultar relatório<svg class="icone"><use href="#i-seta"/></svg></button></article>
-        </div>
-
-        <article class="bloco recentes"><div class="bloco-cabecalho"><div><h2>Ocorrências recentes</h2><p>Últimos registros da rede de ensino</p></div><button type="button" class="link com-icone" data-abrir="ocorrencias">Ver todas<svg class="icone"><use href="#i-seta"/></svg></button></div><div id="recentes-lista"></div></article>
-        <div class="atualizacao"><span class="ponto verde"></span><span id="ultima-atualizacao" role="status">Carregando informações da rede…</span><span>Indicadores: histórico completo · Lista: até 200 registros</span></div>
-      </section>
-
-      <!-- REGISTRAR -->
-      <section id="painel-registrar" class="painel" role="tabpanel" aria-labelledby="aba-registrar" tabindex="0" hidden>
-        <div class="formulario-layout"><div class="bloco formulario-bloco"><div class="bloco-cabecalho"><div><h2>Dados da ocorrência</h2><p>Campos marcados com * são obrigatórios.</p></div><span class="icone-fundo verde"><svg class="icone"><use href="#i-lista"/></svg></span></div>
-          <p id="registro-mensageria" class="status" role="status" aria-live="polite"></p>
-          <form id="form" novalidate autocomplete="off">
-            <p id="erro-geral" class="erro-geral" role="alert" tabindex="-1" hidden></p>
-            <div class="form-secao"><h3><span>01</span>Identificação</h3>
-              <div class="campo"><label for="escola">Unidade escolar <span aria-hidden="true">*</span></label><input id="escola" type="text" list="lista-escolas" placeholder="Digite e selecione o nome da escola" aria-describedby="ajuda-escola erro-escola" required enterkeyhint="next"><datalist id="lista-escolas"></datalist><p id="ajuda-escola" class="ajuda">Selecione uma unidade da lista de sugestões.</p><p class="erro" id="erro-escola"></p></div>
-              <div class="campos-duplos"><div class="campo"><label for="data">Data da ocorrência <span aria-hidden="true">*</span></label><input id="data" type="date" aria-describedby="erro-data" required><p class="erro" id="erro-data"></p></div><div class="campo"><label for="tipo">Tipo <span class="opcional">(opcional)</span></label><input id="tipo" type="text" list="lista-tipos" maxlength="100" placeholder="Selecione ou descreva"><datalist id="lista-tipos"><option value="Briga"></option><option value="Agressão"></option><option value="Dano ao patrimônio"></option><option value="Falta de segurança"></option><option value="Invasão"></option><option value="Ameaça"></option></datalist></div></div>
-            </div>
-            <div class="form-secao"><h3><span>02</span>Classificação e descrição</h3>
-              <fieldset class="campo" aria-describedby="erro-gravidade"><legend>Gravidade <span aria-hidden="true">*</span></legend><div class="gravidade"><input type="radio" id="g-amarelo" name="gravidade" value="AMARELO" required><label class="g amarelo" for="g-amarelo"><span class="ponto amarelo"></span><span><strong>Amarela</strong><small>Atenção e monitoramento</small></span><span class="radio-indicador"></span></label><input type="radio" id="g-vermelho" name="gravidade" value="VERMELHO" required><label class="g vermelho" for="g-vermelho"><span class="ponto vermelho"></span><span><strong>Vermelha</strong><small>Acompanhamento prioritário</small></span><span class="radio-indicador"></span></label></div><p class="erro" id="erro-gravidade"></p></fieldset>
-              <div class="campo"><label for="descricao">Descrição <span class="opcional">(opcional)</span></label><textarea id="descricao" maxlength="5000" rows="5" placeholder="Descreva os fatos de forma objetiva, com as informações necessárias ao acompanhamento." aria-describedby="ajuda-descricao contador"></textarea><div class="campo-rodape"><p id="ajuda-descricao" class="ajuda">Evite dados pessoais desnecessários.</p><p class="contador" id="contador">0 / 5000</p></div></div>
-            </div>
-            <div class="form-secao"><h3><span>03</span>Documento de apoio <span class="opcional">(opcional)</span></h3>
-              <div class="campo"><label for="anexo-tipo">Anexar à ocorrência</label><select id="anexo-tipo" aria-describedby="ajuda-anexo"><option value="">Sem anexo</option><option value="PDF">Arquivo PDF</option><option value="LINK">Link de documento</option></select><p id="ajuda-anexo" class="ajuda">Escolha um PDF ou link. O documento ficará vinculado a este registro.</p></div>
-              <div id="anexo-pdf-campo" class="campo" hidden><label for="anexo-pdf">Arquivo PDF</label><input id="anexo-pdf" type="file" accept=".pdf,application/pdf" aria-describedby="ajuda-pdf erro-anexo-pdf"><p id="ajuda-pdf" class="ajuda">Um arquivo de até 5 MB. Para trocar, selecione outro PDF.</p><p id="erro-anexo-pdf" class="erro"></p></div>
-              <div id="anexo-link-campo" class="campo" hidden><label for="anexo-link">Link do documento</label><input id="anexo-link" type="url" maxlength="2048" placeholder="https://exemplo.com/documento" aria-describedby="ajuda-link erro-anexo-link"><p id="ajuda-link" class="ajuda">Use http:// ou https://. O sistema guarda o endereço; o acesso depende das permissões na origem.</p><p id="erro-anexo-link" class="erro"></p></div>
-            </div>
-            <div class="form-secao"><h3><span>04</span>Responsável pelo registro</h3>
-              <fieldset class="campo" aria-describedby="erro-registrado_por"><legend>Função do responsável <span aria-hidden="true">*</span></legend><div class="opcoes"><input type="radio" id="r-diretor" name="registrado_por" value="DIRETOR" required><label for="r-diretor">Diretor</label><input type="radio" id="r-vice" name="registrado_por" value="VICE_DIRETOR" required><label for="r-vice">Vice-diretor</label><input type="radio" id="r-outros" name="registrado_por" value="OUTROS" required><label for="r-outros">Outros</label></div><p class="erro" id="erro-registrado_por"></p><div id="outro-campo" class="campo-outro" hidden><label for="outro">Nome ou cargo <span aria-hidden="true">*</span></label><input id="outro" type="text" maxlength="100" aria-describedby="erro-outro"><p class="erro" id="erro-outro"></p></div></fieldset>
-            </div>
-            <div class="form-acoes"><button type="button" class="botao secundario" data-abrir="ocorrencias">Voltar à consulta</button><button type="submit" id="enviar" class="botao principal"><svg class="icone"><use href="#i-check"/></svg><span>Registrar ocorrência</span></button></div>
-          </form>
-        </div><aside class="orientacao-registro" id="orientacoes-registro"><span class="icone-fundo verde"><svg class="icone"><use href="#i-escudo"/></svg></span><h2>Um registro bem feito faz a diferença.</h2><p>Informações claras ajudam a rede a compreender o contexto e definir os próximos passos.</p><ol><li><strong>Informe os fatos</strong><span>Descreva o que aconteceu, quando e onde, de forma objetiva.</span></li><li><strong>Classifique com atenção</strong><span>Considere as orientações e os protocolos da sua rede.</span></li><li><strong>Cuide das informações</strong><span>Inclua somente dados necessários ao acompanhamento.</span></li></ol><div class="nota-informativa"><svg class="icone"><use href="#i-info"/></svg><p>O registro não substitui os canais de atendimento de emergência.</p></div></aside></div>
-      </section>
-
-      <!-- OCORRENCIAS -->
-      <section id="painel-ocorrencias" class="painel" role="tabpanel" aria-labelledby="aba-ocorrencias" tabindex="0" hidden>
-        <p id="registro-link-status" class="status" role="status" aria-live="polite"></p>
-        <div class="bloco"><div class="bloco-cabecalho"><div><h2>Consulta de ocorrências</h2><p>Pesquise nos 200 registros mais recentes da rede.</p></div><button class="botao secundario" id="exportar-lista" type="button"><svg class="icone"><use href="#i-download"/></svg>Exportar CSV</button></div>
-          <div class="filtros"><div class="campo busca-campo"><label for="busca">Buscar registro</label><div class="input-icone"><svg class="icone"><use href="#i-busca"/></svg><input id="busca" type="search" placeholder="Escola, tipo ou número do registro"></div></div><div class="campo"><label for="filtro-escola">Unidade escolar</label><select id="filtro-escola"><option value="">Todas as escolas</option></select></div><div class="campo"><label for="filtro-periodo">Período</label><select id="filtro-periodo"><option value="">Todo o período</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select></div></div>
-          <div class="filtros-rodape"><div class="chips" role="group" aria-label="Filtrar por gravidade"><button type="button" class="chip" aria-pressed="true" data-grav="">Todas</button><button type="button" class="chip" aria-pressed="false" data-grav="AMARELO"><span class="ponto amarelo"></span>Amarelas</button><button type="button" class="chip" aria-pressed="false" data-grav="VERMELHO"><span class="ponto vermelho"></span>Vermelhas</button></div><button type="button" class="link" id="limpar-filtros">Limpar filtros</button></div>
-          <p id="lista-status" class="status" role="status" aria-live="polite"></p><div id="lista" class="cartoes"></div><div class="paginacao"><span id="pagina-info"></span><div><button class="botao secundario compacto" id="pagina-anterior" type="button" aria-label="Página anterior">Anterior</button><button class="botao secundario compacto" id="pagina-proxima" type="button" aria-label="Próxima página">Próxima</button></div></div>
-        </div>
-      </section>
-
-      <!-- RELATORIO -->
-      <section id="painel-relatorio" class="painel" role="tabpanel" aria-labelledby="aba-relatorio" tabindex="0" hidden>
-        <div class="bloco"><div class="bloco-cabecalho"><div><h2>Classificação vermelha por escola</h2><p>Consolidado de todos os registros da rede.</p></div><button class="botao secundario" id="exportar-relatorio" type="button"><svg class="icone"><use href="#i-download"/></svg>Exportar CSV</button></div><div class="relatorio-resumo"><span class="icone-fundo vermelho"><svg class="icone"><use href="#i-grafico"/></svg></span><p id="resumo" class="resumo">Consultando informações…</p></div><div class="relatorio-filtros"><label class="interruptor"><input type="checkbox" id="mostrar-zeradas"><span>Incluir escolas sem ocorrências vermelhas</span></label><span class="periodo">Todo o histórico</span></div><p id="rel-status" class="status" role="status" aria-live="polite"></p><ol id="relatorio" class="ranking"></ol></div>
-      <article class="bloco acessos-bloco"><div class="bloco-cabecalho"><div><h2>Estatísticas de acesso</h2><p>Visitas e visualizações do site, com consulta privada na conta Cloudflare do administrador.</p></div></div><div class="acessos-conteudo"><p>Web Analytics habilitado no Cloudflare. Entre na conta proprietária para consultar visitas, visualizações de página e o período desejado. Os dados podem levar alguns minutos para aparecer.</p><a class="botao secundario" id="acessos-cloudflare" href="https://dash.cloudflare.com/4f629e0de9a41d35b1e4d2bbb042738e/web-analytics" target="_blank" rel="noopener noreferrer">Abrir métricas no Cloudflare (nova aba)</a><a class="link" href="https://developers.cloudflare.com/pages/how-to/web-analytics/" target="_blank" rel="noopener noreferrer">Sobre a medição (guia oficial)</a></div></article>
-      </section>
-      <section id="painel-whatsapp" class="painel" role="tabpanel" aria-labelledby="aba-whatsapp" tabindex="0" hidden>
-        <div class="bloco formulario-bloco">
-          <div class="bloco-cabecalho"><div><h2>Destinatários dos avisos</h2><p>Ao registrar uma ocorrência, o sistema prepara um aviso individual para cada número configurado.</p></div></div>
-          <p id="whatsapp-status" class="status" role="status" aria-live="polite">Cadastro de números exclusivo do ADM.</p>
-          <form id="whatsapp-form" hidden>
-            <p id="whatsapp-ajuda" class="ajuda">Informe DDI, DDD e número, por exemplo +55 (11) 99999-9999. Campo vazio desativa o destinatário. Cadastre somente quem autorizou receber os avisos.</p>
-            <div id="whatsapp-campos" class="campos-duplos whatsapp-campos"></div>
-            <div class="form-acoes"><button class="botao secundario" id="whatsapp-recarregar" type="button">Atualizar situação</button><button class="botao principal" id="whatsapp-salvar" type="submit">Salvar números</button></div>
-          </form>
-          <button class="botao secundario" id="whatsapp-bloquear" type="button" hidden>Bloquear configuração</button>
-          <div id="whatsapp-historico" class="whatsapp-historico"></div>
-        </div>
-        <article class="bloco whatsapp-arquitetura"><h2>Do registro ao WhatsApp</h2>
-          <ol class="whatsapp-fluxo"><li><strong>1. Registrar</strong><span>A escola preenche e confirma a ocorrência.</span></li><li><strong>2. Salvar e enfileirar</strong><span>O servidor salva o registro e os avisos no banco.</span></li><li><strong>3. Disparar</strong><span>A API do WhatsApp recebe um aviso por destinatário.</span></li></ol>
-          <p>O aviso informa protocolo, escola, data, classificação e link direto da ocorrência. Ao tocar no link recebido no WhatsApp pessoal, o responsável abre o registro no sistema.</p>
-          <p>Somente envio de avisos. O sistema não recebe respostas e não tem uma interface de conversa.</p>
-          <p>O envio automático depende da ativação do WhatsApp Business pelo responsável técnico.</p>
-          <a class="link" href="%BASE_URL%mensageria.html" target="_blank" rel="noopener">Ver arquitetura simplificada (nova aba)</a>
-        </article>
-      </section>
-      <footer class="bni-rodape"><div class="bni-identidade"><p class="bni-legenda">DESENVOLVIDO POR</p><div class="bni-marca"><img src="/assets/bni-simbolo.svg" width="36" height="36" alt=""><strong>bni·tecnologia</strong></div><p class="bni-descricao">Software sob medida, código próprio e soluções pensadas para o longo prazo.</p></div><div class="bni-base"><span>© 2026 BNI Tecnologia — todos os direitos reservados.</span></div></footer>
-    </main>
-  </div>
-  <dialog id="whatsapp-acesso-dialog" aria-labelledby="whatsapp-acesso-titulo"><div class="dialog-cabecalho"><h2 id="whatsapp-acesso-titulo">Acesso do administrador</h2><button type="button" class="botao-icone" data-fechar aria-label="Fechar acesso ADM"><svg class="icone"><use href="#i-close"/></svg></button></div><div class="dialog-corpo"><p id="whatsapp-acesso-status" role="alert">Área exclusiva do ADM.</p><form id="whatsapp-acesso"><div class="campo"><label for="whatsapp-chave">Senha do ADM</label><input id="whatsapp-chave" type="password" required autocomplete="off" aria-describedby="whatsapp-chave-ajuda"><p id="whatsapp-chave-ajuda" class="ajuda">Use a senha fornecida pelo responsável pelo sistema. Ela não fica salva neste navegador.</p></div><button class="botao principal" type="submit">Acessar configuração</button></form></div></dialog>
-  <dialog id="detalhes-dialog" aria-labelledby="detalhes-titulo"><div class="dialog-cabecalho"><div><p class="sobretitulo">CONSULTA DO REGISTRO</p><h2 id="detalhes-titulo">Detalhes da ocorrência</h2></div><button type="button" class="botao-icone" data-fechar aria-label="Fechar detalhes"><svg class="icone"><use href="#i-close"/></svg></button></div><div id="detalhes-conteudo"></div><div class="dialog-rodape"><button class="botao secundario" type="button" data-fechar>Fechar</button></div></dialog>
-  <dialog id="orientacoes-dialog" aria-labelledby="orientacoes-titulo"><div class="dialog-cabecalho"><h2 id="orientacoes-titulo">Orientações de registro</h2><button type="button" class="botao-icone" data-fechar aria-label="Fechar orientações"><svg class="icone"><use href="#i-close"/></svg></button></div><div class="dialog-corpo"><p>Registre a unidade escolar, a data e a classificação da ocorrência. Use a descrição para contextualizar os fatos.</p><ul><li>Confirme os dados antes de enviar.</li><li>Siga os protocolos de classificação da sua rede.</li><li>Evite informações pessoais desnecessárias.</li><li>Em situações de risco imediato, acione os canais de emergência e os responsáveis da rede.</li></ul><p>O número do registro é gerado automaticamente após a confirmação do envio.</p></div><div class="dialog-rodape"><button type="button" class="botao principal" data-fechar>Entendi</button></div></dialog>
-  <div id="aviso" class="aviso" role="status" aria-live="polite"></div>
-  <script type="module" src="/src/main.ts"></script>
-</body>
+        <button
+          type="button"
+          class="botao-icone"
+          data-fechar
+          aria-label="Fechar detalhes"
+        >
+          <svg class="icone"><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <div id="detalhes-conteudo"></div>
+      <div class="dialog-rodape">
+        <button class="botao secundario" type="button" data-fechar>
+          Fechar
+        </button>
+      </div>
+    </dialog>
+    <dialog id="orientacoes-dialog" aria-labelledby="orientacoes-titulo">
+      <div class="dialog-cabecalho">
+        <h2 id="orientacoes-titulo">Orientações de registro</h2>
+        <button
+          type="button"
+          class="botao-icone"
+          data-fechar
+          aria-label="Fechar orientações"
+        >
+          <svg class="icone"><use href="#i-close" /></svg>
+        </button>
+      </div>
+      <div class="dialog-corpo">
+        <p>
+          Registre a unidade escolar, a data e a classificação da ocorrência.
+          Use a descrição para contextualizar os fatos.
+        </p>
+        <ul>
+          <li>Confirme os dados antes de enviar.</li>
+          <li>Siga os protocolos de classificação da sua rede.</li>
+          <li>Evite informações pessoais desnecessárias.</li>
+          <li>
+            Em situações de risco imediato, acione os canais de emergência e os
+            responsáveis da rede.
+          </li>
+        </ul>
+        <p>
+          O número do registro é gerado automaticamente após a confirmação do
+          envio.
+        </p>
+      </div>
+      <div class="dialog-rodape">
+        <button type="button" class="botao principal" data-fechar>
+          Entendi
+        </button>
+      </div>
+    </dialog>
+    <div id="aviso" class="aviso" role="status" aria-live="polite"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
 </html>

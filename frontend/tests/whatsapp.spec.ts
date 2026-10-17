@@ -1,3 +1,4 @@
+import { abrirComoADM, entrarADM } from './helpers/adm';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -128,11 +129,11 @@ test('link recebido abre a ocorrência fora dos 200 recentes e informa links inv
       registrado_por_outro: null, status: 'ABERTA', criado_em: '2024-02-29T12:00:00Z',
     }))));
   });
-  await page.goto('/#ocorrencias/1');
+  await abrirComoADM(page, '/#ocorrencias/1');
   await expect(page.getByRole('dialog')).toBeVisible();
   await expect(page.locator('#detalhes-titulo')).toHaveText('EN-000001');
   await expect(page.locator('#detalhes-conteudo')).toContainText('Descrição completa do registro 1');
-  await page.reload();
+  await page.reload(); await entrarADM(page, '#ocorrencias/1');
   await expect(page.locator('#detalhes-titulo')).toHaveText('EN-000001');
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.keyboard.press('Escape');

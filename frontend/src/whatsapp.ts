@@ -1,5 +1,6 @@
 import { modoDemo } from './api';
 import type { ResultadoRegistro } from './types';
+import { liberarADM, encerrarAcesso, perfilAtual } from './acesso';
 
 interface Destinatario { id: string; nome: string; cargo: string; numero: string }
 interface Configuracao {
@@ -65,6 +66,7 @@ export function iniciarWhatsApp(aoAutorizar: () => void, aoBloquear: () => void)
   function bloquear(): void {
     const estavaAutorizado = carregado;
     credencial = ''; carregado = false; form.hidden = true;
+    if (perfilAtual() !== 'ESCOLA') encerrarAcesso();
     chave.value = ''; historico.replaceChildren();
     campos.replaceChildren();
     document.querySelector<HTMLButtonElement>('#whatsapp-bloquear')!.hidden = true;
@@ -80,6 +82,7 @@ export function iniciarWhatsApp(aoAutorizar: () => void, aoBloquear: () => void)
       if (input instanceof HTMLInputElement) input.value = p.numero;
     });
     form.hidden = false; carregado = true; chave.value = '';
+    if (primeiroAcesso) liberarADM(credencial);
     document.querySelector<HTMLButtonElement>('#whatsapp-bloquear')!.hidden = false;
     status.textContent = config.ativo ? 'Integração ativa. Novas ocorrências serão enfileiradas para os números preenchidos.'
         : 'Integração pendente. Os números podem ser salvos; o envio depende da configuração da API no servidor.';
@@ -132,6 +135,7 @@ export function iniciarWhatsApp(aoAutorizar: () => void, aoBloquear: () => void)
   });
   dialog.addEventListener('close', () => { chave.value = ''; if (!carregado) credencial = ''; });
   return {
+    encerrar: bloquear,
     autenticado: () => carregado,
     solicitarAcesso: () => {
       if (carregado) { aoAutorizar(); return; }

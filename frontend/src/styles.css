@@ -134,6 +134,7 @@ h2 { font-size: 15px; font-weight: 650; letter-spacing: -.25px; }
 .rodape strong { font-weight: 600; color: #476681; }
 /* ---------- abas (barra inferior no celular) ---------- */
 .abas-lista { padding: 0 13px; display: grid; gap: 6px; }
+.abas-lista.somente-registro { grid-template-columns: 1fr; }
 .abas button { position: relative; display: flex; align-items: center; gap: 11px; width: 100%; padding: 12px 13px; min-height: var(--toque); border: 0; border-radius: 7px; text-align: left; color: #5e728c; background: transparent; font-size: 12px; }
 .abas button .icone { width: 18px; height: 18px; }
 .abas button:hover { background: #f3f7fc; }

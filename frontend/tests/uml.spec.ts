@@ -1,3 +1,4 @@
+import { abrirComoADM } from './helpers/adm';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -63,7 +64,7 @@ test('UML é acessível em temas claro e escuro sem transbordar no celular', asy
 });
 
 test('relatórios encaminham métricas ao Cloudflare autenticado sem expor contadores locais como globais', async ({ page }) => {
-  await page.goto('/#relatorio');
+  await abrirComoADM(page, '/#relatorio');
   await expect(page.locator('#acessos-cloudflare')).toHaveAttribute('href', 'https://dash.cloudflare.com/4f629e0de9a41d35b1e4d2bbb042738e/web-analytics');
   await expect(page.locator('#acessos-cloudflare')).toHaveAttribute('rel', 'noopener noreferrer');
   await expect(page.locator('.acessos-bloco')).toContainText('consulta privada');

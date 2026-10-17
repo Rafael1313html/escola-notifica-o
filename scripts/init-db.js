@@ -20,6 +20,11 @@ async function main() {
       console.log(`Executado: ${arquivo}`);
     }
     const [linhas] = await conexao.query('SELECT COUNT(*) AS total FROM escolas');
+    for (const tabela of ['whatsapp_destinatarios', 'whatsapp_envios']) {
+      const [colunas] = await conexao.query(`SELECT COLUMN_NAME FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = 'acesso_versao'`, [database, tabela]);
+      if (!colunas.length) await conexao.query(`ALTER TABLE ${tabela} ADD COLUMN acesso_versao INT NOT NULL DEFAULT 0`);
+    }
     console.log(`Escolas cadastradas: ${linhas[0].total}`);
   } finally {
     await conexao.end();
