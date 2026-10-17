@@ -67,7 +67,7 @@
         <button role="tab" id="aba-ocorrencias" data-painel="ocorrencias" aria-controls="painel-ocorrencias" aria-selected="false" tabindex="-1" type="button"><svg class="icone"><use href="#i-lista"/></svg><span>Ocorrências</span><span class="nav-contagem" id="nav-total">—</span></button>
         <button role="tab" id="aba-relatorio" data-painel="relatorio" aria-controls="painel-relatorio" aria-selected="false" tabindex="-1" type="button"><svg class="icone"><use href="#i-grafico"/></svg><span>Relatórios</span></button>
         <button role="tab" id="aba-registrar" data-painel="registrar" aria-controls="painel-registrar" aria-selected="false" tabindex="-1" type="button"><svg class="icone"><use href="#i-plus"/></svg><span>Novo registro</span></button>
-        <button role="tab" id="aba-whatsapp" data-painel="whatsapp" aria-controls="painel-whatsapp" aria-selected="false" tabindex="-1" type="button"><svg class="icone"><use href="#i-escudo"/></svg><span>Canal direto com a diretoria</span></button>
+        <button role="tab" id="aba-whatsapp" data-painel="whatsapp" aria-controls="painel-whatsapp" aria-selected="false" tabindex="-1" type="button" hidden><svg class="icone"><use href="#i-escudo"/></svg><span>Canal direto com a diretoria</span></button>
       </div>
     </nav>
     <div class="lateral-apoio">
@@ -83,7 +83,7 @@
   <div class="aplicacao">
     <header class="topo">
       <div class="caminho"><svg class="icone"><use href="#i-escola"/></svg><span>Gestão escolar</span><span class="separador">/</span><strong id="caminho-atual">Visão geral</strong></div>
-      <div class="topo-acoes"><span class="data-atual"><svg class="icone"><use href="#i-calendario"/></svg><time id="data-atual"></time></span><span class="ambiente" id="ambiente">Rede de ensino</span><button type="button" class="alternar-tema" data-alternar-tema aria-label="Tema claro ou escuro" aria-pressed="false"><svg class="icone" aria-hidden="true"><use href="#i-sol"/></svg><span data-tema-rotulo>Claro</span></button><a class="voltar-inicio" href="#inicio">Início</a></div>
+      <div class="topo-acoes"><span class="data-atual"><svg class="icone"><use href="#i-calendario"/></svg><time id="data-atual"></time></span><span class="ambiente" id="ambiente">Rede de ensino</span><button type="button" class="alternar-tema" data-alternar-tema aria-label="Tema claro ou escuro" aria-pressed="false"><svg class="icone" aria-hidden="true"><use href="#i-sol"/></svg><span data-tema-rotulo>Claro</span></button><button type="button" class="acesso-adm" id="abrir-acesso-adm" aria-label="ADM: acesso do administrador">ADM</button><a class="voltar-inicio" href="#inicio">Início</a></div>
     </header>
 
     <main id="conteudo" class="layout" tabindex="-1">
@@ -159,8 +159,7 @@
       <section id="painel-whatsapp" class="painel" role="tabpanel" aria-labelledby="aba-whatsapp" tabindex="0" hidden>
         <div class="bloco formulario-bloco">
           <div class="bloco-cabecalho"><div><h2>Destinatários dos avisos</h2><p>Ao registrar uma ocorrência, o sistema prepara um aviso individual para cada número configurado.</p></div></div>
-          <p id="whatsapp-status" class="status" role="status" aria-live="polite">Entre com a chave ADM para consultar e alterar os números.</p>
-          <form id="whatsapp-acesso"><div class="campo"><label for="whatsapp-chave">Chave de acesso ADM</label><input id="whatsapp-chave" type="password" required autocomplete="off" aria-describedby="whatsapp-chave-ajuda"><p id="whatsapp-chave-ajuda" class="ajuda">Solicite a chave ao responsável pelo sistema. Ela não fica salva neste navegador.</p></div><button class="botao principal" type="submit">Acessar configuração</button></form>
+          <p id="whatsapp-status" class="status" role="status" aria-live="polite">Cadastro de números exclusivo do ADM.</p>
           <form id="whatsapp-form" hidden>
             <p id="whatsapp-ajuda" class="ajuda">Informe DDI, DDD e número, por exemplo +55 (11) 99999-9999. Campo vazio desativa o destinatário. Cadastre somente quem autorizou receber os avisos.</p>
             <div id="whatsapp-campos" class="campos-duplos whatsapp-campos"></div>
@@ -180,6 +179,7 @@
       <footer class="bni-rodape"><div class="bni-identidade"><p class="bni-legenda">DESENVOLVIDO POR</p><div class="bni-marca"><img src="/assets/bni-simbolo.svg" width="36" height="36" alt=""><strong>bni·tecnologia</strong></div><p class="bni-descricao">Software sob medida, código próprio e soluções pensadas para o longo prazo.</p></div><div class="bni-base"><span>© 2026 BNI Tecnologia — todos os direitos reservados.</span></div></footer>
     </main>
   </div>
+  <dialog id="whatsapp-acesso-dialog" aria-labelledby="whatsapp-acesso-titulo"><div class="dialog-cabecalho"><h2 id="whatsapp-acesso-titulo">Acesso do administrador</h2><button type="button" class="botao-icone" data-fechar aria-label="Fechar acesso ADM"><svg class="icone"><use href="#i-close"/></svg></button></div><div class="dialog-corpo"><p id="whatsapp-acesso-status" role="alert">Área exclusiva do ADM.</p><form id="whatsapp-acesso"><div class="campo"><label for="whatsapp-chave">Chave de acesso ADM</label><input id="whatsapp-chave" type="password" required autocomplete="off" aria-describedby="whatsapp-chave-ajuda"><p id="whatsapp-chave-ajuda" class="ajuda">Solicite a chave ao responsável pelo sistema. Ela não fica salva neste navegador.</p></div><button class="botao principal" type="submit">Acessar configuração</button></form></div></dialog>
   <dialog id="detalhes-dialog" aria-labelledby="detalhes-titulo"><div class="dialog-cabecalho"><div><p class="sobretitulo">CONSULTA DO REGISTRO</p><h2 id="detalhes-titulo">Detalhes da ocorrência</h2></div><button type="button" class="botao-icone" data-fechar aria-label="Fechar detalhes"><svg class="icone"><use href="#i-close"/></svg></button></div><div id="detalhes-conteudo"></div><div class="dialog-rodape"><button class="botao secundario" type="button" data-fechar>Fechar</button></div></dialog>
   <dialog id="orientacoes-dialog" aria-labelledby="orientacoes-titulo"><div class="dialog-cabecalho"><h2 id="orientacoes-titulo">Orientações de registro</h2><button type="button" class="botao-icone" data-fechar aria-label="Fechar orientações"><svg class="icone"><use href="#i-close"/></svg></button></div><div class="dialog-corpo"><p>Registre a unidade escolar, a data e a classificação da ocorrência. Use a descrição para contextualizar os fatos.</p><ul><li>Confirme os dados antes de enviar.</li><li>Siga os protocolos de classificação da sua rede.</li><li>Evite informações pessoais desnecessárias.</li><li>Em situações de risco imediato, acione os canais de emergência e os responsáveis da rede.</li></ul><p>O número do registro é gerado automaticamente após a confirmação do envio.</p></div><div class="dialog-rodape"><button type="button" class="botao principal" data-fechar>Entendi</button></div></dialog>
   <div id="aviso" class="aviso" role="status" aria-live="polite"></div>

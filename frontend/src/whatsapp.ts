@@ -12,7 +12,6 @@ const pessoas = [
   ['susana', 'Susana', 'Supervisora'], ['mercia', 'Mercia', 'PEC · ADM'],
   ['monica', 'Monica', 'PEC'], ['camila', 'Camila', 'CEC'],
 ];
-const chaveDemo = 'escola-notificacao:whatsapp-demo';
 
 export function mensagemWhatsApp(resultado: ResultadoRegistro): string {
   if (modoDemo) return ' Demonstração: nenhuma mensagem WhatsApp foi enviada.';
@@ -21,7 +20,7 @@ export function mensagemWhatsApp(resultado: ResultadoRegistro): string {
   return ' WhatsApp: envio automático ainda não ativado.';
 }
 
-export function iniciarWhatsApp(): void {
+export function iniciarWhatsApp(aoAutorizar: () => void, aoBloquear: () => void) {
   const form = document.querySelector<HTMLFormElement>('#whatsapp-form')!;
   const acesso = document.querySelector<HTMLFormElement>('#whatsapp-acesso')!;
   const campos = document.querySelector<HTMLElement>('#whatsapp-campos')!;
@@ -29,55 +28,63 @@ export function iniciarWhatsApp(): void {
   const historico = document.querySelector<HTMLElement>('#whatsapp-historico')!;
   const chave = document.querySelector<HTMLInputElement>('#whatsapp-chave')!;
   const salvar = document.querySelector<HTMLButtonElement>('#whatsapp-salvar')!;
+  const dialog = document.querySelector<HTMLDialogElement>('#whatsapp-acesso-dialog')!;
+  const statusAcesso = document.querySelector<HTMLElement>('#whatsapp-acesso-status')!;
   let credencial = '';
   let carregado = false;
 
-  for (const [id, nome, cargo] of pessoas) {
-    const campo = document.createElement('div'); campo.className = 'campo';
-    const label = document.createElement('label'); label.htmlFor = `whatsapp-${id}`;
-    label.textContent = `${cargo} · ${nome}`;
-    const input = document.createElement('input');
-    input.id = label.htmlFor; input.name = id; input.type = 'tel'; input.maxLength = 30;
-    input.autocomplete = 'off'; input.placeholder = '+55 (11) 99999-9999';
-    input.setAttribute('aria-describedby', 'whatsapp-ajuda');
-    campo.append(label, input); campos.append(campo);
+  function criarCampos(): void {
+    if (campos.childElementCount) return;
+    for (const [id, nome, cargo] of pessoas) {
+      const campo = document.createElement('div'); campo.className = 'campo';
+      const label = document.createElement('label'); label.htmlFor = `whatsapp-${id}`;
+      label.textContent = `${cargo} · ${nome}`;
+      const input = document.createElement('input');
+      input.id = label.htmlFor; input.name = id; input.type = 'tel'; input.maxLength = 30;
+      input.autocomplete = 'off'; input.placeholder = '+55 (11) 99999-9999';
+      input.setAttribute('aria-describedby', 'whatsapp-ajuda');
+      campo.append(label, input); campos.append(campo);
+    }
   }
 
   async function pedir(opcoes?: RequestInit): Promise<Configuracao | { salvo: boolean }> {
+    const chavePedido = credencial;
+    if (!chavePedido) throw new Error('Entre com a chave ADM para acessar a configuração.');
     const resposta = await fetch('/api/admin/whatsapp', { ...opcoes, cache: 'no-store',
       signal: AbortSignal.timeout(15000),
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${credencial}` } });
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${chavePedido}` } });
+    if (credencial !== chavePedido) throw new Error('A sessão ADM foi encerrada.');
     const corpo = await resposta.json().catch(() => null);
+    if (credencial !== chavePedido) throw new Error('A sessão ADM foi encerrada.');
     if (!resposta.ok || !corpo) {
-      if (resposta.status === 401) bloquear();
+      if (resposta.status === 401 || resposta.status === 403) bloquear();
       throw new Error(corpo?.erros?.join(' ') || 'Não foi possível acessar a configuração de WhatsApp.');
     }
     return corpo;
   }
   function bloquear(): void {
-    credencial = ''; carregado = false; form.hidden = true; acesso.hidden = false;
+    const estavaAutorizado = carregado;
+    credencial = ''; carregado = false; form.hidden = true;
     chave.value = ''; historico.replaceChildren();
-    campos.querySelectorAll('input').forEach((input) => { input.value = ''; });
+    campos.replaceChildren();
     document.querySelector<HTMLButtonElement>('#whatsapp-bloquear')!.hidden = true;
     status.textContent = 'Configuração bloqueada.';
+    if (estavaAutorizado) aoBloquear();
   }
   async function carregar(): Promise<void> {
-    let config: Configuracao;
-    if (modoDemo) {
-      const local: Record<string, string> = JSON.parse(localStorage.getItem(chaveDemo) || '{}');
-      config = { ativo: false, envios: [], destinatarios: pessoas.map(([id, nome, cargo]) => ({ id, nome, cargo, numero: typeof local[id] === 'string' ? local[id] : '' })) };
-    } else config = await pedir() as Configuracao;
+    const config = await pedir() as Configuracao;
+    const primeiroAcesso = !carregado;
+    criarCampos();
     config.destinatarios.forEach((p) => {
       const input = form.elements.namedItem(p.id);
       if (input instanceof HTMLInputElement) input.value = p.numero;
     });
-    form.hidden = false; acesso.hidden = true; carregado = true; chave.value = '';
-    document.querySelector<HTMLButtonElement>('#whatsapp-bloquear')!.hidden = modoDemo;
-    status.textContent = modoDemo ? 'Demonstração: números salvos somente neste navegador. Nenhuma mensagem será enviada.'
-      : config.ativo ? 'Integração ativa. Novas ocorrências serão enfileiradas para os números preenchidos.'
+    form.hidden = false; carregado = true; chave.value = '';
+    document.querySelector<HTMLButtonElement>('#whatsapp-bloquear')!.hidden = false;
+    status.textContent = config.ativo ? 'Integração ativa. Novas ocorrências serão enfileiradas para os números preenchidos.'
         : 'Integração pendente. Os números podem ser salvos; o envio depende da configuração da API no servidor.';
     historico.replaceChildren();
-    if (!modoDemo) {
+    {
       const titulo = document.createElement('h3'); titulo.textContent = 'Últimas notificações'; historico.append(titulo);
       const legenda = document.createElement('p'); legenda.className = 'ajuda';
       legenda.textContent = 'Aceito significa recebido pela API da Meta. A entrega no aparelho ainda não é confirmada.'; historico.append(legenda);
@@ -89,12 +96,15 @@ export function iniciarWhatsApp(): void {
       }
       if (!config.envios.length) historico.append(document.createTextNode('Nenhuma notificação registrada.'));
     }
+    dialog.close();
+    if (primeiroAcesso) aoAutorizar();
   }
   acesso.addEventListener('submit', async (ev) => {
     ev.preventDefault(); credencial = chave.value.trim();
     const botao = acesso.querySelector<HTMLButtonElement>('button')!; botao.disabled = true;
-    try { await carregar(); } catch (erro) { credencial = ''; status.textContent = erro instanceof Error ? erro.message : 'Falha de conexão.'; }
-    finally { botao.disabled = false; }
+    statusAcesso.textContent = 'Validando acesso ADM…';
+    try { await carregar(); } catch (erro) { bloquear(); statusAcesso.textContent = erro instanceof Error ? erro.message : 'Falha de conexão.'; }
+    finally { botao.disabled = false; chave.value = ''; }
   });
   form.addEventListener('submit', async (ev) => {
     ev.preventDefault(); if (!carregado) return;
@@ -111,8 +121,7 @@ export function iniciarWhatsApp(): void {
     if (new Set(preenchidos).size !== preenchidos.length) { status.textContent = 'Use um número diferente para cada destinatário.'; return; }
     salvar.disabled = true;
     try {
-      if (modoDemo) localStorage.setItem(chaveDemo, JSON.stringify(Object.fromEntries(destinatarios.map((p) => [p.id, p.numero]))));
-      else await pedir({ method: 'PUT', body: JSON.stringify({ destinatarios }) });
+      await pedir({ method: 'PUT', body: JSON.stringify({ destinatarios }) });
       await carregar(); status.textContent = `Números salvos. ${status.textContent}`;
     } catch (erro) { status.textContent = erro instanceof Error ? erro.message : 'Não foi possível salvar os números.'; }
     finally { salvar.disabled = false; }
@@ -121,5 +130,14 @@ export function iniciarWhatsApp(): void {
   document.querySelector('#whatsapp-recarregar')!.addEventListener('click', () => {
     void carregar().catch(() => { status.textContent = 'Não foi possível atualizar a configuração.'; });
   });
-  if (modoDemo) void carregar().catch(() => { status.textContent = 'Não foi possível ler os números deste navegador.'; });
+  dialog.addEventListener('close', () => { chave.value = ''; if (!carregado) credencial = ''; });
+  return {
+    autenticado: () => carregado,
+    solicitarAcesso: () => {
+      if (carregado) { aoAutorizar(); return; }
+      statusAcesso.textContent = 'Área exclusiva do ADM. Informe sua chave para continuar.';
+      if (!dialog.open) dialog.showModal();
+      chave.focus();
+    },
+  };
 }

@@ -1,6 +1,6 @@
 # Registro de ocorrência e avisos pelo WhatsApp
 
-O administrador preenche seis números na aba **Canal direto com a diretoria**: Marcela (dirigente), Alexandra e Susana (supervisoras), Mercia (PEC / ADM), Monica (PEC) e Camila (CEC). Use DDI + DDD + número. Campo vazio desativa o destinatário. Números repetidos são recusados.
+O administrador entra por **ADM** no topo da página e valida sua chave no servidor. Só depois aparecem a aba **Canal direto com a diretoria** e os seis campos: Marcela (dirigente), Alexandra e Susana (supervisoras), Mercia (PEC / ADM), Monica (PEC) e Camila (CEC). Use DDI + DDD + número. Campo vazio desativa o destinatário. Números repetidos são recusados.
 
 O sistema envia avisos automáticos ao WhatsApp pessoal dos seis responsáveis. Cada aviso inclui um link direto para a ocorrência, como `https://seu-sistema/#ocorrencias/123`. Ao tocar no link, o responsável abre os detalhes no navegador. Não há recebimento de respostas, webhook de mensagens ou interface de conversa dentro do sistema.
 
@@ -41,13 +41,15 @@ A apresentação visual em `/mensageria.html` pode ser impressa ou salva em PDF.
    ```
 
 5. Configure no servidor as variáveis de `.env.example`: `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_API_VERSION` (uma versão atualmente suportada no formato `vNN.N`), `WHATSAPP_TEMPLATE`, `WHATSAPP_TEMPLATE_LANGUAGE` e `APP_PUBLIC_URL`. Esta última deve conter o endereço HTTPS do frontend conectado ao mesmo backend, sem query string ou fragmento. O link é gerado no servidor; não depende do endereço enviado pelo visitante. Sem um endereço válido, o disparo permanece desativado. Após a aprovação do modelo, defina `WHATSAPP_ENABLED=true` e reinicie o servidor. Nunca use prefixo `VITE_` para segredos.
-6. Entre na aba ADM, informe a chave e salve os números. A ativação afeta **novos registros**; ocorrências anteriores não são reenviadas.
+6. Use **ADM** no topo, informe a chave e salve os números. O cadastro e os números ficam ocultos antes da validação. **Bloquear configuração**, recarregar a página ou receber uma resposta 401/403 do servidor encerra o acesso. A ativação afeta **novos registros**; ocorrências anteriores não são reenviadas.
 
 Referência de envio: [coleção oficial da Meta para WhatsApp Cloud API](https://www.postman.com/meta/whatsapp-business-platform/documentation/wlk6lh4/whatsapp-cloud-api).
 
 ## Cloudflare Pages
 
 O build `build:demo` continua local ao navegador e **não envia mensagens**. Para usar o backend compartilhado, configure o build do projeto Pages a partir da raiz do repositório:
+
+O cadastro dos números não tem liberação local de demonstração: exige a mesma autenticação do servidor em todos os modos. Sem backend configurado, o público pode registrar ocorrências fictícias na demonstração, mas ninguém abre os campos administrativos. Valores ou sinalizadores em `localStorage` não concedem acesso ADM.
 
 - Comando: `npm --prefix frontend ci && npm --prefix frontend run build`.
 - Saída: `frontend/dist`.

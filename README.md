@@ -38,7 +38,7 @@ Na demonstração, os registros e metadados continuam em `localStorage`; PDFs fi
 
 ## Rodar localmente
 
-Para configurar os seis destinatários e o envio automático pelo WhatsApp Business, consulte [docs/whatsapp.md](docs/whatsapp.md). A aba **Canal direto com a diretoria** contém os números e o histórico. A apresentação simplificada está em `/mensageria.html`. O envio depende de conta e modelo aprovados na Meta; a demonstração não envia mensagens.
+Para configurar os seis destinatários e o envio automático pelo WhatsApp Business, consulte [docs/whatsapp.md](docs/whatsapp.md). Use **ADM** no topo e valide a chave no servidor para liberar a aba **Canal direto com a diretoria**, com os números e o histórico. O cadastro fica oculto para usuários sem acesso ADM, inclusive na demonstração. A apresentação simplificada está em `/mensageria.html`. O envio depende de conta e modelo aprovados na Meta; a demonstração não envia mensagens.
 
 Use Node.js 20.19 ou superior na linha 20, ou Node.js 22.12 ou superior, para compilar o front-end.
 

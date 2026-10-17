@@ -106,6 +106,7 @@ const botaoAtualizar = q<HTMLButtonElement>('#atualizar');
 /* ---------- abas ---------- */
 
 const abas = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+let acessoADM: ReturnType<typeof iniciarWhatsApp>;
 const paineis: Record<Painel, HTMLElement> = {
   'visao-geral': q('#painel-visao-geral'), registrar: q('#painel-registrar'),
   ocorrencias: q('#painel-ocorrencias'), relatorio: q('#painel-relatorio'),
@@ -122,6 +123,11 @@ let painelAtivo: Painel = 'visao-geral';
 const telaMovel = window.matchMedia('(max-width: 699px)');
 
 function ativar(painel: Painel, moverFoco = false, registroId?: number): void {
+  if (painel === 'whatsapp' && !acessoADM?.autenticado()) {
+    ativar('visao-geral');
+    acessoADM?.solicitarAcesso();
+    return;
+  }
   q('#inicio').hidden = true;
   q('.lateral').hidden = false;
   q('.aplicacao').hidden = false;
@@ -147,12 +153,13 @@ function ativar(painel: Painel, moverFoco = false, registroId?: number): void {
 abas.forEach((aba) => {
   aba.addEventListener('click', () => ativar(aba.dataset.painel as Painel));
   aba.addEventListener('keydown', (ev) => {
-    const i = abas.indexOf(aba);
+    const visiveis = abas.filter((item) => !item.hidden);
+    const i = visiveis.indexOf(aba);
     let destino: HTMLButtonElement | undefined;
-    if (ev.key === 'ArrowRight' || ev.key === 'ArrowDown') destino = abas[(i + 1) % abas.length];
-    if (ev.key === 'ArrowLeft' || ev.key === 'ArrowUp') destino = abas[(i - 1 + abas.length) % abas.length];
-    if (ev.key === 'Home') destino = abas[0];
-    if (ev.key === 'End') destino = abas[abas.length - 1];
+    if (ev.key === 'ArrowRight' || ev.key === 'ArrowDown') destino = visiveis[(i + 1) % visiveis.length];
+    if (ev.key === 'ArrowLeft' || ev.key === 'ArrowUp') destino = visiveis[(i - 1 + visiveis.length) % visiveis.length];
+    if (ev.key === 'Home') destino = visiveis[0];
+    if (ev.key === 'End') destino = visiveis[visiveis.length - 1];
     if (destino) { ev.preventDefault(); ativar(destino.dataset.painel as Painel, true); }
   });
 });
@@ -672,7 +679,17 @@ campoData.min = '1000-01-01';
 campoData.max = hojeISO();
 q<HTMLTimeElement>('#data-atual').dateTime = hojeISO();
 q('#data-atual').textContent = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'America/Sao_Paulo' });
-iniciarWhatsApp();
+acessoADM = iniciarWhatsApp(() => {
+  q('#aba-whatsapp').hidden = false;
+  q('.abas-lista').classList.add('adm-liberado');
+  ativar('whatsapp');
+}, () => {
+  q('#aba-whatsapp').hidden = true;
+  q('.abas-lista').classList.remove('adm-liberado');
+  if (painelAtivo === 'whatsapp') ativar('visao-geral');
+  q('#abrir-acesso-adm').focus();
+});
+q('#abrir-acesso-adm').addEventListener('click', () => acessoADM.solicitarAcesso());
 q('#aviso-demo').hidden = !modoDemo;
 q('#entrada-demo').hidden = !modoDemo;
 if (modoDemo) q('#ambiente').textContent = 'Demonstração';

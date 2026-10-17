@@ -377,7 +377,8 @@ dialog::backdrop { background: #182e256b; backdrop-filter: blur(3px); }
   .bloco-cabecalho .link { white-space: nowrap; font-size: 10px; }
   .bloco-cabecalho .botao { font-size: 9px; padding: 7px 9px; }
   .abas { position: fixed; z-index: 50; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--linha); padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -3px 20px #233e2e05; }
-  .abas-lista { grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 0; gap: 0; }
+  .abas-lista { grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 0; gap: 0; }
+  .abas-lista.adm-liberado { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   .abas button { flex-direction: column; gap: 4px; justify-content: center; text-align: center; padding: 10px 3px 9px; border-radius: 0; font-size: 9px; min-height: 66px; }
   .abas button .icone { width: 21px; height: 21px; }
   .abas button[aria-selected="true"] { background: #edf5fc; }
@@ -489,6 +490,8 @@ dialog::backdrop { background: #182e256b; backdrop-filter: blur(3px); }
 /* Configuração dos seis destinatários e arquitetura da mensageria. */
 #whatsapp-form, #whatsapp-acesso { padding: 0 24px; }
 #whatsapp-acesso { padding-bottom: 24px; }
+.acesso-adm { min-height: 44px; padding: 7px 9px; border: 1px solid #ffffff66; border-radius: 7px; background: #0b6388; color: white; font-size: 11px; font-weight: 600; }
+#whatsapp-acesso-status { margin-bottom: 20px; }
 #whatsapp-bloquear { margin: 0 24px 20px; }
 .whatsapp-campos { margin-top: 20px; }
 .whatsapp-campos > .campo { min-width: 0; }
