@@ -3,7 +3,9 @@ import AxeBuilder from '@axe-core/playwright';
 
 test('UML permite selecionar classes, usar zoom e exportar SVG e PNG', async ({ page }) => {
   await page.goto('/uml.html');
-  await expect(page.getByRole('heading', { name: 'Classes do sistema' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Registro, acesso ADM e avisos' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Quem faz o quê' })).toBeVisible();
+  await expect(page.locator('#uml-casos-mapa svg')).toHaveCount(1);
   await expect(page.locator('#uml-classe-nome')).toHaveText('Escola');
   await expect(page.locator('body')).toHaveClass(/uml-apresentando/);
   await expect(page.locator('#uml-mapa [data-classe]')).toHaveCount(9);

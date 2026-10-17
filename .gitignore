@@ -1,5 +1,6 @@
 node_modules
 .env
+.admin-acesso.local.txt
 frontend/dist/
 frontend/test-results/
 frontend/playwright-report/

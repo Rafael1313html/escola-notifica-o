@@ -52,6 +52,35 @@ const classes = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1100"
 </svg>\n`;
 
 const participantes = [['Escola', 130], ['Sistema', 440], ['Banco e fila', 750], ['API WhatsApp', 1060], ['Responsáveis', 1370]];
+const ator = (x, y, nome) => `<g fill="none" stroke="#456177" stroke-width="2"><circle cx="${x}" cy="${y}" r="16"/><path d="M${x} ${y + 16}v48m-28-29h56m-28 29-24 38m24-38 24 38"/></g><text x="${x}" y="${y + 132}" text-anchor="middle" font-size="22" font-weight="bold">${nome}</text>`;
+const caso = (x, y, rx, nome) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="52" fill="#fff" stroke="#6b879e" stroke-width="2"/><text x="${x}" y="${y + 7}" text-anchor="middle" font-size="22">${nome}</text>`;
+const casos = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="casos-titulo casos-descricao">
+  <title id="casos-titulo">Casos de uso UML: escola, administrador e responsáveis</title>
+  <desc id="casos-descricao">A escola registra ocorrências. Os responsáveis consultam o registro pelo link recebido no WhatsApp. Só o administrador pode configurar os seis números e consultar os envios, após autenticar sua chave no servidor. A API WhatsApp participa somente do envio. O disparo é uma extensão do registro quando a integração está ativa.</desc>
+  ${estilo}<defs><marker id="casos-seta" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M1 1 11 6 1 11" fill="none" stroke="#456177" stroke-width="1.5"/></marker></defs>
+  <rect width="1600" height="1000" fill="#f5f8fb"/>
+  <text x="40" y="45" font-size="24" font-weight="bold">QUEM USA O SISTEMA E O QUE PODE FAZER</text>
+  <rect x="300" y="100" width="1000" height="800" rx="12" fill="#edf4f8" stroke="#6b879e" stroke-width="2"/>
+  <text x="800" y="140" text-anchor="middle" font-size="23" font-weight="bold">escola-notificação · Conviva SP</text>
+  <rect x="330" y="550" width="940" height="320" rx="10" fill="#e7efff" stroke="#6b879e" stroke-dasharray="6 5"/>
+  <text x="800" y="577" text-anchor="middle" font-size="18" font-weight="bold">ÁREA EXCLUSIVA DO ADM</text>
+  <g fill="none" stroke="#456177" stroke-width="2"><path d="M143 235 370 270"/><path d="M1452 235 1240 270"/><path d="M143 655 360 640"/><path d="M143 655H240V790H360"/><path d="M1380 675H1340V460H1050"/></g>
+  ${ator(115, 200, 'Equipe escolar')}${ator(115, 620, 'ADM')}${ator(1480, 200, 'Responsável')}
+  ${caso(570, 270, 200, 'Registrar ocorrência')}${caso(1040, 270, 200, 'Consultar ocorrência')}
+  ${caso(800, 460, 250, 'Enviar aviso com link')}
+  ${caso(570, 640, 210, 'Configurar seis números')}${caso(1050, 650, 210, 'Autenticar ADM')}${caso(570, 790, 210, 'Consultar envios')}
+  <path d="M740 409 620 321" class="relacao" stroke-dasharray="7 5" marker-end="url(#casos-seta)"/>
+  <text x="690" y="351" text-anchor="middle" font-size="17">«extend»</text>
+  <text x="870" y="384" text-anchor="middle" font-size="17">[integração ativa]</text>
+  <path d="M780 640 840 650" class="relacao" stroke-dasharray="7 5" marker-end="url(#casos-seta)"/>
+  <text x="812" y="623" text-anchor="middle" font-size="16">«include»</text>
+  <path d="M780 790H1050V702" class="relacao" stroke-dasharray="7 5" marker-end="url(#casos-seta)"/>
+  <text x="891" y="779" text-anchor="middle" font-size="16">«include»</text>
+  <text x="1050" y="832" text-anchor="middle" font-size="16">Chave validada no servidor</text>
+  <rect x="1380" y="630" width="200" height="90" rx="8" fill="#fff" stroke="#6b879e"/>
+  <text x="1480" y="660" text-anchor="middle" font-size="15">«serviço externo»</text><text x="1480" y="690" text-anchor="middle" font-size="21" font-weight="bold">API WhatsApp</text>
+  <text x="40" y="953" class="nota">Somente o ADM cadastra os destinatários. Os responsáveis recebem o link no WhatsApp pessoal e abrem o registro no navegador.</text>
+</svg>\n`;
 const seta = (x1, x2, y, texto, tracejada = false) => `<path d="M${x1} ${y}H${x2}" fill="none" stroke="#456177" stroke-width="2" ${tracejada ? 'stroke-dasharray="7 5"' : ''} marker-end="url(#seq-seta)"/><text x="${(x1 + x2) / 2}" y="${y - 13}" text-anchor="middle" font-size="17">${texto}</text>`;
 const sequencia = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 820" role="img" aria-labelledby="seq-titulo seq-descricao">
   <title id="seq-titulo">Sequência UML: registrar e enviar o link da ocorrência</title>
@@ -73,7 +102,8 @@ const sequencia = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 820
   <text x="35" y="785" class="nota">Somente envio · sem respostas, webhook de mensagens ou chat interno · integração depende da ativação na Meta</text>
 </svg>\n`;
 for (const [arquivo, conteudo] of [['frontend/src/uml-diagrama.svg', classes], ['docs/classes-uml.svg', classes],
+  ['frontend/src/uml-casos.svg', casos], ['docs/casos-uso-uml.svg', casos],
   ['frontend/src/uml-sequencia.svg', sequencia], ['docs/sequencia-uml.svg', sequencia]]) {
   fs.writeFileSync(path.join(raiz, arquivo), conteudo);
 }
-console.log('Diagramas de classes e de sequência UML gerados.');
+console.log('Diagramas de casos de uso, classes e sequência UML gerados.');

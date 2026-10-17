@@ -3,6 +3,7 @@ import './tema.css';
 import './tema';
 import diagrama from './uml-diagrama.svg?raw';
 import sequencia from './uml-sequencia.svg?raw';
+import casos from './uml-casos.svg?raw';
 import apresentacaoPDF from '../../docs/classes-uml.pdf?url';
 
 interface ClasseUML { tipo: string; descricao: string; atributos: [string, string][]; regras: string[]; }
@@ -60,6 +61,7 @@ const status = q<HTMLParagraphElement>('#uml-status');
 mapa.innerHTML = diagrama;
 q<HTMLAnchorElement>('#uml-pdf').href = apresentacaoPDF;
 q('#uml-sequencia-mapa').innerHTML = sequencia;
+q('#uml-casos-mapa').innerHTML = casos;
 const imagem = mapa.querySelector<SVGSVGElement>('svg')!;
 function elemento(tag: string, texto: string): HTMLElement {
   const item = document.createElement(tag); item.textContent = texto; return item;

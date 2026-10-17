@@ -25,6 +25,13 @@ main { max-width: 1700px; padding: 30px 32px; margin: auto; } .uml-introducao { 
 .uml-apresentando .uml-inspecao { display: none; }
 .uml-apresentando #uml-mapa { height: auto; max-height: none; }
 .uml-sequencia { margin-top: 28px; padding: 24px; background: var(--papel); border: 1px solid var(--linha); border-radius: 12px; }
+.uml-casos { margin-bottom: 32px; padding: 24px; background: var(--papel); border: 1px solid var(--linha); border-radius: 12px; }
+.uml-casos h2 { margin: 6px 0 10px; font-size: 23px; }
+.uml-casos > p { color: var(--suave); }
+#uml-casos-mapa { overflow: auto; margin-top: 20px; }
+#uml-casos-mapa svg { display: block; width: 100%; height: auto; }
+.uml-classes-titulo { font-size: 23px; margin: 28px 0 18px; }
+@media print { .uml-casos { border: 0; padding: 0; margin: 0; } #uml-casos-mapa { overflow: visible; margin-top: 8px; } #uml-casos-mapa svg { max-height: 390px; } .uml-classes-titulo { break-before: page; margin: 0 0 12px; } }
 .uml-sequencia h2 { margin: 6px 0 10px; font-size: 23px; }
 .uml-sequencia > p { color: var(--suave); }
 #uml-sequencia-mapa { overflow: auto; margin-top: 20px; }

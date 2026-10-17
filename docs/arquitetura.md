@@ -8,9 +8,9 @@ Arquivos prontos para compartilhar: [PDF](apresentacao-sistema.pdf) e [imagem PN
 
 ## Diagrama de classes UML interativo
 
-Abra [uml.html](https://escola-notificacao.pages.dev/uml.html) para apresentar os diagramas de classes e de sequência, selecionar as nove entidades e enumerações, consultar atributos e regras, ajustar zoom e baixar SVG/PNG. O modo apresentação amplia o desenho; selecionar uma classe abre seus detalhes. A impressão gera a apresentação em PDF. O desenho representa o modelo de domínio; o código usa interfaces TypeScript e funções, sem classes JavaScript para cada entidade.
+Abra [uml.html](https://escola-notificacao.pages.dev/uml.html) para apresentar três vistas UML: casos de uso (escola, ADM e responsáveis), classes e sequência do envio. O cadastro dos seis números exige autenticação ADM no servidor. As nove entidades e enumerações permitem consultar atributos e regras, ajustar zoom e baixar SVG/PNG. O modo apresentação amplia o desenho; selecionar uma classe abre seus detalhes. A impressão gera a apresentação em PDF. O desenho representa o modelo de domínio; o código usa interfaces TypeScript e funções, sem classes JavaScript para cada entidade.
 
-Versões para compartilhar: [classes em PNG](classes-uml.png), [classes em SVG](classes-uml.svg), [sequência em SVG](sequencia-uml.svg) e [apresentação em PDF](classes-uml.pdf). Para regenerar os vetores, execute `npm run docs:uml`.
+Versões para compartilhar: [casos de uso em SVG](casos-uso-uml.svg), [casos de uso em PNG](casos-uso-uml.png), [classes em PNG](classes-uml.png), [classes em SVG](classes-uml.svg), [sequência em SVG](sequencia-uml.svg) e [apresentação em PDF](classes-uml.pdf). Para regenerar os vetores, execute `npm run docs:uml`.
 
 ```mermaid
 classDiagram
