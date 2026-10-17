@@ -1,23 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 820" role="img" aria-labelledby="seq-titulo seq-descricao">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 900" role="img" aria-labelledby="seq-titulo seq-descricao">
   <title id="seq-titulo">Sequência UML: registrar e enviar o link da ocorrência</title>
-  <desc id="seq-descricao">A escola confirma o cadastro. O sistema salva ocorrência e avisos na mesma transação e devolve o protocolo. Depois processa a fila e envia um modelo com o link pela API WhatsApp. Os responsáveis abrem o registro no navegador. Não há recebimento de respostas, webhook de mensagens ou chat interno.</desc>
+  <desc id="seq-descricao">A equipe escolar confirma o cadastro pela interface Pages. A API Worker salva ocorrência, anexo e avisos no D1 em um batch atômico e devolve o protocolo. O Worker Cron verifica a fila a cada minuto e envia um modelo aprovado pela API WhatsApp, quando a integração está ativa. Os responsáveis abrem o link no navegador. Não há recebimento de respostas ou chat interno.</desc>
   <style>text{font-family:Arial,sans-serif;fill:#24364b}.moldura{fill:#fff;stroke:#6b879e;stroke-width:1.5}.titulo{font-size:23px;font-weight:bold;text-anchor:middle}.estereotipo{font-size:14px;text-anchor:middle;fill:#456177}.atributo{font:17px monospace}.relacao{fill:none;stroke:#456177;stroke-width:2}.rotulo{font-size:17px}.nota{font-size:17px;fill:#456177}.classe{cursor:pointer}.classe:hover .moldura{stroke:#12636d;stroke-width:4}</style><defs><marker id="seq-seta" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#456177"/></marker></defs>
-  <rect width="1500" height="820" fill="#f5f8fb"/>
+  <rect width="1800" height="900" fill="#f5f8fb"/>
   <text x="35" y="40" font-size="22" font-weight="bold">DO CADASTRO AO LINK NO WHATSAPP PESSOAL</text>
-  <rect x="25" y="75" width="210" height="60" rx="8" fill="#e7f5f5" stroke="#6b879e"/><text x="130" y="112" text-anchor="middle" font-size="21" font-weight="bold">Escola</text><path d="M130 135V750" stroke="#8195a5" stroke-dasharray="6 7"/>
-<rect x="335" y="75" width="210" height="60" rx="8" fill="#e7f5f5" stroke="#6b879e"/><text x="440" y="112" text-anchor="middle" font-size="21" font-weight="bold">Sistema</text><path d="M440 135V750" stroke="#8195a5" stroke-dasharray="6 7"/>
-<rect x="645" y="75" width="210" height="60" rx="8" fill="#e7f5f5" stroke="#6b879e"/><text x="750" y="112" text-anchor="middle" font-size="21" font-weight="bold">Banco e fila</text><path d="M750 135V750" stroke="#8195a5" stroke-dasharray="6 7"/>
-<rect x="955" y="75" width="210" height="60" rx="8" fill="#e7f5f5" stroke="#6b879e"/><text x="1060" y="112" text-anchor="middle" font-size="21" font-weight="bold">API WhatsApp</text><path d="M1060 135V750" stroke="#8195a5" stroke-dasharray="6 7"/>
-<rect x="1265" y="75" width="210" height="60" rx="8" fill="#e7f5f5" stroke="#6b879e"/><text x="1370" y="112" text-anchor="middle" font-size="21" font-weight="bold">Responsáveis</text><path d="M1370 135V750" stroke="#8195a5" stroke-dasharray="6 7"/>
-  <rect x="430" y="180" width="20" height="200" fill="#d9eafa" stroke="#6b879e"/>
-  <path d="M130 190H430" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="280" y="177" text-anchor="middle" font-size="17">1. Confirmar ocorrência</text>
-  <path d="M450 260H750" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="600" y="247" text-anchor="middle" font-size="17">2. Salvar registro e seis avisos</text>
-  <path d="M750 325H450" fill="none" stroke="#456177" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#seq-seta)"/><text x="600" y="312" text-anchor="middle" font-size="17">3. Confirmar transação</text>
-  <path d="M430 390H130" fill="none" stroke="#456177" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#seq-seta)"/><text x="280" y="377" text-anchor="middle" font-size="17">4. Retornar protocolo</text>
-  <rect x="700" y="435" width="755" height="175" rx="8" fill="none" stroke="#6b879e"/>
-  <text x="715" y="460" font-size="15" font-weight="bold">loop · um aviso por número configurado</text>
-  <path d="M750 510H1060" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="905" y="497" text-anchor="middle" font-size="17">5. Modelo aprovado + link</text>
-  <path d="M1060 580H1370" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="1215" y="567" text-anchor="middle" font-size="17">6. Aviso no WhatsApp pessoal</text>
-  <path d="M1370 680H440" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="905" y="667" text-anchor="middle" font-size="17">7. Tocar no link e consultar a ocorrência no navegador</text>
-  <text x="35" y="785" class="nota">Somente envio · sem respostas, webhook de mensagens ou chat interno · integração depende da ativação na Meta</text>
+  <rect x="30" y="75" width="220" height="60" rx="8" fill="#e7f5f5" stroke="#6b879e"/><text x="140" y="112" text-anchor="middle" font-size="21" font-weight="bold">Equipe escolar</text><path d="M140 135V810" stroke="#8195a5" stroke-dasharray="6 7"/>
+<rect x="320" y="75" width="220" height="60" rx="8" fill="#e7f5f5" stroke="#6b879e"/><text x="430" y="112" text-anchor="middle" font-size="21" font-weight="bold">API Worker</text><path d="M430 135V810" stroke="#8195a5" stroke-dasharray="6 7"/>
+<rect x="620" y="75" width="220" height="60" rx="8" fill="#e7f5f5" stroke="#6b879e"/><text x="730" y="112" text-anchor="middle" font-size="21" font-weight="bold">D1 e fila</text><path d="M730 135V810" stroke="#8195a5" stroke-dasharray="6 7"/>
+<rect x="920" y="75" width="220" height="60" rx="8" fill="#e7f5f5" stroke="#6b879e"/><text x="1030" y="112" text-anchor="middle" font-size="21" font-weight="bold">Worker Cron</text><path d="M1030 135V810" stroke="#8195a5" stroke-dasharray="6 7"/>
+<rect x="1220" y="75" width="220" height="60" rx="8" fill="#e7f5f5" stroke="#6b879e"/><text x="1330" y="112" text-anchor="middle" font-size="21" font-weight="bold">API WhatsApp</text><path d="M1330 135V810" stroke="#8195a5" stroke-dasharray="6 7"/>
+<rect x="1520" y="75" width="220" height="60" rx="8" fill="#e7f5f5" stroke="#6b879e"/><text x="1630" y="112" text-anchor="middle" font-size="21" font-weight="bold">Responsáveis</text><path d="M1630 135V810" stroke="#8195a5" stroke-dasharray="6 7"/>
+  <rect x="420" y="180" width="20" height="200" fill="#d9eafa" stroke="#6b879e"/>
+  <path d="M140 190H420" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="280" y="177" text-anchor="middle" font-size="17">1. Confirmar registro</text>
+  <path d="M440 260H730" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="585" y="247" text-anchor="middle" font-size="17">2. Registro, anexo e avisos</text>
+  <path d="M730 325H440" fill="none" stroke="#456177" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#seq-seta)"/><text x="585" y="312" text-anchor="middle" font-size="17">3. Confirmar batch atômico</text>
+  <path d="M420 390H140" fill="none" stroke="#456177" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#seq-seta)"/><text x="280" y="377" text-anchor="middle" font-size="17">4. Retornar protocolo</text>
+  <rect x="695" y="430" width="1055" height="255" rx="8" fill="none" stroke="#6b879e"/>
+  <text x="710" y="453" font-size="15" font-weight="bold">loop · cron a cada minuto · integração ativa · um aviso por número preenchido</text>
+  <path d="M1030 500H730" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="880" y="487" text-anchor="middle" font-size="17">5. Buscar e assumir pendente</text>
+  <path d="M730 550H1030" fill="none" stroke="#456177" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#seq-seta)"/><text x="880" y="537" text-anchor="middle" font-size="17">6. Dados do aviso</text>
+  <path d="M1030 600H1330" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="1180" y="587" text-anchor="middle" font-size="17">7. Modelo aprovado + link</text>
+  <path d="M1330 650H1630" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="1480" y="637" text-anchor="middle" font-size="17">8. Aviso no WhatsApp pessoal</text>
+  <path d="M1630 755H430" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="1030" y="742" text-anchor="middle" font-size="17">9. Tocar no link e consultar a ocorrência no navegador</text>
+  <text x="35" y="863" class="nota">Somente envio · sem respostas, webhook de mensagens ou chat interno · integração depende da ativação na Meta</text>
 </svg>

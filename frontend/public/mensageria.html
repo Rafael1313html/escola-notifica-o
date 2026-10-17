@@ -10,6 +10,7 @@
     @media(max-width:760px){header{align-items:flex-start;flex-direction:column;gap:12px}h1{font-size:25px}.fluxo,.destinatarios{grid-template-columns:1fr}.fluxo li+li:before{content:'↓';top:-29px;left:48%}}
     @media print{@page{size:A4 landscape;margin:12mm}body{background:white;font-size:11px}main{padding:0;max-width:none}h1{font-size:24px}.acoes{display:none}.fluxo{gap:20px;margin:16px 0}.fluxo li{padding:12px}.pessoa{padding:9px}.aviso{margin:14px 0;padding:8px 14px}h2{font-size:17px;margin:12px 0}.mensagem{padding:10px}footer{margin-top:14px}*{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
     .mensagem { overflow-wrap: anywhere; }
+    @media print { body { font-size: 10px; } header { padding-bottom: 10px; gap: 18px; } header img { width: 100px; } h1 { font-size: 21px; } h2 { margin: 8px 0; } p { margin: 5px 0; } .fluxo { margin: 12px 0; } .fluxo li { padding: 10px; } .pessoa { padding: 7px; } .aviso { margin: 10px 0; padding: 6px 12px; } .mensagem { display: grid; grid-template-columns: 1fr 2fr; gap: 4px 18px; max-width: none; } .mensagem strong { grid-column: 1 / -1; } .mensagem p { margin: 0; } footer { margin-top: 10px; padding-top: 8px; } }
   </style>
 </head>
 <body><main>
@@ -17,13 +18,13 @@
   <h2>Fluxo de registro e envio</h2>
   <ol class="fluxo" aria-label="Fluxo do registro e da mensageria">
     <li><span class="numero">01 · ESCOLA</span><h3>Registrar ocorrência</h3><p>Preencher escola, data, classificação e fatos. Confirmar o cadastro.</p></li>
-    <li class="destaque"><span class="numero">02 · SISTEMA</span><h3>Salvar e gerar protocolo</h3><p>Guardar a ocorrência e sua fila de avisos juntos no banco de dados.</p></li>
-    <li><span class="numero">03 · MENSAGERIA</span><h3>Enviar pelo WhatsApp</h3><p>O servidor processa a fila e envia um modelo de mensagem pela API da Meta.</p></li>
+    <li class="destaque"><span class="numero">02 · API WORKER + D1</span><h3>Salvar e gerar protocolo</h3><p>Guardar ocorrência, documento e avisos juntos no banco D1 do Cloudflare.</p></li>
+    <li><span class="numero">03 · WORKER CRON</span><h3>Enviar pelo WhatsApp</h3><p>Com a integração ativa, o cron verifica a fila a cada minuto e envia pela API da Meta.</p></li>
     <li><span class="numero">04 · EQUIPE</span><h3>Abrir o link recebido</h3><p>Cada responsável recebe o aviso no WhatsApp pessoal e toca no link para consultar a ocorrência.</p></li>
   </ol>
   <h2>Seis números, preenchidos pelo administrador</h2>
   <div class="destinatarios"><div class="pessoa"><strong>Marcela</strong><span>Dirigente</span></div><div class="pessoa"><strong>Alexandra</strong><span>Supervisora</span></div><div class="pessoa"><strong>Susana</strong><span>Supervisora</span></div><div class="pessoa"><strong>Mercia</strong><span>PEC · ADM</span></div><div class="pessoa"><strong>Monica</strong><span>PEC</span></div><div class="pessoa"><strong>Camila</strong><span>CEC</span></div></div>
-  <p>O administrador usa <strong>ADM</strong> no topo e valida sua chave no servidor. Só depois aparecem <strong>Canal direto com a diretoria</strong> e os seis campos de números. Campo vazio desativa o destinatário.</p>
+  <p>Acesso comum: registrar e consultar ocorrências. O administrador usa <strong>ADM</strong> no topo e valida sua senha na API. Só depois aparecem <strong>Canal direto com a diretoria</strong> e os seis campos de números. Campo vazio desativa o destinatário.</p>
   <div class="aviso"><strong>Ativação pendente da conta WhatsApp Business.</strong><p>O envio depende das credenciais e de um modelo de mensagem aprovado pela Meta. O cadastro de números exige acesso ADM validado no servidor, inclusive na demonstração. Usuários sem acesso ADM não visualizam os campos. A demonstração não envia mensagens.</p></div>
   <h2>Exemplo de aviso</h2><div class="mensagem"><strong>Nova ocorrência registrada</strong><p>Protocolo: #123<br>Escola: unidade escolar<br>Data: 2026-10-17<br>Classificação: AMARELO</p><p>Acesse o registro completo: https://seu-sistema/#ocorrencias/123</p></div>
   <p>O aviso contém protocolo, escola, data, classificação e link direto. Descrição e documentos ficam no sistema. Somente envio: o sistema não recebe respostas, não usa webhook de mensagens e não tem interface de conversa. O painel ADM diferencia fila, aceite pela Meta, falha e resultado incerto. O aceite não confirma a entrega no aparelho.</p>

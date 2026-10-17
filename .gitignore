@@ -1,6 +1,9 @@
 node_modules
 .env
 .admin-acesso.local.txt
+.dev.vars
+.dev.vars.*
+**/.wrangler/
 frontend/dist/
 frontend/test-results/
 frontend/playwright-report/

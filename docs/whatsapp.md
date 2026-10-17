@@ -1,5 +1,7 @@
 # Registro de ocorrência e avisos pelo WhatsApp
 
+Para o backend nativo no Cloudflare, siga [cloudflare.md](cloudflare.md): Worker, D1, senha ADM em secret e cron a cada minuto. A configuração Node.js/MySQL abaixo continua como alternativa de instalação.
+
 O administrador entra por **ADM** no topo da página e valida sua chave no servidor. Só depois aparecem a aba **Canal direto com a diretoria** e os seis campos: Marcela (dirigente), Alexandra e Susana (supervisoras), Mercia (PEC / ADM), Monica (PEC) e Camila (CEC). Use DDI + DDD + número. Campo vazio desativa o destinatário. Números repetidos são recusados.
 
 O sistema envia avisos automáticos ao WhatsApp pessoal dos seis responsáveis. Cada aviso inclui um link direto para a ocorrência, como `https://seu-sistema/#ocorrencias/123`. Ao tocar no link, o responsável abre os detalhes no navegador. Não há recebimento de respostas, webhook de mensagens ou interface de conversa dentro do sistema.
@@ -8,11 +10,11 @@ O sistema envia avisos automáticos ao WhatsApp pessoal dos seis responsáveis. 
 
 ```mermaid
 flowchart LR
-    ADM[ADM: seis números] -->|Chave de acesso| API[Servidor da aplicação]
+    ADM[ADM: seis números] -->|Senha ADM| API[API Worker no Cloudflare]
     Escola[Escola registra ocorrência] --> Web[Interface no Cloudflare]
     Web --> API
-    API -->|Transação: ocorrência e avisos| DB[(MySQL)]
-    DB --> Fila[Processador da fila]
+    API -->|Batch atômico: ocorrência e avisos| DB[(D1)]
+    DB --> Fila[Worker Cron a cada minuto]
     Fila --> Meta[API WhatsApp Business]
     Meta --> Marcela[Marcela: dirigente]
     Meta --> Alexandra[Alexandra: supervisora]
@@ -55,7 +57,7 @@ O cadastro dos números não tem liberação local de demonstração: exige a me
 - Saída: `frontend/dist`.
 - Variável do Pages: `API_ORIGIN=https://dominio-do-backend` (somente a origem, sem caminho).
 - Publique o diretório `functions` da raiz junto ao site. O arquivo `functions/api/[[path]].js` encaminha `/api/*` ao servidor Node.js, evitando expor credenciais da Meta e evitando CORS entre navegador e backend.
-- O backend Node.js e o MySQL precisam estar publicados e ativos, por exemplo no Railway já previsto no projeto. As credenciais da Meta e a chave ADM ficam **no backend**, e não no Cloudflare ou no bundle do navegador.
+- O backend pode ser o Worker/D1 descrito em [cloudflare.md](cloudflare.md), ou uma instalação Node.js/MySQL. No ambiente Cloudflare, a senha ADM e o token da Meta são secrets do Worker. Nunca coloque esses segredos no bundle do navegador.
 
 Somente copiar `dist` por upload estático não publica Pages Functions. Use integração Git do Pages ou Wrangler com suporte a Functions. Configure os ambientes de produção e de prévia separadamente.
 
@@ -64,7 +66,7 @@ Referências: [Pages Functions](https://developers.cloudflare.com/pages/function
 ## Garantias e limites
 
 - O cadastro não espera chamadas externas. Ocorrência, anexo e avisos são persistidos na mesma transação. Uma falha ao gravar a fila desfaz o cadastro; falha posterior da Meta preserva a ocorrência já salva.
-- A fila é processada a cada cinco segundos, em lotes de até seis avisos. A atualização condicional de status impede dois processadores de assumirem o mesmo aviso.
+- A fila é processada a cada minuto no Cloudflare, ou a cada cinco segundos no Node.js, em lotes de até seis avisos. A atualização condicional de status impede dois processadores de assumirem o mesmo aviso.
 - O aviso envia protocolo, escola, data, classificação e link direto. Descrição, nome do registrante e anexos não são enviados à Meta. O link consulta a ocorrência pelo ID, inclusive quando ela não está mais entre os 200 registros recentes. Os detalhes seguem as mesmas regras de acesso do sistema; o link não cria uma autorização adicional.
 - `PENDENTE`: na fila; `PROCESSANDO`: tentativa em curso; `ACEITO`: Meta retornou um ID de mensagem; `FALHOU`: resposta de erro da API; `INCERTO`: timeout, resposta sem ID ou processamento interrompido.
 - O painel mostra os últimos 30 avisos. Não há confirmação de entrega ou leitura, pois webhooks ainda não fazem parte desta integração.

@@ -107,6 +107,7 @@ test('datas e escola filtram os registros sem alterar os indicadores globais', a
 });
 
 test('navegação por teclado, layout responsivo e estados vazios acessíveis', async ({ page }) => {
+  test.setTimeout(60000); // Seis páginas passam pela análise completa de acessibilidade.
   await page.goto('/#visao-geral');
   await expect(page.locator('#metrica-total')).toHaveText('0');
   await page.getByRole('tab', { name: 'Visão geral' }).focus();

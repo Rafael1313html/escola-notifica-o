@@ -11,22 +11,22 @@ const classes: Record<string, ClasseUML> = {
   Escola: {
     tipo: 'Entidade', descricao: 'Unidade escolar identificada pelo cadastro da rede.',
     atributos: [['id', 'Inteiro · chave primária'], ['nome', 'Texto de até 150 caracteres · único']],
-    regras: ['Uma escola pode ter zero ou várias ocorrências.', 'Cada ocorrência deve indicar uma escola cadastrada.', 'Tabela MySQL: escolas.'],
+    regras: ['Uma escola pode ter zero ou várias ocorrências.', 'Cada ocorrência deve indicar uma escola cadastrada.', 'Tabela: escolas.'],
   },
   Ocorrencia: {
     tipo: 'Entidade', descricao: 'Registro dos fatos, da classificação e do responsável pelo preenchimento.',
     atributos: [['id', 'Inteiro · chave primária · protocolo EN-000001'], ['escola_id', 'Inteiro · referência à escola'], ['data_ocorrencia', 'Data válida, igual ou anterior a hoje'], ['tipo', 'Texto opcional de até 100 caracteres'], ['descricao', 'Texto opcional de até 5.000 caracteres'], ['gravidade', 'Enumeração Gravidade'], ['registrado_por', 'Enumeração Registrante'], ['registrado_por_outro', 'Nome ou cargo opcional · até 100 caracteres'], ['status', 'Texto de até 30 caracteres · padrão ABERTA'], ['criado_em', 'Data e hora geradas pelo banco']],
-    regras: ['Pertence a exatamente uma escola.', 'Pode ter zero ou um anexo e gerar até seis avisos WhatsApp.', 'OUTROS exige nome ou cargo; os demais responsáveis mantêm esse campo vazio.', 'Ocorrência, anexo e fila de avisos são gravados na mesma transação.', 'O link recebido abre o registro pelo ID, inclusive fora dos 200 recentes.', 'Tabela MySQL: ocorrencias.'],
+    regras: ['Pertence a exatamente uma escola.', 'Pode ter zero ou um anexo e gerar até seis avisos WhatsApp.', 'OUTROS exige nome ou cargo; os demais responsáveis mantêm esse campo vazio.', 'Ocorrência, anexo e fila de avisos são gravados na mesma transação.', 'O link recebido abre o registro pelo ID, inclusive fora dos 200 recentes.', 'Tabela: ocorrencias.'],
   },
   Anexo: {
     tipo: 'Entidade', descricao: 'Documento opcional vinculado a uma ocorrência. Guarda um PDF ou um endereço de documento.',
-    atributos: [['ocorrencia_id', 'Inteiro · chave primária e referência à ocorrência'], ['tipo', 'Enumeração TipoAnexo'], ['nome', 'Nome do PDF · até 180 caracteres · opcional'], ['url', 'Link HTTP/HTTPS · até 2.048 caracteres · opcional'], ['tamanho', 'Quantidade de bytes do PDF · opcional'], ['arquivo', 'Conteúdo binário do PDF · MEDIUMBLOB · opcional']],
-    regras: ['PDF: nome, tamanho e arquivo preenchidos; URL vazia.', 'LINK: URL preenchida; nome, tamanho e arquivo vazios.', 'PDF de até 5 MB, com extensão e assinatura do formato validadas.', 'Links não podem conter credenciais; o sistema guarda o endereço sem copiar o arquivo.', 'Excluir a ocorrência remove o anexo no banco por ON DELETE CASCADE.', 'A composição representa essa dependência de existência.', 'Tabela MySQL: ocorrencia_anexos. Na demonstração, PDFs ficam no IndexedDB.'],
+    atributos: [['ocorrencia_id', 'Inteiro · chave primária e referência à ocorrência'], ['tipo', 'Enumeração TipoAnexo'], ['nome', 'Nome do PDF · até 180 caracteres · opcional'], ['url', 'Link HTTP/HTTPS · até 2.048 caracteres · opcional'], ['tamanho', 'Quantidade de bytes do PDF · opcional'], ['arquivo', 'Conteúdo binário do PDF · partes no D1 ou MEDIUMBLOB no MySQL · opcional']],
+    regras: ['PDF: nome, tamanho e arquivo preenchidos; URL vazia.', 'LINK: URL preenchida; nome, tamanho e arquivo vazios.', 'PDF de até 5 MB, com extensão e assinatura do formato validadas.', 'Links não podem conter credenciais; o sistema guarda o endereço sem copiar o arquivo.', 'Excluir a ocorrência remove o anexo no banco por ON DELETE CASCADE.', 'A composição representa essa dependência de existência.', 'Tabela: ocorrencia_anexos. Na demonstração, PDFs ficam no IndexedDB.'],
   },
   Registrante: {
     tipo: 'Enumeração', descricao: 'Função de quem preencheu o registro; não representa uma conta autenticada.',
     atributos: [['DIRETOR', 'Diretor'], ['VICE_DIRETOR', 'Vice-diretor'], ['OUTROS', 'Outra função, com nome ou cargo obrigatório']],
-    regras: ['Uma única opção por ocorrência.', 'O cadastro e as consultas não têm login. A configuração dos números exige uma chave ADM.'],
+    regras: ['Uma única opção por ocorrência.', 'O cadastro e as consultas não têm login. A configuração dos números exige uma senha ADM.'],
   },
   Gravidade: {
     tipo: 'Enumeração', descricao: 'Classificação usada nos indicadores, filtros e relatórios da rede.',
@@ -35,18 +35,18 @@ const classes: Record<string, ClasseUML> = {
   },
   TipoAnexo: {
     tipo: 'Enumeração de domínio', descricao: 'Alternativas aceitas no documento de apoio de uma ocorrência.',
-    atributos: [['PDF', 'Arquivo armazenado no MySQL ou no navegador da demonstração'], ['LINK', 'Endereço HTTP/HTTPS de um documento externo']],
+    atributos: [['PDF', 'Arquivo armazenado no D1, no MySQL ou no navegador da demonstração'], ['LINK', 'Endereço HTTP/HTTPS de um documento externo']],
     regras: ['Um anexo escolhe apenas uma alternativa.', 'Representa a união de tipos TypeScript e as restrições CHECK do banco.'],
   },
   DestinatarioWhatsApp: {
     tipo: 'Configuração de mensageria', descricao: 'Um dos seis responsáveis que podem receber o link da ocorrência no WhatsApp pessoal.',
     atributos: [['id', 'Identificador fixo · chave primária'], ['numero', 'DDI, DDD e telefone · até 15 dígitos'], ['/ nome', 'Derivado do cadastro fixo da aplicação'], ['/ cargo', 'Derivado do cadastro fixo da aplicação']],
-    regras: ['Marcela: dirigente. Alexandra e Susana: supervisoras. Mercia: PEC / ADM. Monica: PEC. Camila: CEC.', 'O ADM altera os seis números usando uma chave de acesso.', 'Campo vazio desativa o destinatário; números repetidos são recusados.', 'Pode receber avisos de várias ocorrências.', 'Tabela MySQL: whatsapp_destinatarios.'],
+    regras: ['Marcela: dirigente. Alexandra e Susana: supervisoras. Mercia: PEC / ADM. Monica: PEC. Camila: CEC.', 'O ADM altera os seis números usando uma senha de acesso.', 'Campo vazio desativa o destinatário; números repetidos são recusados.', 'Pode receber avisos de várias ocorrências.', 'Tabela: whatsapp_destinatarios.'],
   },
   AvisoWhatsApp: {
     tipo: 'Entidade da fila', descricao: 'Aviso individual persistido após o cadastro e enviado pela API da Meta.',
     atributos: [['id', 'Inteiro longo · chave primária'], ['ocorrencia_id', 'Referência à ocorrência'], ['destinatario_id', 'Referência ao responsável'], ['numero', 'Cópia do telefone no momento do registro'], ['status', 'Enumeração StatusEnvioWhatsApp'], ['mensagem_id', 'ID retornado pela Meta · opcional'], ['atualizado_em', 'Data e hora da última atualização']],
-    regras: ['Um aviso por ocorrência e destinatário; a combinação é única no banco.', 'Protocolo, escola, data, classificação e link direto seguem no modelo aprovado.', 'Descrição e documentos ficam no sistema.', 'A fila é processada após a gravação, sem esperar pela Meta durante o cadastro.', 'Somente envio: sem respostas, webhook de mensagens ou chat interno.', 'Tabela MySQL: whatsapp_envios.'],
+    regras: ['Um aviso por ocorrência e destinatário; a combinação é única no banco.', 'Protocolo, escola, data, classificação e link direto seguem no modelo aprovado.', 'Descrição e documentos ficam no sistema.', 'A fila é processada após a gravação, sem esperar pela Meta durante o cadastro.', 'Somente envio: sem respostas, webhook de mensagens ou chat interno.', 'Tabela: whatsapp_envios.'],
   },
   StatusEnvioWhatsApp: {
     tipo: 'Enumeração de mensageria', descricao: 'Situação da tentativa de envio; não representa confirmação de entrega no aparelho.',

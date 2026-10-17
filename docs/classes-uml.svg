@@ -51,7 +51,7 @@
 <text class="atributo" x="18" y="153">+ nome: string [180] ?</text>
 <text class="atributo" x="18" y="178">+ url: string [2048] ?</text>
 <text class="atributo" x="18" y="203">+ tamanho: int ?</text>
-<text class="atributo" x="18" y="228">+ arquivo: MEDIUMBLOB ?</text>
+<text class="atributo" x="18" y="228">+ arquivo: binario ?</text>
   </g>
 <g class="classe" data-classe="Registrante" transform="translate(40 390)">
     <rect class="moldura" width="300" height="170" rx="10"/>

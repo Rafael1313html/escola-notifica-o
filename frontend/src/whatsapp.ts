@@ -49,7 +49,7 @@ export function iniciarWhatsApp(aoAutorizar: () => void, aoBloquear: () => void)
 
   async function pedir(opcoes?: RequestInit): Promise<Configuracao | { salvo: boolean }> {
     const chavePedido = credencial;
-    if (!chavePedido) throw new Error('Entre com a chave ADM para acessar a configuração.');
+    if (!chavePedido) throw new Error('Entre com a senha ADM para acessar a configuração.');
     const resposta = await fetch('/api/admin/whatsapp', { ...opcoes, cache: 'no-store',
       signal: AbortSignal.timeout(15000),
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${chavePedido}` } });
@@ -135,7 +135,7 @@ export function iniciarWhatsApp(aoAutorizar: () => void, aoBloquear: () => void)
     autenticado: () => carregado,
     solicitarAcesso: () => {
       if (carregado) { aoAutorizar(); return; }
-      statusAcesso.textContent = 'Área exclusiva do ADM. Informe sua chave para continuar.';
+      statusAcesso.textContent = 'Área exclusiva do ADM. Informe sua senha para continuar.';
       if (!dialog.open) dialog.showModal();
       chave.focus();
     },

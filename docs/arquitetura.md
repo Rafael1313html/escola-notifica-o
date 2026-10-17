@@ -1,5 +1,7 @@
 # Conviva SP — uso e arquitetura
 
+No Cloudflare, o acesso comum usa Pages, uma API Worker e banco D1 compartilhado. A configuração dos seis números exige senha ADM. O cron do Worker processa a fila a cada minuto. Consulte [implantação e acessos](cloudflare.md). A opção Node.js/MySQL continua disponível para instalações próprias.
+
 A arquitetura simplificada de **registro e disparo ao WhatsApp**, com os seis destinatários configurados pelo ADM, está em [whatsapp.md](whatsapp.md) e na apresentação `/mensageria.html`. O backend persiste a fila junto à ocorrência e envia os avisos pela API da Meta após a gravação. A demonstração não envia mensagens.
 
 A apresentação para o cliente está em [apresentacao.html](../frontend/public/apresentacao.html). Após iniciar o sistema, abra `/apresentacao.html` ou use “Como o sistema funciona” na lateral. A página funciona sem serviços externos e oferece impressão em A4 paisagem ou salvamento em PDF pelo navegador.
@@ -67,7 +69,7 @@ classDiagram
         +string nome
         +string url
         +int tamanho
-        +MEDIUMBLOB arquivo
+        +bytes arquivo
     }
     class Gravidade {
         <<enumeration>>
@@ -146,4 +148,4 @@ Os registros e os metadados dos anexos ficam em `localStorage`. O conteúdo dos 
 
 ## Escopo atual
 
-O sistema oferece cadastro, consulta dos 200 registros mais recentes, busca, filtros, detalhes, download de PDF, abertura de links, indicadores do histórico, relatório por escola e exportação CSV. Não há autenticação nem controle de acesso. Para implantação com dados reais, esses recursos ainda precisam ser implementados; a demonstração deve usar dados fictícios.
+O sistema oferece cadastro, consulta dos 200 registros mais recentes, busca, filtros, detalhes, download de PDF, abertura de links, indicadores do histórico, relatório por escola e exportação CSV. O acesso comum não exige login. A configuração dos números e o histórico dos avisos exigem senha ADM validada pela API. No Cloudflare, PDFs são divididos em partes de 512 KB no D1; na instalação MySQL, usam MEDIUMBLOB. Ambos preservam o limite de 5 MB.

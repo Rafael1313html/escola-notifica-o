@@ -1,0 +1,38 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "escola-notificacao-api",
+  "main": "worker.mjs",
+  "account_id": "4f629e0de9a41d35b1e4d2bbb042738e",
+  "compatibility_date": "2026-10-17",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "directory": "../frontend/dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*", "/health"],
+    "not_found_handling": "single-page-application"
+  },
+  "vars": {
+    "APP_PUBLIC_URL": "https://escola-notificacao.pages.dev/",
+    "WHATSAPP_ENABLED": "false"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "escola-notificacao",
+      "database_id": "1faab84f-3dfd-43ac-a7d3-b42fabf99284",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "triggers": {
+    "crons": [
+      "* * * * *"
+    ]
+  },
+  "observability": {
+    "enabled": true
+  }
+}

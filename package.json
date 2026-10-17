@@ -10,11 +10,17 @@
     "build:demo": "npm --prefix frontend ci && npm --prefix frontend run build:demo",
     "db:init": "node scripts/init-db.js",
     "docs:uml": "node scripts/gerar-uml.js",
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "cloudflare:dev": "wrangler dev --config cloudflare/wrangler.jsonc",
+    "cloudflare:migrate": "wrangler d1 migrations apply DB --remote --config cloudflare/wrangler.jsonc",
+    "cloudflare:deploy": "wrangler deploy --config cloudflare/wrangler.jsonc"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "mysql2": "^3.11.0"
+  },
+  "devDependencies": {
+    "wrangler": "4.151.1"
   }
 }

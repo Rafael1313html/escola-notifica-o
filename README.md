@@ -62,7 +62,11 @@ O workflow `.github/workflows/pages.yml` publica a interface automaticamente ap�
 
 Essa demonstração funciona sem servidor e sem MySQL. Os registros ficam no armazenamento local do navegador de cada visitante; não são compartilhados entre pessoas e podem ser apagados ao limpar os dados do navegador. Use somente dados fictícios. O GitHub Pages em repositório privado depende do plano da conta; se a publicação for bloqueada pelo plano, conecte o repositório privado ao Cloudflare Pages e use `npm --prefix frontend ci && npm --prefix frontend run build:demo` como comando de build e `frontend/dist` como diretório de saída. O Cloudflare Pages publica em um domínio `pages.dev`.
 
-## Publicar o backend no Railway
+## Publicar o backend no Cloudflare
+
+O backend nativo usa Worker, D1 e cron. O acesso comum registra e consulta ocorrências; o ADM entra com senha para configurar os seis números. Consulte [publicação e acessos no Cloudflare](docs/cloudflare.md) para configuração, migrações e comandos. A senha fica como secret do Worker, fora do Git e do frontend.
+
+## Alternativa: backend Node.js/MySQL no Railway
 
 O `railway.json` configura o build, o início da aplicação e a rota de saúde. O build compila o front-end e o servidor Express entrega os arquivos gerados. O comando de início cria as tabelas e cadastra as 103 escolas de forma repetível.
 
@@ -81,7 +85,7 @@ O `railway.json` configura o build, o início da aplicação e a rota de saúde.
 4. Gere um domínio público para o serviço da aplicação nas configurações de rede do Railway.
 5. Abra o domínio para testar o backend compartilhado e persistente.
 
-O app não tem autenticação: quem tiver o link pode consultar e criar registros. Use somente dados fictícios no ambiente público de teste; não insira nomes, descrições ou informações reais de estudantes. Nunca envie o arquivo `.env` ao GitHub.
+O acesso comum permite consultar e criar registros sem senha. A configuração dos números exige senha ADM validada pelo backend. Nunca envie o arquivo `.env` ao GitHub.
 
 ## Rotas da API
 

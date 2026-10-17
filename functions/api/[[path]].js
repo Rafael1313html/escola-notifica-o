@@ -1,4 +1,4 @@
-// Cloudflare Pages encaminha a API para o servidor Node.js/MySQL.
+// Cloudflare Pages encaminha a API para o backend compartilhado (Worker/D1 ou Node.js/MySQL).
 // Configure API_ORIGIN como variável do Pages, por exemplo https://seu-backend.example.com.
 export async function onRequest({ request, env }) {
   const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };

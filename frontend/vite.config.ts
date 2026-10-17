@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
     base: mode === "github" ? "/escola-notifica-o/" : "/",
     define: {
       "import.meta.env.VITE_DEMO_MODE": JSON.stringify(
-        mode === "demo" || mode === "github" ? "true" : "false",
+        (mode === "demo" || mode === "github") && env.VITE_SHARED_BACKEND !== "true" ? "true" : "false",
       ),
     },
     server: {

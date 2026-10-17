@@ -16,7 +16,7 @@ test('cadastro de números fica oculto sem ADM, inclusive na demonstração e no
   await expect(page.locator('#whatsapp-campos input')).toHaveCount(0);
   expect(pedidos).toBe(0);
   await page.getByRole('button', { name: 'ADM: acesso do administrador', exact: true }).click();
-  await page.getByLabel('Chave de acesso ADM', { exact: true }).fill('incorreta');
+  await page.getByLabel('Senha do ADM', { exact: true }).fill('incorreta');
   await page.getByRole('button', { name: 'Acessar configuração' }).click();
   await expect(page.locator('#whatsapp-acesso-status')).toHaveText('Chave ADM inválida.');
   await expect(page.locator('#painel-whatsapp')).not.toBeVisible();
@@ -30,6 +30,7 @@ test('cadastro de números fica oculto sem ADM, inclusive na demonstração e no
 });
 
 test('somente ADM validado no servidor consulta e salva seis números; bloquear e recarregar removem acesso', async ({ page }) => {
+  test.setTimeout(60000); // Login, persistência, bloqueio e duas análises de acessibilidade.
   const destinatarios = [
     ['marcela', 'Marcela', 'Dirigente'], ['alexandra', 'Alexandra', 'Supervisora'], ['susana', 'Susana', 'Supervisora'],
     ['mercia', 'Mercia', 'PEC · ADM'], ['monica', 'Monica', 'PEC'], ['camila', 'Camila', 'CEC'],
@@ -49,7 +50,7 @@ test('somente ADM validado no servidor consulta e salva seis números; bloquear 
     if (!(await page.locator('#whatsapp-acesso-dialog').isVisible())) {
       await page.getByRole('button', { name: 'ADM: acesso do administrador', exact: true }).click();
     }
-    await page.getByLabel('Chave de acesso ADM', { exact: true }).fill('teste-chave-adm');
+    await page.getByLabel('Senha do ADM', { exact: true }).fill('teste-chave-adm');
     await page.getByRole('button', { name: 'Acessar configuração' }).click();
     await expect(page.locator('#whatsapp-form')).toBeVisible();
   };
@@ -98,7 +99,7 @@ test('fechar acesso ADM durante a validação impede que resposta atrasada liber
     await route.fulfill({ json: { ativo: false, envios: [], destinatarios: [] } });
   });
   await page.goto('/#whatsapp');
-  await page.getByLabel('Chave de acesso ADM', { exact: true }).fill('teste-chave-adm');
+  await page.getByLabel('Senha do ADM', { exact: true }).fill('teste-chave-adm');
   await page.getByRole('button', { name: 'Acessar configuração' }).click();
   await expect.poll(() => recebeuPedido).toBe(true);
   await page.getByRole('button', { name: 'Fechar acesso ADM' }).click();

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="casos-titulo casos-descricao">
   <title id="casos-titulo">Casos de uso UML: escola, administrador e responsáveis</title>
-  <desc id="casos-descricao">A escola registra ocorrências. Os responsáveis consultam o registro pelo link recebido no WhatsApp. Só o administrador pode configurar os seis números e consultar os envios, após autenticar sua chave no servidor. A API WhatsApp participa somente do envio. O disparo é uma extensão do registro quando a integração está ativa.</desc>
+  <desc id="casos-descricao">A escola registra ocorrências. Os responsáveis consultam o registro pelo link recebido no WhatsApp. Só o administrador pode configurar os seis números e consultar os envios, após autenticar sua senha no servidor. A API WhatsApp participa somente do envio. O disparo é uma extensão do registro quando a integração está ativa.</desc>
   <style>text{font-family:Arial,sans-serif;fill:#24364b}.moldura{fill:#fff;stroke:#6b879e;stroke-width:1.5}.titulo{font-size:23px;font-weight:bold;text-anchor:middle}.estereotipo{font-size:14px;text-anchor:middle;fill:#456177}.atributo{font:17px monospace}.relacao{fill:none;stroke:#456177;stroke-width:2}.rotulo{font-size:17px}.nota{font-size:17px;fill:#456177}.classe{cursor:pointer}.classe:hover .moldura{stroke:#12636d;stroke-width:4}</style><defs><marker id="casos-seta" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M1 1 11 6 1 11" fill="none" stroke="#456177" stroke-width="1.5"/></marker></defs>
   <rect width="1600" height="1000" fill="#f5f8fb"/>
   <text x="40" y="45" font-size="24" font-weight="bold">QUEM USA O SISTEMA E O QUE PODE FAZER</text>
@@ -20,7 +20,7 @@
   <text x="812" y="623" text-anchor="middle" font-size="16">«include»</text>
   <path d="M780 790H1050V702" class="relacao" stroke-dasharray="7 5" marker-end="url(#casos-seta)"/>
   <text x="891" y="779" text-anchor="middle" font-size="16">«include»</text>
-  <text x="1050" y="832" text-anchor="middle" font-size="16">Chave validada no servidor</text>
+  <text x="1050" y="832" text-anchor="middle" font-size="16">Senha validada na API</text>
   <rect x="1380" y="630" width="200" height="90" rx="8" fill="#fff" stroke="#6b879e"/>
   <text x="1480" y="660" text-anchor="middle" font-size="15">«serviço externo»</text><text x="1480" y="690" text-anchor="middle" font-size="21" font-weight="bold">API WhatsApp</text>
   <text x="40" y="953" class="nota">Somente o ADM cadastra os destinatários. Os responsáveis recebem o link no WhatsApp pessoal e abrem o registro no navegador.</text>
