@@ -1,14 +1,16 @@
 # Conviva SP — uso e arquitetura
 
+A arquitetura simplificada de **registro e disparo ao WhatsApp**, com os seis destinatários configurados pelo ADM, está em [whatsapp.md](whatsapp.md) e na apresentação `/mensageria.html`. O backend persiste a fila junto à ocorrência e envia os avisos pela API da Meta após a gravação. A demonstração não envia mensagens.
+
 A apresentação para o cliente está em [apresentacao.html](../frontend/public/apresentacao.html). Após iniciar o sistema, abra `/apresentacao.html` ou use “Como o sistema funciona” na lateral. A página funciona sem serviços externos e oferece impressão em A4 paisagem ou salvamento em PDF pelo navegador.
 
 Arquivos prontos para compartilhar: [PDF](apresentacao-sistema.pdf) e [imagem PNG](apresentacao-sistema.png).
 
 ## Diagrama de classes UML interativo
 
-Abra [uml.html](https://escola-notificacao.pages.dev/uml.html) para selecionar as seis entidades e enumerações, consultar atributos e regras, ajustar zoom e baixar SVG/PNG. A apresentação também contém um link para o UML. O desenho representa o modelo de domínio; o código atual usa interfaces TypeScript e funções, sem classes JavaScript para cada entidade.
+Abra [uml.html](https://escola-notificacao.pages.dev/uml.html) para apresentar os diagramas de classes e de sequência, selecionar as nove entidades e enumerações, consultar atributos e regras, ajustar zoom e baixar SVG/PNG. O modo apresentação amplia o desenho; selecionar uma classe abre seus detalhes. A impressão gera a apresentação em PDF. O desenho representa o modelo de domínio; o código usa interfaces TypeScript e funções, sem classes JavaScript para cada entidade.
 
-Versões para compartilhar: [imagem PNG](classes-uml.png), [vetor SVG](classes-uml.svg) e [PDF](classes-uml.pdf).
+Versões para compartilhar: [classes em PNG](classes-uml.png), [classes em SVG](classes-uml.svg), [sequência em SVG](sequencia-uml.svg) e [apresentação em PDF](classes-uml.pdf). Para regenerar os vetores, execute `npm run docs:uml`.
 
 ```mermaid
 classDiagram
@@ -17,6 +19,32 @@ classDiagram
     Ocorrencia ..> Gravidade
     Ocorrencia ..> Registrante
     Anexo ..> TipoAnexo
+    Ocorrencia "1" *-- "0..6" AvisoWhatsApp : gera
+    DestinatarioWhatsApp "1" -- "0..*" AvisoWhatsApp : recebe
+    AvisoWhatsApp ..> StatusEnvioWhatsApp
+    class DestinatarioWhatsApp {
+        +string id
+        +string numero
+        +string nome_derivado
+        +string cargo_derivado
+    }
+    class AvisoWhatsApp {
+        +bigint id
+        +int ocorrencia_id
+        +string destinatario_id
+        +string numero
+        +StatusEnvioWhatsApp status
+        +string mensagem_id
+        +timestamp atualizado_em
+    }
+    class StatusEnvioWhatsApp {
+        <<enumeration>>
+        PENDENTE
+        PROCESSANDO
+        ACEITO
+        FALHOU
+        INCERTO
+    }
     class Escola {
         +int id
         +string nome

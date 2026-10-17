@@ -1,6 +1,6 @@
 # Contagem de acessos no Cloudflare
 
-O contador global deve ficar no **Cloudflare Web Analytics**, protegido pelo login e pelas permissões da conta do administrador. Não existe um papel ADM na aplicação atual. Esconder um contador em uma tela local não criaria proteção de acesso.
+O contador global deve ficar no **Cloudflare Web Analytics**, protegido pelo login e pelas permissões da conta do administrador. A chave ADM da aplicação protege a configuração dos números de WhatsApp; ela não concede acesso às métricas do Cloudflare. Esconder um contador em uma tela local não criaria proteção de acesso.
 
 ## Habilitar no projeto existente
 

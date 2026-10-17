@@ -1,6 +1,11 @@
 export type Gravidade = 'AMARELO' | 'VERMELHO';
 export type Registrante = 'DIRETOR' | 'VICE_DIRETOR' | 'OUTROS';
 
+export interface ResultadoRegistro {
+  id: number;
+  whatsapp?: { status: 'PENDENTE' | 'NAO_CONFIGURADO' | 'SEM_DESTINATARIOS'; total: number };
+}
+
 export type NovoAnexo = { tipo: 'PDF'; nome: string; conteudo: string } | { tipo: 'LINK'; url: string };
 export type Anexo = { tipo: 'PDF'; nome: string; tamanho: number } | { tipo: 'LINK'; url: string };
 

@@ -14,7 +14,7 @@ async function main() {
       `CREATE DATABASE IF NOT EXISTS \`${database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`
     );
     await conexao.changeUser({ database });
-    for (const arquivo of ['schema.sql', 'seed_escolas.sql']) {
+    for (const arquivo of ['schema.sql', 'seed_escolas.sql', 'whatsapp.sql']) {
       const sql = fs.readFileSync(path.join(__dirname, '..', 'db', arquivo), 'utf8');
       await conexao.query(sql);
       console.log(`Executado: ${arquivo}`);

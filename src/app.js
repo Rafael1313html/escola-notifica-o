@@ -3,8 +3,14 @@ const fs = require('fs');
 const express = require('express');
 const { GRAVIDADES, hojeISO, idValido, validarOcorrencia } = require('./validacao');
 const { validarAnexo } = require('./anexos');
+const { validarDestinatarios } = require('./whatsapp');
 
-function criarApp(pool) {
+function comAnexo({ anexo_tipo, anexo_nome, anexo_url, anexo_tamanho, ...ocorrencia }) {
+  return { ...ocorrencia,
+    anexo: anexo_tipo ? { tipo: anexo_tipo, nome: anexo_nome, url: anexo_url, tamanho: anexo_tamanho } : null };
+}
+
+function criarApp(pool, { mensageria } = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.use((req, res, next) => {
@@ -15,6 +21,16 @@ function criarApp(pool) {
   app.use('/api/ocorrencias', express.json({ limit: '8mb' }));
   app.use(express.json({ limit: '32kb' }));
   app.get('/health', (req, res) => res.status(200).send('ok'));
+  if (mensageria) {
+    app.get('/api/admin/whatsapp', mensageria.proteger, async (req, res, next) => {
+      try { res.json(await mensageria.configuracao()); } catch (erro) { next(erro); }
+    });
+    app.put('/api/admin/whatsapp', mensageria.proteger, async (req, res, next) => {
+      const { erros, dados } = validarDestinatarios(req.body);
+      if (erros.length) return res.status(400).json({ erros });
+      try { await mensageria.salvar(dados); res.json({ salvo: true }); } catch (erro) { next(erro); }
+    });
+  }
   // Serve o front-end compilado (frontend/dist). Se ainda não foi gerado, usa a página simples em public/.
   const pastaFront = path.join(__dirname, '..', 'frontend', 'dist');
   app.use(express.static(fs.existsSync(pastaFront) ? pastaFront : path.join(__dirname, '..', 'public')));
@@ -35,10 +51,12 @@ function criarApp(pool) {
       const validacaoAnexo = validarAnexo(req.body.anexo);
       if (validacaoAnexo.erros.length) return res.status(400).json({ erros: validacaoAnexo.erros });
       const anexo = validacaoAnexo.anexo;
-      const conexao = anexo ? await pool.getConnection() : pool;
+      const transacao = Boolean(anexo || mensageria);
+      const conexao = transacao ? await pool.getConnection() : pool;
       let resultado;
+      let whatsapp;
       try {
-        if (anexo) await conexao.beginTransaction();
+        if (transacao) await conexao.beginTransaction();
         [resultado] = await conexao.query(
           `INSERT INTO ocorrencias
              (escola_id, data_ocorrencia, tipo, descricao, gravidade, registrado_por, registrado_por_outro)
@@ -50,15 +68,16 @@ function criarApp(pool) {
           await conexao.query(`INSERT INTO ocorrencia_anexos
             (ocorrencia_id, tipo, nome, url, tamanho, arquivo) VALUES (?, ?, ?, ?, ?, ?)`,
           [resultado.insertId, anexo.tipo, anexo.nome || null, anexo.url || null, anexo.tamanho || null, anexo.arquivo || null]);
-          await conexao.commit();
         }
+        if (mensageria) whatsapp = await mensageria.enfileirar(conexao, resultado.insertId);
+        if (transacao) await conexao.commit();
       } catch (erro) {
-        if (anexo) await conexao.rollback();
+        if (transacao) await conexao.rollback();
         throw erro;
       } finally {
-        if (anexo) conexao.release();
+        if (transacao) conexao.release();
       }
-      res.status(201).json({ id: resultado.insertId });
+      res.status(201).json({ id: resultado.insertId, ...(whatsapp ? { whatsapp } : {}) });
     } catch (erro) { next(erro); }
   });
 
@@ -86,10 +105,20 @@ function criarApp(pool) {
            LEFT JOIN ocorrencia_anexos a ON a.ocorrencia_id = o.id
            ${where} ORDER BY o.data_ocorrencia DESC, o.id DESC LIMIT 200`, valores
       );
-      res.json(rows.map(({ anexo_tipo, anexo_nome, anexo_url, anexo_tamanho, ...ocorrencia }) => ({
-        ...ocorrencia,
-        anexo: anexo_tipo ? { tipo: anexo_tipo, nome: anexo_nome, url: anexo_url, tamanho: anexo_tamanho } : null,
-      })));
+      res.json(rows.map(comAnexo));
+    } catch (erro) { next(erro); }
+  });
+
+  app.get('/api/ocorrencias/:id', async (req, res, next) => {
+    if (!idValido(req.params.id)) return res.status(400).json({ erros: ['Registro inválido.'] });
+    try {
+      const [rows] = await pool.query(`SELECT o.id, e.nome AS escola, o.data_ocorrencia, o.tipo, o.descricao,
+        o.gravidade, o.registrado_por, o.registrado_por_outro, o.status, o.criado_em,
+        a.tipo AS anexo_tipo, a.nome AS anexo_nome, a.url AS anexo_url, a.tamanho AS anexo_tamanho
+        FROM ocorrencias o JOIN escolas e ON e.id = o.escola_id
+        LEFT JOIN ocorrencia_anexos a ON a.ocorrencia_id = o.id WHERE o.id = ?`, [Number(req.params.id)]);
+      if (!rows.length) return res.status(404).json({ erros: ['Ocorrência não encontrada.'] });
+      res.json(comAnexo(rows[0]));
     } catch (erro) { next(erro); }
   });
 

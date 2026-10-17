@@ -1,4 +1,4 @@
-import type { Escola, Gravidade, Indicadores, ItemRelatorio, NovaOcorrencia, Ocorrencia } from './types';
+import type { Escola, Gravidade, Indicadores, ItemRelatorio, NovaOcorrencia, Ocorrencia, ResultadoRegistro } from './types';
 import { criarOcorrenciaDemo, escolasDemo, listarIndicadoresDemo, listarOcorrenciasDemo, listarRelatorioDemo } from './demo';
 import { arquivoDemo } from './arquivos-demo';
 
@@ -42,11 +42,18 @@ export const listarOcorrencias = (gravidade: Gravidade | ''): Promise<Ocorrencia
 export const listarRelatorio = (): Promise<ItemRelatorio[]> =>
   modoDemo ? listarRelatorioDemo() : pedir<ItemRelatorio[]>('/api/relatorios/vermelhas-por-escola');
 
+export async function buscarOcorrencia(id: number): Promise<Ocorrencia> {
+  if (!modoDemo) return pedir<Ocorrencia>(`/api/ocorrencias/${id}`);
+  const registro = (await listarOcorrenciasDemo('')).find((o) => o.id === id);
+  if (!registro) throw new ApiError(['Ocorrência não encontrada neste navegador de demonstração.']);
+  return registro;
+}
+
 export const listarIndicadores = (): Promise<Indicadores> =>
   modoDemo ? listarIndicadoresDemo() : pedir<Indicadores>('/api/indicadores');
 
-export const criarOcorrencia = (dados: NovaOcorrencia): Promise<{ id: number }> =>
-  modoDemo ? criarOcorrenciaDemo(dados) : pedir<{ id: number }>('/api/ocorrencias', {
+export const criarOcorrencia = (dados: NovaOcorrencia): Promise<ResultadoRegistro> =>
+  modoDemo ? criarOcorrenciaDemo(dados) : pedir<ResultadoRegistro>('/api/ocorrencias', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dados),

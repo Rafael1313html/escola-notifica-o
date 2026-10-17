@@ -5,6 +5,12 @@ test('UML permite selecionar classes, usar zoom e exportar SVG e PNG', async ({ 
   await page.goto('/uml.html');
   await expect(page.getByRole('heading', { name: 'Classes do sistema' })).toBeVisible();
   await expect(page.locator('#uml-classe-nome')).toHaveText('Escola');
+  await expect(page.locator('body')).toHaveClass(/uml-apresentando/);
+  await expect(page.locator('#uml-mapa [data-classe]')).toHaveCount(9);
+  await expect(page.getByRole('heading', { name: 'Do registro ao WhatsApp' })).toBeVisible();
+  await page.getByRole('button', { name: 'Avisos WhatsApp', exact: true }).click();
+  await expect(page.locator('#uml-regras')).toContainText('link direto');
+  await expect(page.locator('#uml-atributos')).toContainText('mensagem_id');
   await page.locator('[data-selecionar="Anexo"]').click();
   await expect(page.locator('#uml-classe-nome')).toHaveText('Anexo');
   await expect(page.locator('#uml-regras')).toContainText('ON DELETE CASCADE');
@@ -33,6 +39,10 @@ test('UML permite selecionar classes, usar zoom e exportar SVG e PNG', async ({ 
     for await (const parte of stream!) partes.push(Buffer.from(parte));
     expect(Buffer.concat(partes).toString().slice(0, 15)).toContain(assinatura);
   }
+  const pdfPromise = page.waitForEvent('download');
+  await page.getByRole('link', { name: 'Baixar PDF', exact: true }).click();
+  const pdf = await pdfPromise;
+  expect(pdf.suggestedFilename()).toBe('conviva-uml-apresentacao.pdf');
   await page.emulateMedia({ media: 'print' });
   await expect(page.locator('#uml-mapa')).toHaveCSS('overflow', 'visible');
   await expect(page.locator('.uml-exportar')).not.toBeVisible();

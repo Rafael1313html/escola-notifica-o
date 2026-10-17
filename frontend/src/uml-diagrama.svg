@@ -1,60 +1,119 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" role="img" aria-labelledby="uml-titulo uml-descricao">
-  <title id="uml-titulo">Diagrama de classes UML do Conviva SP</title>
-  <desc id="uml-descricao">Uma Escola possui zero ou várias Ocorrências. Cada Ocorrência pertence a uma Escola e compõe zero ou um Anexo. Gravidade, Registrante e TipoAnexo são enumerações. As classes representam o modelo de domínio implementado.</desc>
-  <style>
-    text { font-family: Arial, sans-serif; fill: #24364b; }
-    .moldura { fill: #fff; stroke: #6b879e; stroke-width: 1.5; }
-    .cabecalho { fill: #e7f5f5; }
-    .enum-cabecalho { fill: #fff3d8; }
-    .titulo { font-size: 24px; font-weight: bold; text-anchor: middle; }
-    .estereotipo { font-size: 14px; text-anchor: middle; fill: #456177; }
-    .atributo { font: 17px monospace; }
-    .relacao { fill: none; stroke: #456177; stroke-width: 2; }
-    .rotulo { font-size: 16px; }
-    .nota { font-size: 16px; fill: #456177; }
-    .classe:focus { outline: none; }
-    .classe:focus .moldura, .classe:hover .moldura { stroke: #12636d; stroke-width: 4; }
-    .classe { cursor: pointer; }
-  </style>
-  <defs><marker id="uml-dependencia" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M1 1 11 6 1 11" fill="none" stroke="#456177" stroke-width="1.5"/></marker></defs>
-  <rect width="1400" height="900" fill="#f5f8fb"/>
-  <text x="40" y="44" font-size="16" font-weight="bold" fill="#12636d">CONVIVA SP · MODELO DE DOMÍNIO</text>
-  <text x="40" y="74" class="nota">Selecione uma entidade ou enumeração para explorar seus atributos e regras.</text>
-  <g class="relacao"><path d="M370 240H520"/><path d="M938 240H1040"/><path d="M715 520V650" stroke-dasharray="7 5" marker-end="url(#uml-dependencia)"/><path d="M590 520V575H205V650" stroke-dasharray="7 5" marker-end="url(#uml-dependencia)"/><path d="M1200 430V650" stroke-dasharray="7 5" marker-end="url(#uml-dependencia)"/></g>
-  <path d="m910 240 14-9 14 9-14 9Z" fill="#456177"/>
-  <text x="383" y="225" class="rotulo">1</text><text x="474" y="225" class="rotulo">0..*</text><text x="396" y="268" class="rotulo">registra</text>
-  <text x="950" y="225" class="rotulo">1</text><text x="995" y="225" class="rotulo">0..1</text><text x="946" y="268" class="rotulo">compõe</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1100" role="img" aria-labelledby="uml-titulo uml-descricao">
+  <title id="uml-titulo">Conviva SP: classes do registro e dos avisos WhatsApp</title>
+  <desc id="uml-descricao">Uma escola registra ocorrências. Cada ocorrência pode ter um anexo e gerar até seis avisos, um por destinatário configurado. Cada aviso tem um estado de envio. Os seis responsáveis recebem um link no WhatsApp pessoal. O modelo representa as tabelas implementadas.</desc>
+  <style>text{font-family:Arial,sans-serif;fill:#24364b}.moldura{fill:#fff;stroke:#6b879e;stroke-width:1.5}.titulo{font-size:23px;font-weight:bold;text-anchor:middle}.estereotipo{font-size:14px;text-anchor:middle;fill:#456177}.atributo{font:17px monospace}.relacao{fill:none;stroke:#456177;stroke-width:2}.rotulo{font-size:17px}.nota{font-size:17px;fill:#456177}.classe{cursor:pointer}.classe:hover .moldura{stroke:#12636d;stroke-width:4}</style><defs><marker id="uml-dependencia" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M1 1 11 6 1 11" fill="none" stroke="#456177" stroke-width="1.5"/></marker></defs>
+  <rect width="1800" height="1100" fill="#f5f8fb"/>
+  <text x="40" y="42" font-size="21" font-weight="bold">CONVIVA SP · REGISTRO E MENSAGERIA</text>
+  <text x="40" y="74" class="nota">Modelo de domínio · dados persistidos no servidor · avisos individuais com link da ocorrência</text>
+  <g class="relacao"><path d="M340 240H480"/><path d="M996 240H1170"/>
+    <path d="M900 506V760"/><path d="M430 870H620"/>
+    <path d="M510 480V500H340" stroke-dasharray="7 5" marker-end="url(#uml-dependencia)"/>
+    <path d="M730 480V530" stroke-dasharray="7 5" marker-end="url(#uml-dependencia)"/>
+    <path d="M1350 380V440" stroke-dasharray="7 5" marker-end="url(#uml-dependencia)"/>
+    <path d="M1120 875H1360" stroke-dasharray="7 5" marker-end="url(#uml-dependencia)"/>
+  </g>
+  <path d="m970 240 13-9 13 9-13 9Z" fill="#456177"/><path d="m900 480 9 13-9 13-9-13Z" fill="#456177"/>
+  <g class="rotulo"><text x="350" y="225">1</text><text x="435" y="225">0..*</text><text x="370" y="270">registra</text>
+    <text x="1005" y="225">1</text><text x="1120" y="225">0..1</text><text x="1030" y="270">compõe</text>
+    <text x="916" y="525">1</text><text x="916" y="742">0..6</text><text x="920" y="620">gera avisos</text>
+    <text x="445" y="854">1</text><text x="570" y="854">0..*</text><text x="462" y="900">recebe</text></g>
   <g class="classe" data-classe="Escola" transform="translate(40 140)">
-    <rect class="moldura" width="330" height="170" rx="8"/><path class="cabecalho" d="M8 1h314q7 0 7 7v65H1V8q0-7 7-7"/>
-    <text class="estereotipo" x="165" y="26">«entidade»</text><text class="titulo" x="165" y="56">Escola</text><path class="relacao" d="M0 74H330"/>
-    <text class="atributo" x="18" y="110">+ id: int {PK}</text><text class="atributo" x="18" y="142">+ nome: string [150] {único}</text>
+    <rect class="moldura" width="300" height="165" rx="10"/>
+    <path fill="#e7f5f5" d="M10 1h280q9 0 9 9v64H1V10q0-9 9-9"/>
+    <text class="estereotipo" x="150" y="25">«entidade»</text>
+    <text class="titulo" x="150" y="55">Escola</text><path class="relacao" d="M0 74H300"/>
+    <text class="atributo" x="18" y="103">+ id: int {PK}</text>
+<text class="atributo" x="18" y="128">+ nome: string [150] {único}</text>
   </g>
-  <g class="classe" data-classe="Ocorrencia" transform="translate(520 100)">
-    <rect class="moldura" width="390" height="420" rx="8"/><path class="cabecalho" d="M8 1h374q7 0 7 7v65H1V8q0-7 7-7"/>
-    <text class="estereotipo" x="195" y="26">«entidade»</text><text class="titulo" x="195" y="56">Ocorrencia</text><path class="relacao" d="M0 74H390"/>
-    <g class="atributo"><text x="18" y="110">+ id: int {PK}</text><text x="18" y="138">+ escola_id: int {FK}</text><text x="18" y="166">+ data_ocorrencia: date</text><text x="18" y="194">+ tipo: string [100] ?</text><text x="18" y="222">+ descricao: string [5000] ?</text><text x="18" y="250">+ gravidade: Gravidade</text><text x="18" y="278">+ registrado_por: Registrante</text><text x="18" y="306">+ registrado_por_outro: string ?</text><text x="18" y="334">+ status: string = ABERTA</text><text x="18" y="362">+ criado_em: timestamp</text></g>
-    <text class="nota" x="18" y="399">Resumo na interface: até 300 caracteres</text>
+<g class="classe" data-classe="Ocorrencia" transform="translate(480 110)">
+    <rect class="moldura" width="490" height="370" rx="10"/>
+    <path fill="#e7f5f5" d="M10 1h470q9 0 9 9v64H1V10q0-9 9-9"/>
+    <text class="estereotipo" x="245" y="25">«entidade»</text>
+    <text class="titulo" x="245" y="55">Ocorrencia</text><path class="relacao" d="M0 74H490"/>
+    <text class="atributo" x="18" y="103">+ id: int {PK}</text>
+<text class="atributo" x="18" y="128">+ escola_id: int {FK}</text>
+<text class="atributo" x="18" y="153">+ data_ocorrencia: date</text>
+<text class="atributo" x="18" y="178">+ tipo: string [100] ?</text>
+<text class="atributo" x="18" y="203">+ descricao: string [5000] ?</text>
+<text class="atributo" x="18" y="228">+ gravidade: Gravidade</text>
+<text class="atributo" x="18" y="253">+ registrado_por: Registrante</text>
+<text class="atributo" x="18" y="278">+ registrado_por_outro: string ?</text>
+<text class="atributo" x="18" y="303">+ status: string = ABERTA</text>
+<text class="atributo" x="18" y="328">+ criado_em: timestamp</text>
   </g>
-  <g class="classe" data-classe="Anexo" transform="translate(1040 140)">
-    <rect class="moldura" width="320" height="290" rx="8"/><path class="cabecalho" d="M8 1h304q7 0 7 7v65H1V8q0-7 7-7"/>
-    <text class="estereotipo" x="160" y="26">«entidade»</text><text class="titulo" x="160" y="56">Anexo</text><path class="relacao" d="M0 74H320"/>
-    <g class="atributo"><text x="18" y="110">+ ocorrencia_id: int {PK,FK}</text><text x="18" y="138">+ tipo: TipoAnexo</text><text x="18" y="166">+ nome: string [180] ?</text><text x="18" y="194">+ url: string [2048] ?</text><text x="18" y="222">+ tamanho: int ?</text><text x="18" y="250">+ arquivo: MEDIUMBLOB ?</text></g>
-    <text class="nota" x="18" y="276">PDF até 5 MB ou link HTTP/HTTPS</text>
+<g class="classe" data-classe="Anexo" transform="translate(1170 110)">
+    <rect class="moldura" width="570" height="270" rx="10"/>
+    <path fill="#e7f5f5" d="M10 1h550q9 0 9 9v64H1V10q0-9 9-9"/>
+    <text class="estereotipo" x="285" y="25">«entidade»</text>
+    <text class="titulo" x="285" y="55">Anexo</text><path class="relacao" d="M0 74H570"/>
+    <text class="atributo" x="18" y="103">+ ocorrencia_id: int {PK,FK}</text>
+<text class="atributo" x="18" y="128">+ tipo: TipoAnexo</text>
+<text class="atributo" x="18" y="153">+ nome: string [180] ?</text>
+<text class="atributo" x="18" y="178">+ url: string [2048] ?</text>
+<text class="atributo" x="18" y="203">+ tamanho: int ?</text>
+<text class="atributo" x="18" y="228">+ arquivo: MEDIUMBLOB ?</text>
   </g>
-  <g class="classe" data-classe="Registrante" transform="translate(40 650)">
-    <rect class="moldura" width="330" height="180" rx="8"/><path class="enum-cabecalho" d="M8 1h314q7 0 7 7v65H1V8q0-7 7-7"/>
-    <text class="estereotipo" x="165" y="26">«enumeration»</text><text class="titulo" x="165" y="56">Registrante</text><path class="relacao" d="M0 74H330"/>
-    <g class="atributo"><text x="18" y="107">DIRETOR</text><text x="18" y="135">VICE_DIRETOR</text><text x="18" y="163">OUTROS</text></g>
+<g class="classe" data-classe="Registrante" transform="translate(40 390)">
+    <rect class="moldura" width="300" height="170" rx="10"/>
+    <path fill="#fff3d8" d="M10 1h280q9 0 9 9v64H1V10q0-9 9-9"/>
+    <text class="estereotipo" x="150" y="25">«enumeration»</text>
+    <text class="titulo" x="150" y="55">Registrante</text><path class="relacao" d="M0 74H300"/>
+    <text class="atributo" x="18" y="103">DIRETOR</text>
+<text class="atributo" x="18" y="128">VICE_DIRETOR</text>
+<text class="atributo" x="18" y="153">OUTROS</text>
   </g>
-  <g class="classe" data-classe="Gravidade" transform="translate(540 650)">
-    <rect class="moldura" width="350" height="150" rx="8"/><path class="enum-cabecalho" d="M8 1h334q7 0 7 7v65H1V8q0-7 7-7"/>
-    <text class="estereotipo" x="175" y="26">«enumeration»</text><text class="titulo" x="175" y="56">Gravidade</text><path class="relacao" d="M0 74H350"/>
-    <g class="atributo"><text x="18" y="107">AMARELO</text><text x="18" y="135">VERMELHO</text></g>
+<g class="classe" data-classe="Gravidade" transform="translate(480 530)">
+    <rect class="moldura" width="280" height="145" rx="10"/>
+    <path fill="#fff3d8" d="M10 1h260q9 0 9 9v64H1V10q0-9 9-9"/>
+    <text class="estereotipo" x="140" y="25">«enumeration»</text>
+    <text class="titulo" x="140" y="55">Gravidade</text><path class="relacao" d="M0 74H280"/>
+    <text class="atributo" x="18" y="103">AMARELO</text>
+<text class="atributo" x="18" y="128">VERMELHO</text>
   </g>
-  <g class="classe" data-classe="TipoAnexo" transform="translate(1040 650)">
-    <rect class="moldura" width="320" height="150" rx="8"/><path class="enum-cabecalho" d="M8 1h304q7 0 7 7v65H1V8q0-7 7-7"/>
-    <text class="estereotipo" x="160" y="26">«enumeration»</text><text class="titulo" x="160" y="56">TipoAnexo</text><path class="relacao" d="M0 74H320"/>
-    <g class="atributo"><text x="18" y="107">PDF</text><text x="18" y="135">LINK</text></g>
+<g class="classe" data-classe="TipoAnexo" transform="translate(1170 440)">
+    <rect class="moldura" width="280" height="145" rx="10"/>
+    <path fill="#fff3d8" d="M10 1h260q9 0 9 9v64H1V10q0-9 9-9"/>
+    <text class="estereotipo" x="140" y="25">«enumeration»</text>
+    <text class="titulo" x="140" y="55">TipoAnexo</text><path class="relacao" d="M0 74H280"/>
+    <text class="atributo" x="18" y="103">PDF</text>
+<text class="atributo" x="18" y="128">LINK</text>
   </g>
-  <text x="40" y="875" class="nota">+ atributo público · ? opcional · PK chave primária · FK chave estrangeira · losango: composição · tracejado: dependência de tipo</text>
+<g class="classe" data-classe="DestinatarioWhatsApp" transform="translate(40 760)">
+    <rect class="moldura" width="390" height="220" rx="10"/>
+    <path fill="#e7efff" d="M10 1h370q9 0 9 9v64H1V10q0-9 9-9"/>
+    <text class="estereotipo" x="195" y="25">«entidade»</text>
+    <text class="titulo" x="195" y="55">DestinatarioWhatsApp</text><path class="relacao" d="M0 74H390"/>
+    <text class="atributo" x="18" y="103">+ id: string {PK}</text>
+<text class="atributo" x="18" y="128">+ numero: string [15]</text>
+<text class="atributo" x="18" y="153">/ nome: string {derivado}</text>
+<text class="atributo" x="18" y="178">/ cargo: string {derivado}</text>
+  </g>
+<g class="classe" data-classe="AvisoWhatsApp" transform="translate(620 760)">
+    <rect class="moldura" width="500" height="270" rx="10"/>
+    <path fill="#e7efff" d="M10 1h480q9 0 9 9v64H1V10q0-9 9-9"/>
+    <text class="estereotipo" x="250" y="25">«entidade»</text>
+    <text class="titulo" x="250" y="55">AvisoWhatsApp</text><path class="relacao" d="M0 74H500"/>
+    <text class="atributo" x="18" y="103">+ id: bigint {PK}</text>
+<text class="atributo" x="18" y="128">+ ocorrencia_id: int {FK}</text>
+<text class="atributo" x="18" y="153">+ destinatario_id: string {FK}</text>
+<text class="atributo" x="18" y="178">+ numero: string [15]</text>
+<text class="atributo" x="18" y="203">+ status: StatusEnvioWhatsApp</text>
+<text class="atributo" x="18" y="228">+ mensagem_id: string ?</text>
+<text class="atributo" x="18" y="253">+ atualizado_em: timestamp</text>
+  </g>
+<g class="classe" data-classe="StatusEnvioWhatsApp" transform="translate(1360 690)">
+    <rect class="moldura" width="380" height="230" rx="10"/>
+    <path fill="#fff3d8" d="M10 1h360q9 0 9 9v64H1V10q0-9 9-9"/>
+    <text class="estereotipo" x="190" y="25">«enumeration»</text>
+    <text class="titulo" x="190" y="55">StatusEnvioWhatsApp</text><path class="relacao" d="M0 74H380"/>
+    <text class="atributo" x="18" y="103">PENDENTE</text>
+<text class="atributo" x="18" y="128">PROCESSANDO</text>
+<text class="atributo" x="18" y="153">ACEITO</text>
+<text class="atributo" x="18" y="178">FALHOU</text>
+<text class="atributo" x="18" y="203">INCERTO</text>
+  </g>
+  <text x="40" y="650" class="nota">ADM configura seis números:</text>
+  <text x="40" y="680" class="nota">Marcela · Alexandra · Susana</text>
+  <text x="40" y="708" class="nota">Mercia · Monica · Camila</text>
+  <text x="40" y="1075" class="nota">PK: chave primária · FK: referência · ?: opcional · /: derivado · losango: composição · tracejado: dependência de tipo</text>
 </svg>

@@ -190,3 +190,32 @@ test('listagem retorna metadados do anexo sem carregar o conteúdo do PDF', asyn
   assert.deepEqual(itens[0].anexo, { tipo: 'PDF', nome: 'apoio.pdf', url: null, tamanho: 25 });
   assert.equal(itens[1].anexo, null);
 });
+
+test('link direto consulta ocorrência pelo ID sem limitar aos 200 recentes ou carregar PDF', async (t) => {
+  const base = await servidorTeste(t, async (sql, valores) => {
+    assert.match(sql, /WHERE o\.id = \?/);
+    assert.doesNotMatch(sql, /LIMIT 200|a\.arquivo/);
+    assert.deepEqual(valores, [42]);
+    return [[{ id: 42, escola: 'Escola de teste', descricao: 'Registro completo',
+      anexo_tipo: 'LINK', anexo_url: 'https://example.org/documento' }]];
+  });
+  const r = await fetch(`${base}/api/ocorrencias/42`);
+  assert.equal(r.status, 200);
+  assert.equal(r.headers.get('cache-control'), 'no-store');
+  const registro = await r.json();
+  assert.equal(registro.id, 42);
+  assert.equal(registro.descricao, 'Registro completo');
+  assert.equal(registro.anexo.url, 'https://example.org/documento');
+});
+
+test('link direto rejeita ID inválido e informa ocorrência inexistente', async (t) => {
+  let consultas = 0;
+  const base = await servidorTeste(t, async () => { consultas++; return [[]]; });
+  for (const id of ['0', '-1', '1e2', 'abc', '9007199254740992']) {
+    assert.equal((await fetch(`${base}/api/ocorrencias/${id}`)).status, 400);
+  }
+  assert.equal(consultas, 0);
+  const r = await fetch(`${base}/api/ocorrencias/99`);
+  assert.equal(r.status, 404);
+  assert.deepEqual(await r.json(), { erros: ['Ocorrência não encontrada.'] });
+});

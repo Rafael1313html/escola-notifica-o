@@ -114,8 +114,8 @@ test('navegação por teclado, layout responsivo e estados vazios acessíveis', 
   await expect(page.getByRole('tab', { name: 'Ocorrências' })).toBeFocused();
   await expect(page.locator('#painel-ocorrencias')).toBeVisible();
   await page.keyboard.press('End');
-  await expect(page.getByRole('tab', { name: 'Novo registro' })).toBeFocused();
-  for (const rota of ['inicio', 'visao-geral', 'ocorrencias', 'registrar', 'relatorio']) {
+  await expect(page.getByRole('tab', { name: 'Canal direto com a diretoria' })).toBeFocused();
+  for (const rota of ['inicio', 'visao-geral', 'ocorrencias', 'registrar', 'relatorio', 'whatsapp']) {
     await page.goto(`/#${rota}`);
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     const resultados = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();

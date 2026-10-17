@@ -144,7 +144,7 @@ h2 { font-size: 15px; font-weight: 650; letter-spacing: -.25px; }
 .campo { margin: 0 0 20px; padding: 0; border: 0; min-width: 0; }
 label, legend { display: block; font-weight: 600; margin-bottom: 8px; padding: 0; font-size: 12px; }
 .opcional { color: var(--suave); font-size: 11px; font-weight: 400; margin-left: 3px; }
-input[type="text"], input[type="date"], input[type="search"], select, textarea { width: 100%; min-height: var(--toque); padding: 10px 12px; font-size: 13px; /* evita o zoom automático no iPhone */ color: var(--tinta); background: white; border: 1px solid #cdd8e5; border-radius: 6px; transition: border-color .15s, box-shadow .15s; }
+input[type="text"], input[type="date"], input[type="search"], input[type="tel"], input[type="password"], select, textarea { width: 100%; min-height: var(--toque); padding: 10px 12px; font-size: 13px; /* evita o zoom automático no iPhone */ color: var(--tinta); background: white; border: 1px solid #cdd8e5; border-radius: 6px; transition: border-color .15s, box-shadow .15s; }
 input::placeholder, textarea::placeholder { color: #697b92; opacity: 1; }
 input:focus, select:focus, textarea:focus { border-color: #167fac; box-shadow: 0 0 0 3px #edf4fc; }
 textarea { resize: vertical; min-height: 125px; line-height: 1.7; }
@@ -377,13 +377,13 @@ dialog::backdrop { background: #182e256b; backdrop-filter: blur(3px); }
   .bloco-cabecalho .link { white-space: nowrap; font-size: 10px; }
   .bloco-cabecalho .botao { font-size: 9px; padding: 7px 9px; }
   .abas { position: fixed; z-index: 50; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--linha); padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -3px 20px #233e2e05; }
-  .abas-lista { grid-template-columns: repeat(4, 1fr); padding: 0; gap: 0; }
+  .abas-lista { grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 0; gap: 0; }
   .abas button { flex-direction: column; gap: 4px; justify-content: center; text-align: center; padding: 10px 3px 9px; border-radius: 0; font-size: 9px; min-height: 66px; }
   .abas button .icone { width: 21px; height: 21px; }
   .abas button[aria-selected="true"] { background: #edf5fc; }
   .abas button[aria-selected="true"]::before { left: 24%; right: 24%; top: 0; bottom: auto; width: auto; height: 2px; }
   .nav-contagem { display: none; }
-  input[type="text"], input[type="date"], input[type="search"], select, textarea { font-size: 16px; }
+  input[type="text"], input[type="date"], input[type="search"], input[type="tel"], input[type="password"], select, textarea { font-size: 16px; }
   .filtros { grid-template-columns: 1fr; padding: 0 18px; gap: 0; }
   .busca-campo { grid-column: auto; }
   .filtros input, .filtros select { font-size: 16px; }
@@ -486,3 +486,18 @@ dialog::backdrop { background: #182e256b; backdrop-filter: blur(3px); }
 .acessos-conteudo .botao { white-space: normal; text-align: center; }
 .acessos-conteudo .link { display: block; width: fit-content; margin-top: 12px; }
 @media (max-width: 699px) { .marca { height: 80px; padding: 9px 18px; } .marca img { width: 111px; } }
+/* Configuração dos seis destinatários e arquitetura da mensageria. */
+#whatsapp-form, #whatsapp-acesso { padding: 0 24px; }
+#whatsapp-acesso { padding-bottom: 24px; }
+#whatsapp-bloquear { margin: 0 24px 20px; }
+.whatsapp-campos { margin-top: 20px; }
+.whatsapp-campos > .campo { min-width: 0; }
+.whatsapp-historico { margin: 24px; overflow-wrap: anywhere; }
+.whatsapp-historico p { margin: 10px 0; }
+.whatsapp-arquitetura { margin-top: 24px; padding: 24px; }
+.whatsapp-arquitetura > p { margin: 16px 0; }
+.whatsapp-fluxo { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding: 0; list-style: none; margin: 24px 0; }
+.whatsapp-fluxo li { border: 1px solid currentColor; border-radius: 12px; padding: 18px; }
+.whatsapp-fluxo strong, .whatsapp-fluxo span { display: block; }
+.whatsapp-fluxo span { margin-top: 8px; }
+@media (max-width: 699px) { .whatsapp-fluxo { grid-template-columns: 1fr; } }

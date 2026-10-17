@@ -67,6 +67,7 @@
         <button role="tab" id="aba-ocorrencias" data-painel="ocorrencias" aria-controls="painel-ocorrencias" aria-selected="false" tabindex="-1" type="button"><svg class="icone"><use href="#i-lista"/></svg><span>Ocorrências</span><span class="nav-contagem" id="nav-total">—</span></button>
         <button role="tab" id="aba-relatorio" data-painel="relatorio" aria-controls="painel-relatorio" aria-selected="false" tabindex="-1" type="button"><svg class="icone"><use href="#i-grafico"/></svg><span>Relatórios</span></button>
         <button role="tab" id="aba-registrar" data-painel="registrar" aria-controls="painel-registrar" aria-selected="false" tabindex="-1" type="button"><svg class="icone"><use href="#i-plus"/></svg><span>Novo registro</span></button>
+        <button role="tab" id="aba-whatsapp" data-painel="whatsapp" aria-controls="painel-whatsapp" aria-selected="false" tabindex="-1" type="button"><svg class="icone"><use href="#i-escudo"/></svg><span>Canal direto com a diretoria</span></button>
       </div>
     </nav>
     <div class="lateral-apoio">
@@ -74,6 +75,7 @@
       <button class="nav-ajuda" id="abrir-orientacoes" type="button"><svg class="icone"><use href="#i-info"/></svg>Orientações de registro</button>
       <a class="apresentacao-link" href="%BASE_URL%apresentacao.html" target="_blank" rel="noopener">Como o sistema funciona (nova aba)</a>
       <a class="apresentacao-link" href="%BASE_URL%uml.html" target="_blank" rel="noopener">Diagrama de classes UML (nova aba)</a>
+      <a class="apresentacao-link" href="%BASE_URL%mensageria.html" target="_blank" rel="noopener">Registro e WhatsApp (nova aba)</a>
     </div>
     <div class="lateral-rodape"><span class="rede-icone"><svg class="icone"><use href="#i-escudo"/></svg></span><div><strong>Convivência escolar</strong><span>Uma rede de cuidado e proteção</span></div></div>
   </aside>
@@ -115,6 +117,7 @@
       <!-- REGISTRAR -->
       <section id="painel-registrar" class="painel" role="tabpanel" aria-labelledby="aba-registrar" tabindex="0" hidden>
         <div class="formulario-layout"><div class="bloco formulario-bloco"><div class="bloco-cabecalho"><div><h2>Dados da ocorrência</h2><p>Campos marcados com * são obrigatórios.</p></div><span class="icone-fundo verde"><svg class="icone"><use href="#i-lista"/></svg></span></div>
+          <p id="registro-mensageria" class="status" role="status" aria-live="polite"></p>
           <form id="form" novalidate autocomplete="off">
             <p id="erro-geral" class="erro-geral" role="alert" tabindex="-1" hidden></p>
             <div class="form-secao"><h3><span>01</span>Identificação</h3>
@@ -140,6 +143,7 @@
 
       <!-- OCORRENCIAS -->
       <section id="painel-ocorrencias" class="painel" role="tabpanel" aria-labelledby="aba-ocorrencias" tabindex="0" hidden>
+        <p id="registro-link-status" class="status" role="status" aria-live="polite"></p>
         <div class="bloco"><div class="bloco-cabecalho"><div><h2>Consulta de ocorrências</h2><p>Pesquise nos 200 registros mais recentes da rede.</p></div><button class="botao secundario" id="exportar-lista" type="button"><svg class="icone"><use href="#i-download"/></svg>Exportar CSV</button></div>
           <div class="filtros"><div class="campo busca-campo"><label for="busca">Buscar registro</label><div class="input-icone"><svg class="icone"><use href="#i-busca"/></svg><input id="busca" type="search" placeholder="Escola, tipo ou número do registro"></div></div><div class="campo"><label for="filtro-escola">Unidade escolar</label><select id="filtro-escola"><option value="">Todas as escolas</option></select></div><div class="campo"><label for="filtro-periodo">Período</label><select id="filtro-periodo"><option value="">Todo o período</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select></div></div>
           <div class="filtros-rodape"><div class="chips" role="group" aria-label="Filtrar por gravidade"><button type="button" class="chip" aria-pressed="true" data-grav="">Todas</button><button type="button" class="chip" aria-pressed="false" data-grav="AMARELO"><span class="ponto amarelo"></span>Amarelas</button><button type="button" class="chip" aria-pressed="false" data-grav="VERMELHO"><span class="ponto vermelho"></span>Vermelhas</button></div><button type="button" class="link" id="limpar-filtros">Limpar filtros</button></div>
@@ -151,6 +155,27 @@
       <section id="painel-relatorio" class="painel" role="tabpanel" aria-labelledby="aba-relatorio" tabindex="0" hidden>
         <div class="bloco"><div class="bloco-cabecalho"><div><h2>Classificação vermelha por escola</h2><p>Consolidado de todos os registros da rede.</p></div><button class="botao secundario" id="exportar-relatorio" type="button"><svg class="icone"><use href="#i-download"/></svg>Exportar CSV</button></div><div class="relatorio-resumo"><span class="icone-fundo vermelho"><svg class="icone"><use href="#i-grafico"/></svg></span><p id="resumo" class="resumo">Consultando informações…</p></div><div class="relatorio-filtros"><label class="interruptor"><input type="checkbox" id="mostrar-zeradas"><span>Incluir escolas sem ocorrências vermelhas</span></label><span class="periodo">Todo o histórico</span></div><p id="rel-status" class="status" role="status" aria-live="polite"></p><ol id="relatorio" class="ranking"></ol></div>
       <article class="bloco acessos-bloco"><div class="bloco-cabecalho"><div><h2>Estatísticas de acesso</h2><p>Visitas e visualizações do site, com consulta privada na conta Cloudflare do administrador.</p></div></div><div class="acessos-conteudo"><p>Web Analytics habilitado no Cloudflare. Entre na conta proprietária para consultar visitas, visualizações de página e o período desejado. Os dados podem levar alguns minutos para aparecer.</p><a class="botao secundario" id="acessos-cloudflare" href="https://dash.cloudflare.com/4f629e0de9a41d35b1e4d2bbb042738e/web-analytics" target="_blank" rel="noopener noreferrer">Abrir métricas no Cloudflare (nova aba)</a><a class="link" href="https://developers.cloudflare.com/pages/how-to/web-analytics/" target="_blank" rel="noopener noreferrer">Sobre a medição (guia oficial)</a></div></article>
+      </section>
+      <section id="painel-whatsapp" class="painel" role="tabpanel" aria-labelledby="aba-whatsapp" tabindex="0" hidden>
+        <div class="bloco formulario-bloco">
+          <div class="bloco-cabecalho"><div><h2>Destinatários dos avisos</h2><p>Ao registrar uma ocorrência, o sistema prepara um aviso individual para cada número configurado.</p></div></div>
+          <p id="whatsapp-status" class="status" role="status" aria-live="polite">Entre com a chave ADM para consultar e alterar os números.</p>
+          <form id="whatsapp-acesso"><div class="campo"><label for="whatsapp-chave">Chave de acesso ADM</label><input id="whatsapp-chave" type="password" required autocomplete="off" aria-describedby="whatsapp-chave-ajuda"><p id="whatsapp-chave-ajuda" class="ajuda">Solicite a chave ao responsável pelo sistema. Ela não fica salva neste navegador.</p></div><button class="botao principal" type="submit">Acessar configuração</button></form>
+          <form id="whatsapp-form" hidden>
+            <p id="whatsapp-ajuda" class="ajuda">Informe DDI, DDD e número, por exemplo +55 (11) 99999-9999. Campo vazio desativa o destinatário. Cadastre somente quem autorizou receber os avisos.</p>
+            <div id="whatsapp-campos" class="campos-duplos whatsapp-campos"></div>
+            <div class="form-acoes"><button class="botao secundario" id="whatsapp-recarregar" type="button">Atualizar situação</button><button class="botao principal" id="whatsapp-salvar" type="submit">Salvar números</button></div>
+          </form>
+          <button class="botao secundario" id="whatsapp-bloquear" type="button" hidden>Bloquear configuração</button>
+          <div id="whatsapp-historico" class="whatsapp-historico"></div>
+        </div>
+        <article class="bloco whatsapp-arquitetura"><h2>Do registro ao WhatsApp</h2>
+          <ol class="whatsapp-fluxo"><li><strong>1. Registrar</strong><span>A escola preenche e confirma a ocorrência.</span></li><li><strong>2. Salvar e enfileirar</strong><span>O servidor salva o registro e os avisos no banco.</span></li><li><strong>3. Disparar</strong><span>A API do WhatsApp recebe um aviso por destinatário.</span></li></ol>
+          <p>O aviso informa protocolo, escola, data, classificação e link direto da ocorrência. Ao tocar no link recebido no WhatsApp pessoal, o responsável abre o registro no sistema.</p>
+          <p>Somente envio de avisos. O sistema não recebe respostas e não tem uma interface de conversa.</p>
+          <p>O envio automático depende da ativação do WhatsApp Business pelo responsável técnico.</p>
+          <a class="link" href="%BASE_URL%mensageria.html" target="_blank" rel="noopener">Ver arquitetura simplificada (nova aba)</a>
+        </article>
       </section>
       <footer class="bni-rodape"><div class="bni-identidade"><p class="bni-legenda">DESENVOLVIDO POR</p><div class="bni-marca"><img src="/assets/bni-simbolo.svg" width="36" height="36" alt=""><strong>bni·tecnologia</strong></div><p class="bni-descricao">Software sob medida, código próprio e soluções pensadas para o longo prazo.</p></div><div class="bni-base"><span>© 2026 BNI Tecnologia — todos os direitos reservados.</span></div></footer>
     </main>

@@ -38,6 +38,8 @@ Na demonstração, os registros e metadados continuam em `localStorage`; PDFs fi
 
 ## Rodar localmente
 
+Para configurar os seis destinatários e o envio automático pelo WhatsApp Business, consulte [docs/whatsapp.md](docs/whatsapp.md). A aba **Canal direto com a diretoria** contém os números e o histórico. A apresentação simplificada está em `/mensageria.html`. O envio depende de conta e modelo aprovados na Meta; a demonstração não envia mensagens.
+
 Use Node.js 20.19 ou superior na linha 20, ou Node.js 22.12 ou superior, para compilar o front-end.
 
 1. Copie `.env.example` para `.env` e configure o acesso ao MySQL.
@@ -89,6 +91,7 @@ O app não tem autenticação: quem tiver o link pode consultar e criar registro
 | GET | `/api/indicadores` | Totais de todo o histórico e agregados mensais dos últimos seis meses |
 | POST | `/api/ocorrencias` | Registra uma ocorrência |
 | GET | `/api/ocorrencias?gravidade=VERMELHO` | Lista ocorrências, com filtros opcionais `gravidade` e `escola_id` |
+| GET | `/api/ocorrencias/:id` | Detalhes da ocorrência pelo link recebido no WhatsApp, inclusive fora da lista dos 200 registros recentes |
 | GET | `/api/ocorrencias/:id/anexo` | Baixa o PDF vinculado à ocorrência; retorna 404 quando não existe |
 | GET | `/api/relatorios/vermelhas-por-escola` | Total de ocorrências vermelhas por escola |
 | GET | `/health` | Verificação de disponibilidade |

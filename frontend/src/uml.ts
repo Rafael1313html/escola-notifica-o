@@ -2,6 +2,8 @@ import './uml.css';
 import './tema.css';
 import './tema';
 import diagrama from './uml-diagrama.svg?raw';
+import sequencia from './uml-sequencia.svg?raw';
+import apresentacaoPDF from '../../docs/classes-uml.pdf?url';
 
 interface ClasseUML { tipo: string; descricao: string; atributos: [string, string][]; regras: string[]; }
 const classes: Record<string, ClasseUML> = {
@@ -13,7 +15,7 @@ const classes: Record<string, ClasseUML> = {
   Ocorrencia: {
     tipo: 'Entidade', descricao: 'Registro dos fatos, da classificação e do responsável pelo preenchimento.',
     atributos: [['id', 'Inteiro · chave primária · protocolo EN-000001'], ['escola_id', 'Inteiro · referência à escola'], ['data_ocorrencia', 'Data válida, igual ou anterior a hoje'], ['tipo', 'Texto opcional de até 100 caracteres'], ['descricao', 'Texto opcional de até 5.000 caracteres'], ['gravidade', 'Enumeração Gravidade'], ['registrado_por', 'Enumeração Registrante'], ['registrado_por_outro', 'Nome ou cargo opcional · até 100 caracteres'], ['status', 'Texto de até 30 caracteres · padrão ABERTA'], ['criado_em', 'Data e hora geradas pelo banco']],
-    regras: ['Pertence a exatamente uma escola.', 'Pode ter zero ou um anexo.', 'OUTROS exige nome ou cargo; os demais responsáveis mantêm esse campo vazio.', 'Ocorrência e anexo são gravados na mesma transação.', 'O resumo exibido no painel tem até 300 caracteres.', 'Tabela MySQL: ocorrencias.'],
+    regras: ['Pertence a exatamente uma escola.', 'Pode ter zero ou um anexo e gerar até seis avisos WhatsApp.', 'OUTROS exige nome ou cargo; os demais responsáveis mantêm esse campo vazio.', 'Ocorrência, anexo e fila de avisos são gravados na mesma transação.', 'O link recebido abre o registro pelo ID, inclusive fora dos 200 recentes.', 'Tabela MySQL: ocorrencias.'],
   },
   Anexo: {
     tipo: 'Entidade', descricao: 'Documento opcional vinculado a uma ocorrência. Guarda um PDF ou um endereço de documento.',
@@ -23,7 +25,7 @@ const classes: Record<string, ClasseUML> = {
   Registrante: {
     tipo: 'Enumeração', descricao: 'Função de quem preencheu o registro; não representa uma conta autenticada.',
     atributos: [['DIRETOR', 'Diretor'], ['VICE_DIRETOR', 'Vice-diretor'], ['OUTROS', 'Outra função, com nome ou cargo obrigatório']],
-    regras: ['Uma única opção por ocorrência.', 'O sistema atual não possui login nem permissões de administrador.'],
+    regras: ['Uma única opção por ocorrência.', 'O cadastro e as consultas não têm login. A configuração dos números exige uma chave ADM.'],
   },
   Gravidade: {
     tipo: 'Enumeração', descricao: 'Classificação usada nos indicadores, filtros e relatórios da rede.',
@@ -35,12 +37,29 @@ const classes: Record<string, ClasseUML> = {
     atributos: [['PDF', 'Arquivo armazenado no MySQL ou no navegador da demonstração'], ['LINK', 'Endereço HTTP/HTTPS de um documento externo']],
     regras: ['Um anexo escolhe apenas uma alternativa.', 'Representa a união de tipos TypeScript e as restrições CHECK do banco.'],
   },
+  DestinatarioWhatsApp: {
+    tipo: 'Configuração de mensageria', descricao: 'Um dos seis responsáveis que podem receber o link da ocorrência no WhatsApp pessoal.',
+    atributos: [['id', 'Identificador fixo · chave primária'], ['numero', 'DDI, DDD e telefone · até 15 dígitos'], ['/ nome', 'Derivado do cadastro fixo da aplicação'], ['/ cargo', 'Derivado do cadastro fixo da aplicação']],
+    regras: ['Marcela: dirigente. Alexandra e Susana: supervisoras. Mercia: PEC / ADM. Monica: PEC. Camila: CEC.', 'O ADM altera os seis números usando uma chave de acesso.', 'Campo vazio desativa o destinatário; números repetidos são recusados.', 'Pode receber avisos de várias ocorrências.', 'Tabela MySQL: whatsapp_destinatarios.'],
+  },
+  AvisoWhatsApp: {
+    tipo: 'Entidade da fila', descricao: 'Aviso individual persistido após o cadastro e enviado pela API da Meta.',
+    atributos: [['id', 'Inteiro longo · chave primária'], ['ocorrencia_id', 'Referência à ocorrência'], ['destinatario_id', 'Referência ao responsável'], ['numero', 'Cópia do telefone no momento do registro'], ['status', 'Enumeração StatusEnvioWhatsApp'], ['mensagem_id', 'ID retornado pela Meta · opcional'], ['atualizado_em', 'Data e hora da última atualização']],
+    regras: ['Um aviso por ocorrência e destinatário; a combinação é única no banco.', 'Protocolo, escola, data, classificação e link direto seguem no modelo aprovado.', 'Descrição e documentos ficam no sistema.', 'A fila é processada após a gravação, sem esperar pela Meta durante o cadastro.', 'Somente envio: sem respostas, webhook de mensagens ou chat interno.', 'Tabela MySQL: whatsapp_envios.'],
+  },
+  StatusEnvioWhatsApp: {
+    tipo: 'Enumeração de mensageria', descricao: 'Situação da tentativa de envio; não representa confirmação de entrega no aparelho.',
+    atributos: [['PENDENTE', 'Aviso na fila'], ['PROCESSANDO', 'Tentativa em curso'], ['ACEITO', 'A Meta retornou um ID de mensagem'], ['FALHOU', 'A API recusou o envio'], ['INCERTO', 'Timeout ou resultado desconhecido']],
+    regras: ['O painel ADM mostra os 30 avisos mais recentes.', 'Falhas e resultados incertos não são reenviados automaticamente.', 'O envio real depende da conta Meta, do modelo aprovado e do endereço público configurado.'],
+  },
 };
 
 function q<T extends HTMLElement>(seletor: string): T { return document.querySelector<T>(seletor)!; }
 const mapa = q<HTMLDivElement>('#uml-mapa');
 const status = q<HTMLParagraphElement>('#uml-status');
 mapa.innerHTML = diagrama;
+q<HTMLAnchorElement>('#uml-pdf').href = apresentacaoPDF;
+q('#uml-sequencia-mapa').innerHTML = sequencia;
 const imagem = mapa.querySelector<SVGSVGElement>('svg')!;
 function elemento(tag: string, texto: string): HTMLElement {
   const item = document.createElement(tag); item.textContent = texto; return item;
@@ -48,6 +67,7 @@ function elemento(tag: string, texto: string): HTMLElement {
 function selecionar(nome: string, anunciar = true): void {
   const classe = classes[nome];
   if (!classe) return;
+  if (anunciar) apresentar(false);
   q('#uml-classe-nome').textContent = nome;
   q('#uml-classe-tipo').textContent = classe.tipo.toLocaleUpperCase('pt-BR');
   q('#uml-classe-descricao').textContent = classe.descricao;
@@ -59,6 +79,14 @@ function selecionar(nome: string, anunciar = true): void {
   imagem.querySelectorAll<SVGGElement>('[data-classe]').forEach((grupo) => grupo.classList.toggle('selecionada', grupo.dataset.classe === nome));
   if (anunciar) status.textContent = `Classe ${nome} selecionada. Os atributos e regras foram atualizados.`;
 }
+
+function apresentar(ativo: boolean): void {
+  document.body.classList.toggle('uml-apresentando', ativo);
+  q<HTMLButtonElement>('#uml-apresentar').textContent = ativo ? 'Ver atributos e regras' : 'Modo apresentação';
+  q('#uml-apresentar').setAttribute('aria-pressed', String(ativo));
+}
+q('#uml-apresentar').addEventListener('click', () => apresentar(!document.body.classList.contains('uml-apresentando')));
+apresentar(true);
 document.querySelectorAll<HTMLButtonElement>('[data-selecionar]').forEach((botao) => botao.addEventListener('click', () => selecionar(botao.dataset.selecionar!)));
 imagem.querySelectorAll<SVGGElement>('[data-classe]').forEach((grupo) => grupo.addEventListener('click', () => selecionar(grupo.dataset.classe!)));
 selecionar('Escola', false);
@@ -117,7 +145,7 @@ q('#uml-png').addEventListener('click', async () => {
   const url = URL.createObjectURL(new Blob([diagrama], { type: 'image/svg+xml;charset=utf-8' }));
   try {
     const figura = new Image(); figura.src = url; await figura.decode();
-    const canvas = document.createElement('canvas'); canvas.width = 2800; canvas.height = 1800;
+    const canvas = document.createElement('canvas'); canvas.width = 3600; canvas.height = 2200;
     const contexto = canvas.getContext('2d'); if (!contexto) throw new Error();
     contexto.drawImage(figura, 0, 0, canvas.width, canvas.height);
     const png = await new Promise<Blob>((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error()), 'image/png'));

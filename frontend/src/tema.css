@@ -29,7 +29,7 @@ input[type="url"] { width: 100%; min-height: var(--toque); padding: 10px 12px; f
   :root[data-tema="escuro"] :is(.sobretitulo, .nav-legenda, .marca-descricao, .indicador-topo, .rodape, .rodape strong, .entrada-rodape,
     .entrada-titulo .sobretitulo, .entrada-titulo > p:last-child, .mensagem-rede p, .mensagem-rede .etiqueta,
     .orientacao-registro > p, .orientacao-registro li span, .filtros label, .ranking li::before) { color: var(--suave); }
-  :root[data-tema="escuro"] :is(input[type="text"], input[type="date"], input[type="search"], input[type="url"], input[type="file"], select, textarea) {
+  :root[data-tema="escuro"] :is(input[type="text"], input[type="date"], input[type="search"], input[type="url"], input[type="file"], input[type="tel"], input[type="password"], select, textarea) {
     background: var(--tema-campo); color: var(--tinta); border-color: #52697c;
   }
   :root[data-tema="escuro"] :is(input, textarea)::placeholder { color: #a2b3c3; }

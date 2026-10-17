@@ -1,7 +1,8 @@
 import './styles.css';
 import './tema.css';
 import './tema';
-import { ApiError, baixarAnexo, criarOcorrencia, listarEscolas, listarIndicadores, listarOcorrencias, listarRelatorio, modoDemo } from './api';
+import { iniciarWhatsApp, mensagemWhatsApp } from './whatsapp';
+import { ApiError, baixarAnexo, buscarOcorrencia, criarOcorrencia, listarEscolas, listarIndicadores, listarOcorrencias, listarRelatorio, modoDemo } from './api';
 import { lerPDF, LIMITE_PDF, linkValido } from './anexos';
 import type { Escola, Gravidade, Indicadores, ItemRelatorio, NovaOcorrencia, Ocorrencia, Registrante } from './types';
 import { baixarCSV, formatarData, hojeISO, normalizar, numero, protocolo } from './utils';
@@ -62,7 +63,7 @@ function criarVazio(titulo: string, texto: string, acao?: { rotulo: string; exec
 
 /* ---------- estado ---------- */
 
-type Painel = 'visao-geral' | 'registrar' | 'ocorrencias' | 'relatorio';
+type Painel = 'visao-geral' | 'registrar' | 'ocorrencias' | 'relatorio' | 'whatsapp';
 const estado = {
   escolas: new Map<string, number>(), // nome normalizado -> id
   ocorrencias: null as Ocorrencia[] | null,
@@ -108,17 +109,19 @@ const abas = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="tab
 const paineis: Record<Painel, HTMLElement> = {
   'visao-geral': q('#painel-visao-geral'), registrar: q('#painel-registrar'),
   ocorrencias: q('#painel-ocorrencias'), relatorio: q('#painel-relatorio'),
+  whatsapp: q('#painel-whatsapp'),
 };
 const TITULOS: Record<Painel, [string, string]> = {
   'visao-geral': ['Visão geral', 'Informações da rede para uma gestão mais atenta e integrada.'],
   registrar: ['Nova ocorrência', 'Registre os fatos e contribua para o acompanhamento da sua escola.'],
   ocorrencias: ['Ocorrências', 'Consulte, filtre e acompanhe os registros da rede de ensino.'],
   relatorio: ['Relatórios', 'Informações consolidadas para apoiar as decisões da gestão.'],
+  whatsapp: ['Canal direto com a diretoria', 'Configure quem recebe os avisos de novas ocorrências.'],
 };
 let painelAtivo: Painel = 'visao-geral';
 const telaMovel = window.matchMedia('(max-width: 699px)');
 
-function ativar(painel: Painel, moverFoco = false): void {
+function ativar(painel: Painel, moverFoco = false, registroId?: number): void {
   q('#inicio').hidden = true;
   q('.lateral').hidden = false;
   q('.aplicacao').hidden = false;
@@ -137,7 +140,8 @@ function ativar(painel: Painel, moverFoco = false): void {
   q('#caminho-atual').textContent = titulo;
   q<HTMLButtonElement>('.acoes-pagina [data-abrir="registrar"]').hidden = painel === 'registrar';
   document.title = `${titulo} · Conviva SP`;
-  if (location.hash !== `#${painel}`) history.replaceState(null, '', `#${painel}`);
+  const hash = registroId ? `#ocorrencias/${registroId}` : `#${painel}`;
+  if (location.hash !== hash) history.replaceState(null, '', hash);
 }
 
 abas.forEach((aba) => {
@@ -158,10 +162,34 @@ function ajustarOrientacao(): void {
 telaMovel.addEventListener('change', ajustarOrientacao);
 ajustarOrientacao();
 function painelDaUrl(): Painel {
-  const h = location.hash.replace('#', '');
+  const h = location.hash.replace('#', '').split('/')[0];
   return Object.hasOwn(paineis, h) ? h as Painel : 'visao-geral';
 }
 function sincronizarRota(): void {
+  const status = q('#registro-link-status');
+  status.textContent = '';
+  q<HTMLDialogElement>('#detalhes-dialog').close();
+  if (location.hash.startsWith('#ocorrencias/')) {
+    const hash = location.hash;
+    const valor = hash.slice('#ocorrencias/'.length);
+    const id = Number(valor);
+    if (!/^[1-9]\d*$/.test(valor) || !Number.isSafeInteger(id)) {
+      ativar('ocorrencias');
+      status.textContent = 'O link da ocorrência é inválido.';
+      return;
+    }
+    ativar('ocorrencias', false, id);
+    status.textContent = 'Abrindo ocorrência…';
+    void buscarOcorrencia(id).then((registro) => {
+      if (location.hash !== hash) return;
+      status.textContent = '';
+      abrirDetalhes(registro);
+    }).catch((erro) => {
+      if (location.hash !== hash) return;
+      status.textContent = erro instanceof Error ? erro.message : 'Não foi possível abrir a ocorrência.';
+    });
+    return;
+  }
   if (!location.hash || location.hash === '#inicio') {
     q('#inicio').hidden = false;
     q('.lateral').hidden = true;
@@ -293,7 +321,8 @@ form.addEventListener('submit', async (ev) => {
     } else if (campoAnexoTipo.value === 'LINK') dados.anexo = { tipo: 'LINK', url: campoAnexoLink.value.trim() };
     const resultado = await criarOcorrencia(dados);
     salvarPreferencia(dados.registrado_por);
-    mostrarAviso(`Ocorrência ${protocolo(resultado.id)} registrada com sucesso.`);
+    mostrarAviso(`Ocorrência ${protocolo(resultado.id)} registrada com sucesso.${mensagemWhatsApp(resultado)}`);
+    q('#registro-mensageria').textContent = `Ocorrência ${protocolo(resultado.id)} registrada.${mensagemWhatsApp(resultado)}`;
     reiniciarFormulario(dados.registrado_por);
     // Atualiza só o que está na tela; as outras seções recarregam ao abrir.
     // O painel e as consultas agora compartilham os dados atualizados após cada registro.
@@ -643,6 +672,7 @@ campoData.min = '1000-01-01';
 campoData.max = hojeISO();
 q<HTMLTimeElement>('#data-atual').dateTime = hojeISO();
 q('#data-atual').textContent = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'America/Sao_Paulo' });
+iniciarWhatsApp();
 q('#aviso-demo').hidden = !modoDemo;
 q('#entrada-demo').hidden = !modoDemo;
 if (modoDemo) q('#ambiente').textContent = 'Demonstração';
