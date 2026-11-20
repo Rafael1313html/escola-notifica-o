@@ -1,5 +1,9 @@
 # Modelagem MySQL
 
+> Este é o modelo relacional usado pela instalação Node.js/MySQL local. A produção Cloudflare ainda usa D1. A evolução escolhida é Supabase Postgres; o diagrama abaixo mostra o domínio lógico comum, não afirma que a migração já foi executada.
+
+[Abrir diagrama entidade-relacionamento em SVG](modelo-entidade-relacionamento.svg).
+
 O esquema MySQL guarda escolas, ocorrências, anexos e a fila de avisos. A chave ADM fica em `ADMIN_WHATSAPP_KEY` no ambiente do servidor; nunca fica no banco nem no frontend. A API exige essa chave antes de ler ocorrências, indicadores, relatórios ou PDFs. O cadastro e a lista de escolas continuam públicos.
 
 ```mermaid

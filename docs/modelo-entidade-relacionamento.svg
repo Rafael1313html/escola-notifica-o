@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 820" role="img" aria-labelledby="title desc">
+  <title id="title">Modelo entidade-relacionamento do Conviva SP</title>
+  <desc id="desc">Escolas agrupam ocorrências. Cada ocorrência pode ter um anexo e gerar vários avisos. Cada destinatário recebe avisos de várias ocorrências. A fila registra o estado de cada envio.</desc>
+  <defs>
+    <style>
+      text{font-family:Arial,sans-serif;fill:#17283f}.bg{fill:#f5f8fb}.card{fill:#fff;stroke:#cbd8e2;stroke-width:2}.head{fill:#18324f}.headtext{fill:#fff;font-size:20px;font-weight:700}.field{font-size:15px}.muted{fill:#5e7184;font-size:13px}.line{fill:none;stroke:#2f718d;stroke-width:3}.label{fill:#fff;stroke:#d4e0e8;stroke-width:1}.labeltext{fill:#176f87;font-size:14px;font-weight:700}.pk{fill:#dba725;font-size:11px;font-weight:700}.fk{fill:#17839a;font-size:11px;font-weight:700}
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#2f718d"/></marker>
+  </defs>
+  <rect class="bg" width="1440" height="820" rx="24"/>
+  <text x="48" y="54" font-size="28" font-weight="700">Modelo de dados · visão lógica</text>
+  <text x="48" y="80" class="muted">Mesmo domínio para a versão atual e a migração planejada para Supabase/PostgreSQL.</text>
+
+  <g class="line" marker-end="url(#arrow)">
+    <path d="M390 210H520"/><path d="M900 178H1025"/><path d="M710 390V463"/>
+    <path d="M390 570H520"/><path d="M1190 258V340"/>
+  </g>
+  <g>
+    <rect class="label" x="416" y="184" width="82" height="28" rx="14"/><text class="labeltext" x="457" y="203" text-anchor="middle">1 para N</text>
+    <rect class="label" x="918" y="151" width="94" height="28" rx="14"/><text class="labeltext" x="965" y="170" text-anchor="middle">1 para 0..1</text>
+    <rect class="label" x="719" y="405" width="82" height="28" rx="14"/><text class="labeltext" x="760" y="424" text-anchor="middle">1 para N</text>
+    <rect class="label" x="414" y="542" width="82" height="28" rx="14"/><text class="labeltext" x="455" y="561" text-anchor="middle">1 para N</text>
+    <rect class="label" x="1198" y="285" width="82" height="28" rx="14"/><text class="labeltext" x="1239" y="304" text-anchor="middle">1 para N</text>
+  </g>
+
+  <g transform="translate(50 120)">
+    <rect class="card" width="340" height="190" rx="14"/><path d="M0 14Q0 0 14 0H326Q340 0 340 14V48H0Z" class="head"/><text class="headtext" x="22" y="32">ESCOLAS</text>
+    <text class="field" x="22" y="82">id</text><text class="pk" x="290" y="82">PK</text>
+    <text class="field" x="22" y="112">nome</text><text class="muted" x="290" y="112">único</text>
+    <text class="muted" x="22" y="158">Cadastro de referência da rede</text>
+  </g>
+  <g transform="translate(520 88)">
+    <rect class="card" width="380" height="302" rx="14"/><path d="M0 14Q0 0 14 0H366Q380 0 380 14V48H0Z" class="head"/><text class="headtext" x="22" y="32">OCORRÊNCIAS</text>
+    <text class="field" x="22" y="82">id</text><text class="pk" x="338" y="82">PK</text>
+    <text class="field" x="22" y="109">escola_id</text><text class="fk" x="338" y="109">FK</text>
+    <text class="field" x="22" y="136">data_ocorrencia · tipo · descrição</text>
+    <text class="field" x="22" y="163">gravidade · responsável · status</text>
+    <text class="field" x="22" y="190">criado_em</text>
+    <text class="muted" x="22" y="247">Um registro pertence a uma escola</text>
+    <text class="muted" x="22" y="270">e fica visível apenas ao ADM.</text>
+  </g>
+  <g transform="translate(1025 105)">
+    <rect class="card" width="340" height="153" rx="14"/><path d="M0 14Q0 0 14 0H326Q340 0 340 14V48H0Z" class="head"/><text class="headtext" x="22" y="32">ANEXOS</text>
+    <text class="field" x="22" y="82">ocorrencia_id</text><text class="pk" x="290" y="82">PK/FK</text>
+    <text class="field" x="22" y="109">tipo · nome · tamanho</text>
+    <text class="field" x="22" y="136">URL ou referência do arquivo</text>
+  </g>
+  <g transform="translate(1025 340)">
+    <rect class="card" width="340" height="152" rx="14"/><path d="M0 14Q0 0 14 0H326Q340 0 340 14V48H0Z" class="head"/><text class="headtext" x="22" y="32">PARTES DO ARQUIVO</text>
+    <text class="field" x="22" y="82">ocorrencia_id</text><text class="fk" x="290" y="82">FK</text>
+    <text class="field" x="22" y="109">posição · conteúdo binário</text>
+    <text class="muted" x="22" y="136">Detalhe físico da versão D1</text>
+  </g>
+  <g transform="translate(50 490)">
+    <rect class="card" width="340" height="168" rx="14"/><path d="M0 14Q0 0 14 0H326Q340 0 340 14V48H0Z" class="head"/><text class="headtext" x="22" y="32">DESTINATÁRIOS</text>
+    <text class="field" x="22" y="82">id</text><text class="pk" x="290" y="82">PK</text>
+    <text class="field" x="22" y="109">número · ativo</text>
+    <text class="muted" x="22" y="143">Configuração protegida pelo ADM</text>
+  </g>
+  <g transform="translate(520 463)">
+    <rect class="card" width="380" height="195" rx="14"/><path d="M0 14Q0 0 14 0H366Q380 0 380 14V48H0Z" class="head"/><text class="headtext" x="22" y="32">FILA DE AVISOS</text>
+    <text class="field" x="22" y="82">id</text><text class="pk" x="338" y="82">PK</text>
+    <text class="field" x="22" y="109">ocorrencia_id · destinatario_id</text><text class="fk" x="338" y="109">FK</text>
+    <text class="field" x="22" y="136">status · mensagem_id · atualizado_em</text>
+    <text class="muted" x="22" y="170">Armazena resultado, sem detalhes sensíveis</text>
+  </g>
+  <text x="50" y="745" class="muted">Regra de acesso: cadastro público; consulta, exportação, anexos e administração exigem chave ADM no servidor.</text>
+  <text x="50" y="772" class="muted">Na migração para Supabase, arquivos podem usar Supabase Storage; esta vista preserva a relação lógica ocorrência → anexo.</text>
+</svg>

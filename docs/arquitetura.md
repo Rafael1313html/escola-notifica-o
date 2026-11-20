@@ -1,10 +1,8 @@
 # Conviva SP — uso e arquitetura
 
-No Cloudflare, o acesso comum usa Pages, uma API Worker e banco D1 compartilhado. A configuração dos seis números exige senha ADM. O cron do Worker processa a fila a cada minuto. Consulte [implantação e acessos](cloudflare.md). A opção Node.js/MySQL continua disponível para instalações próprias.
+No Cloudflare publicado, a interface usa Pages, a API roda em Worker e os dados ficam no banco D1. A configuração dos seis números exige senha ADM. O cron do Worker processa a fila a cada minuto. A migração aprovada substitui D1 por Supabase Postgres e mantém Pages/Worker; até concluir, D1 segue como banco ativo. Consulte [plano de migração](migracao-supabase.md) e [deploy e acessos](cloudflare.md). A opção Node.js/MySQL continua disponível para instalações próprias.
 
 A arquitetura simplificada de **registro e disparo ao WhatsApp**, com os seis destinatários configurados pelo ADM, está em [whatsapp.md](whatsapp.md) e na apresentação `/mensageria.html`. O backend persiste a fila junto à ocorrência e envia os avisos pela API da Meta após a gravação. A demonstração não envia mensagens.
-
-A apresentação para o cliente está em [apresentacao.html](../frontend/public/apresentacao.html). Após iniciar o sistema, abra `/apresentacao.html` ou use “Como o sistema funciona” na lateral. A página funciona sem serviços externos e oferece impressão em A4 paisagem ou salvamento em PDF pelo navegador.
 
 Arquivos prontos para compartilhar: [PDF](apresentacao-sistema.pdf) e [imagem PNG](apresentacao-sistema.png).
 
@@ -149,3 +147,5 @@ Os registros e os metadados dos anexos ficam em `localStorage`. O conteúdo dos 
 ## Escopo atual
 
 O sistema oferece cadastro, consulta dos 200 registros mais recentes, busca, filtros, detalhes, download de PDF, abertura de links, indicadores do histórico, relatório por escola e exportação CSV. As escolas somente registram. Consultas, relatórios e documentos exigem senha ADM. Somente o ADM consulta, altera ou apaga registros. No Cloudflare, PDFs são divididos em partes de 512 KB no D1; na instalação MySQL, usam MEDIUMBLOB. Ambos preservam o limite de 5 MB.
+
+A apresentação visual para o cliente está em [apresentacao.html](../frontend/public/apresentacao.html). Após iniciar o sistema, abra `/apresentacao.html`; a página oferece impressão em A4 paisagem ou salvamento em PDF pelo navegador. O guia e roteiro estão em [apresentacao-cliente.md](apresentacao-cliente.md), com [diagrama ER](modelo-entidade-relacionamento.svg).

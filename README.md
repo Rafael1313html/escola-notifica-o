@@ -78,7 +78,7 @@ Essa demonstração funciona sem servidor e sem MySQL. Os registros ficam no arm
 
 ## Publicar o backend no Cloudflare
 
-O backend nativo usa Worker, D1 e cron. A escola registra ocorrências; somente o ADM consulta, altera ou exclui registros e configura números. Os avisos do WhatsApp levam ao painel, que exige senha ADM; links antigos de consulta foram desativados. Consulte [publicação e acessos no Cloudflare](docs/cloudflare.md) para configuração, migrações e comandos. A senha fica como secret do Worker, fora do Git e do frontend.
+O ambiente publicado ainda usa Worker, D1 e cron. A escola registra ocorrências; somente o ADM consulta, altera ou exclui registros e configura números. Os avisos do WhatsApp levam ao painel, que exige senha ADM; links antigos de consulta foram desativados. A evolução aprovada substitui D1 por Supabase Postgres, mantendo Cloudflare Pages. Consulte o [plano de migração](docs/migracao-supabase.md) e a [apresentação do cliente](docs/apresentacao-cliente.md). A senha fica como secret do Worker, fora do Git e do frontend.
 
 ## Alternativa: backend Node.js/MySQL no Railway
 
