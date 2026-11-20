@@ -1,6 +1,6 @@
-# Modelagem MySQL
+# Modelagem do banco: MySQL local e Cloudflare D1
 
-> Este é o modelo relacional usado pela instalação Node.js/MySQL local. A produção Cloudflare ainda usa D1. A evolução escolhida é Supabase Postgres; o diagrama abaixo mostra o domínio lógico comum, não afirma que a migração já foi executada.
+> Este é o modelo relacional da instalação local MySQL e da produção Cloudflare D1. As relações lógicas são as mesmas; a implementação dos anexos difere entre os bancos.
 
 [Abrir diagrama entidade-relacionamento em SVG](modelo-entidade-relacionamento.svg).
 

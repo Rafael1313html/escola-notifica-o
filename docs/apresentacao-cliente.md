@@ -46,7 +46,6 @@ A API exige a chave ADM antes de consultar ocorrências ou anexos. A chave fica 
 
 **Ambiente publicado hoje:** Cloudflare Pages entrega a interface; Cloudflare Worker valida pedidos e controla autorização; banco D1 persiste escolas, ocorrências, anexos e fila de avisos. O conteúdo do PDF é dividido em partes no D1 para respeitar o limite por arquivo.
 
-**Evolução escolhida:** substituir D1 por Supabase Postgres, mantendo o site no Cloudflare Pages. A estrutura lógica e as relações permanecem as mesmas. A migração exige um projeto Supabase, credenciais de servidor protegidas e transferência dos registros existentes. Até a implantação e validação dessa migração, o ambiente publicado continua usando D1.
 
 **Alternativa de desenvolvimento:** Node.js + MySQL 8. O banco MySQL local foi inicializado para desenvolvimento. Ele é separado do banco publicado e não recebe automaticamente dados do Cloudflare.
 
@@ -54,7 +53,7 @@ A API exige a chave ADM antes de consultar ocorrências ou anexos. A chave fica 
 
 ![Diagrama entidade-relacionamento do Conviva SP](modelo-entidade-relacionamento.svg)
 
-Uma escola possui várias ocorrências. Cada ocorrência pode ter zero ou um anexo e gerar vários avisos. A fila liga ocorrências aos destinatários e guarda o estado de cada envio. Na migração para Supabase, o conteúdo do arquivo pode ficar no Supabase Storage e a tabela de anexos guardar a referência.
+Uma escola possui várias ocorrências. Cada ocorrência pode ter zero ou um anexo e gerar vários avisos. A fila liga ocorrências aos destinatários e guarda estado do envio.
 
 ## Regras principais
 
@@ -81,7 +80,6 @@ Uma escola possui várias ocorrências. Cada ocorrência pode ter zero ou um ane
 - [Arquitetura da aplicação](arquitetura.md)
 - [Deploy e acessos Cloudflare](cloudflare.md)
 - [Diagrama ER em SVG](modelo-entidade-relacionamento.svg)
-- [Plano de migra??o Supabase](migracao-supabase.md)
 - [Diagrama UML interativo](../frontend/uml.html)
 
 **Limite do ambiente de demonstração:** usa infraestrutura e dados compartilhados para teste. Antes de operar com informações pessoais ou incidentes reais, concluir a migração para o banco definido, revisar governança e retenção, limitar credenciais aos usuários autorizados e validar o processo com a equipe responsável.

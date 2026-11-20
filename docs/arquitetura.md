@@ -1,6 +1,6 @@
 # Conviva SP — uso e arquitetura
 
-No Cloudflare publicado, a interface usa Pages, a API roda em Worker e os dados ficam no banco D1. A configuração dos seis números exige senha ADM. O cron do Worker processa a fila a cada minuto. A migração aprovada substitui D1 por Supabase Postgres e mantém Pages/Worker; até concluir, D1 segue como banco ativo. Consulte [plano de migração](migracao-supabase.md) e [deploy e acessos](cloudflare.md). A opção Node.js/MySQL continua disponível para instalações próprias.
+No Cloudflare publicado, a interface usa Pages, a API roda em Worker e os dados ficam no banco D1. A configuração dos seis números exige senha ADM. O cron do Worker processa a fila a cada minuto. Consulte [deploy e acessos](cloudflare.md). A opção Node.js/MySQL continua disponível para instalações próprias.
 
 A arquitetura simplificada de **registro e disparo ao WhatsApp**, com os seis destinatários configurados pelo ADM, está em [whatsapp.md](whatsapp.md) e na apresentação `/mensageria.html`. O backend persiste a fila junto à ocorrência e envia os avisos pela API da Meta após a gravação. A demonstração não envia mensagens.
 

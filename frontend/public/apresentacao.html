@@ -47,30 +47,29 @@
 
     <section class="slide" aria-labelledby="arquitetura-titulo">
       <p class="eyebrow">03 · Fluxo da aplicação</p><h2 id="arquitetura-titulo">Uma entrada segura para o banco</h2>
-      <svg class="diagram" viewBox="0 0 1200 380" role="img" aria-labelledby="fluxo-title fluxo-desc">
-        <title id="fluxo-title">Fluxo atual e evolução planejada</title><desc id="fluxo-desc">A escola e o ADM usam o navegador. O Cloudflare Pages entrega a aplicação. O Worker valida operações e acessa o D1 atual. A migração aprovada trocará o D1 pelo Supabase Postgres.</desc>
+      <svg class="diagram" viewBox="0 0 1200 340" role="img" aria-labelledby="fluxo-title fluxo-desc">
+        <title id="fluxo-title">Arquitetura publicada no Cloudflare</title><desc id="fluxo-desc">Escola e ADM usam o navegador. Cloudflare Pages entrega a interface. O Worker valida os pedidos e grava dados no D1.</desc>
         <defs><marker id="seta" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#28738c"/></marker></defs>
-        <g fill="none" stroke="#28738c" stroke-width="3" marker-end="url(#seta)"><path d="M205 170H300"/><path d="M500 170H595"/><path d="M795 145H900"/><path d="M795 205H900" stroke-dasharray="8 7"/></g>
-        <g font-family="Montserrat,Arial" text-anchor="middle"><rect x="20" y="105" width="185" height="130" rx="16" fill="#fff" stroke="#cbd8e2" stroke-width="2"/><text x="112" y="145" fill="#18324f" font-size="18" font-weight="600">Pessoas</text><text x="112" y="176" fill="#526477" font-size="14">Escola · ADM</text><text x="112" y="201" fill="#526477" font-size="13">Navegador web</text>
+        <g fill="none" stroke="#28738c" stroke-width="3" marker-end="url(#seta)"><path d="M205 170H300"/><path d="M500 170H595"/><path d="M795 170H900"/></g>
+        <g font-family="Montserrat,Arial" text-anchor="middle"><rect x="20" y="105" width="185" height="130" rx="16" fill="#fff" stroke="#cbd8e2" stroke-width="2"/><text x="112" y="145" fill="#18324f" font-size="18" font-weight="600">Pessoas</text><text x="112" y="176" fill="#526477" font-size="14">Escola | ADM</text><text x="112" y="201" fill="#526477" font-size="13">Navegador web</text>
         <rect x="300" y="105" width="200" height="130" rx="16" fill="#eaf6f6" stroke="#2aaeb0" stroke-width="2"/><text x="400" y="145" fill="#18324f" font-size="18" font-weight="600">Cloudflare Pages</text><text x="400" y="176" fill="#526477" font-size="14">Interface responsiva</text><text x="400" y="201" fill="#526477" font-size="13">Cadastro e painel</text>
-        <rect x="595" y="105" width="200" height="130" rx="16" fill="#18324f"/><text x="695" y="145" fill="#fff" font-size="18" font-weight="600">Cloudflare Worker</text><text x="695" y="176" fill="#d5e0e9" font-size="14">API · validação · ADM</text><text x="695" y="201" fill="#d5e0e9" font-size="13">Banco atual: D1</text>
-        <rect x="900" y="75" width="270" height="105" rx="16" fill="#fff5de" stroke="#e6b64e" stroke-width="2"/><text x="1035" y="116" fill="#18324f" font-size="18" font-weight="600">D1 · produção atual</text><text x="1035" y="146" fill="#526477" font-size="13">Registros e anexos</text>
-        <rect x="900" y="215" width="270" height="105" rx="16" fill="#f1eefa" stroke="#8a79bd" stroke-width="2" stroke-dasharray="7 5"/><text x="1035" y="256" fill="#18324f" font-size="18" font-weight="600">Supabase Postgres</text><text x="1035" y="286" fill="#526477" font-size="13">Migração aprovada · pendente</text></g>
-        <text x="598" y="358" text-anchor="middle" fill="#526477" font-family="Montserrat,Arial" font-size="12">Linha contínua: ambiente publicado hoje · linha tracejada: evolução aprovada</text>
+        <rect x="595" y="105" width="200" height="130" rx="16" fill="#18324f"/><text x="695" y="145" fill="#fff" font-size="18" font-weight="600">Cloudflare Worker</text><text x="695" y="176" fill="#d5e0e9" font-size="14">API | acesso | ADM</text><text x="695" y="201" fill="#d5e0e9" font-size="13">Acesso protegido</text>
+        <rect x="900" y="105" width="270" height="130" rx="16" fill="#fff5de" stroke="#e6b64e" stroke-width="2"/><text x="1035" y="145" fill="#18324f" font-size="18" font-weight="600">Cloudflare D1</text><text x="1035" y="176" fill="#526477" font-size="14">Banco ativo</text><text x="1035" y="201" fill="#526477" font-size="13">Registros e anexos</text></g>
+        <text x="598" y="302" text-anchor="middle" fill="#526477" font-family="Montserrat,Arial" font-size="13">Interface, API e banco publicados na infraestrutura Cloudflare.</text>
       </svg>
-      <p class="caption">Após migrar, Pages continuará hospedando a interface. O Worker seguirá protegendo a API e encaminhará operações ao Supabase por HTTPS.</p>
+      <p class="caption">O Worker valida acesso ADM antes de ler ou gravar dados no banco.</p>
     </section>
 
     <section class="slide" aria-labelledby="dados-titulo">
       <p class="eyebrow">04 · Modelo de dados</p><h2 id="dados-titulo">Relações que organizam o histórico</h2>
       <div class="erd-wrap"><img class="erd" src="assets/modelo-entidade-relacionamento.svg" alt="Diagrama entidade-relacionamento: escolas possuem ocorrências; ocorrência pode ter anexo e gera avisos para destinatários; fila guarda estado de envio."></div>
-      <p class="caption">A modelagem lógica permanece na migração. A implementação física do anexo pode mudar: D1 divide PDFs em partes; Supabase pode guardar arquivos no Storage e metadados no banco.</p>
+      <p class="caption">O D1 divide PDFs em partes para respeitar o limite por arquivo. A opção Node.js/MySQL guarda o PDF na tabela de anexo.</p>
       <div class="links"><a class="secondary" href="uml.html">Abrir diagramas UML</a><a class="secondary" href="https://github.com/Rafael1313html/escola-notifica-o/blob/main/docs/modelagem-mysql.md">Ver esquema detalhado</a></div>
     </section>
 
     <section class="slide" aria-labelledby="proximos-titulo">
       <p class="eyebrow">05 · Demonstração e próximos passos</p><h2 id="proximos-titulo">Pronto para validar o fluxo</h2>
-      <ul class="checklist"><li>Interface publicada e adaptada a celular.</li><li>Cadastro gravado e protocolo confirmado.</li><li>Consulta protegida por chave ADM.</li><li>Registro de teste pode ser excluído pelo ADM.</li><li>WhatsApp permanece desativado no teste.</li><li>Migração para Supabase requer projeto e credenciais protegidas.</li></ul>
+      <ul class="checklist"><li>Interface publicada e adaptada a celular.</li><li>Cadastro gravado e protocolo confirmado.</li><li>Consulta protegida por chave ADM.</li><li>Registro de teste pode ser excluído pelo ADM.</li><li>WhatsApp permanece desativado no teste.</li><li>MySQL local disponível como alternativa separada para desenvolvimento.</li></ul>
       <div class="band"><strong>Roteiro sugerido</strong> Registrar ocorrência fictícia → copiar protocolo → entrar como ADM → localizar registro → revisar anexo/indicadores → excluir dado de demonstração.</div>
       <div class="links"><a href="/#registrar">Abrir cadastro</a><a href="/#visao-geral">Abrir painel ADM</a><a class="secondary" href="apresentacao-cliente.pdf">Baixar PDF</a><a class="secondary" href="https://github.com/Rafael1313html/escola-notifica-o/blob/main/docs/apresentacao-cliente.md">Guia para o cliente</a><button class="print" onclick="window.print()">Imprimir / salvar em PDF</button></div>
     </section>

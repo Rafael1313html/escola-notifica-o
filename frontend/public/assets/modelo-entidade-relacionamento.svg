@@ -9,7 +9,7 @@
   </defs>
   <rect class="bg" width="1440" height="820" rx="24"/>
   <text x="48" y="54" font-size="28" font-weight="700">Modelo de dados · visão lógica</text>
-  <text x="48" y="80" class="muted">Mesmo domínio para a versão atual e a migração planejada para Supabase/PostgreSQL.</text>
+  <text x="48" y="80" class="muted">Modelo lógico do banco publicado no Cloudflare D1; relações compartilhadas com a opção local MySQL.</text>
 
   <g class="line" marker-end="url(#arrow)">
     <path d="M390 210H520"/><path d="M900 178H1025"/><path d="M710 390V463"/>
@@ -65,5 +65,5 @@
     <text class="muted" x="22" y="170">Armazena resultado, sem detalhes sensíveis</text>
   </g>
   <text x="50" y="745" class="muted">Regra de acesso: cadastro público; consulta, exportação, anexos e administração exigem chave ADM no servidor.</text>
-  <text x="50" y="772" class="muted">Na migração para Supabase, arquivos podem usar Supabase Storage; esta vista preserva a relação lógica ocorrência → anexo.</text>
+  <text x="50" y="772" class="muted">No D1, PDFs ficam divididos em partes. Na opção MySQL, o arquivo fica no MEDIUMBLOB do anexo.</text>
 </svg>
