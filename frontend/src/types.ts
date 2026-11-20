@@ -22,6 +22,7 @@ export interface Ocorrencia {
   descricao: string | null;
   gravidade: Gravidade;
   registrado_por: Registrante;
+  registrado_por_nome: string;
   registrado_por_outro: string | null;
   status: string;
   criado_em: string;
@@ -40,6 +41,7 @@ export interface NovaOcorrencia {
   descricao: string;
   gravidade: Gravidade;
   registrado_por: Registrante;
+  registrado_por_nome: string;
   registrado_por_outro: string;
   anexo?: NovoAnexo | null;
 }

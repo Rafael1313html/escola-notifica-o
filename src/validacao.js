@@ -29,7 +29,7 @@ function validarOcorrencia(corpo) {
   const textos = {};
   for (const [campo, limite, rotulo] of [
     ['tipo', 100, 'O tipo'], ['descricao', 5000, 'A descrição'],
-    ['registrado_por_outro', 100, 'O nome ou cargo'],
+    ['registrado_por_nome', 100, 'O nome de quem registrou'], ['registrado_por_outro', 100, 'O nome ou cargo'],
   ]) {
     const valor = corpo[campo];
     if (valor != null && typeof valor !== 'string') {
@@ -39,12 +39,14 @@ function validarOcorrencia(corpo) {
       if (textos[campo].length > limite) erros.push(`${rotulo} deve ter até ${limite} caracteres.`);
     }
   }
+  if (!textos.registrado_por_nome) erros.push('Informe o nome de quem registrou.');
   if (corpo.registrado_por === 'OUTROS' && !textos.registrado_por_outro) erros.push('Informe quem registrou.');
   return {
     erros,
     dados: erros.length ? null : {
       escola_id: Number(corpo.escola_id), data_ocorrencia: corpo.data_ocorrencia,
       gravidade: corpo.gravidade, registrado_por: corpo.registrado_por,
+      registrado_por_nome: textos.registrado_por_nome,
       tipo: textos.tipo || null, descricao: textos.descricao || null,
       registrado_por_outro: corpo.registrado_por === 'OUTROS' ? textos.registrado_por_outro : null,
     },

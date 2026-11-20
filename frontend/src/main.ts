@@ -41,8 +41,9 @@ const ROTULO_REGISTRANTE: Record<Registrante, string> = {
 const ROTULO_GRAVIDADE: Record<Gravidade, string> = { AMARELO: 'Amarela', VERMELHO: 'Vermelha' };
 
 function responsavel(o: Ocorrencia): string {
-  return o.registrado_por === 'OUTROS' && o.registrado_por_outro
+  const funcao = o.registrado_por === 'OUTROS' && o.registrado_por_outro
     ? o.registrado_por_outro : ROTULO_REGISTRANTE[o.registrado_por] || 'Não informado';
+  return o.registrado_por_nome ? `${o.registrado_por_nome} · ${funcao}` : funcao;
 }
 
 function criarSelo(gravidade: Gravidade): HTMLElement {
@@ -96,6 +97,7 @@ const campoData = q<HTMLInputElement>('#data');
 const campoTipo = q<HTMLInputElement>('#tipo');
 const campoDescricao = q<HTMLTextAreaElement>('#descricao');
 const campoOutro = q<HTMLInputElement>('#outro');
+const campoRegistranteNome = q<HTMLInputElement>('#registrado-por-nome');
 const campoAnexoTipo = q<HTMLSelectElement>('#anexo-tipo');
 const campoAnexoPDF = q<HTMLInputElement>('#anexo-pdf');
 const campoAnexoLink = q<HTMLInputElement>('#anexo-link');
@@ -259,10 +261,10 @@ function mostrarAviso(texto: string): void {
 
 /* ---------- formulário ---------- */
 
-type CampoErro = 'escola' | 'data' | 'gravidade' | 'registrado_por' | 'outro' | 'anexo-pdf' | 'anexo-link';
+type CampoErro = 'escola' | 'data' | 'gravidade' | 'registrado_por' | 'registrado_por_nome' | 'outro' | 'anexo-pdf' | 'anexo-link';
 interface ErroCampo { campo: CampoErro; mensagem: string; }
 const ALVO_FOCO: Record<CampoErro, string> = {
-  escola: 'escola', data: 'data', gravidade: 'g-amarelo', registrado_por: 'r-diretor', outro: 'outro',
+  escola: 'escola', data: 'data', gravidade: 'g-amarelo', registrado_por: 'r-diretor', registrado_por_nome: 'registrado-por-nome', outro: 'outro',
   'anexo-pdf': 'anexo-pdf', 'anexo-link': 'anexo-link',
 };
 function limparErro(campo: CampoErro): void {
@@ -291,6 +293,11 @@ function validar(): { erros: ErroCampo[]; dados: NovaOcorrencia | null } {
   const gravidade = valorRadio('gravidade');
   if (gravidade !== 'AMARELO' && gravidade !== 'VERMELHO') erros.push({ campo: 'gravidade', mensagem: 'Escolha a classificação amarela ou vermelha.' });
   const registrante = valorRadio('registrado_por');
+  if (!campoRegistranteNome.value.trim()) {
+    erros.push({ campo: 'registrado_por_nome', mensagem: 'Informe o nome de quem está registrando.' });
+  } else if (campoRegistranteNome.value.trim().length > 100) {
+    erros.push({ campo: 'registrado_por_nome', mensagem: 'O nome deve ter até 100 caracteres.' });
+  }
   if (registrante !== 'DIRETOR' && registrante !== 'VICE_DIRETOR' && registrante !== 'OUTROS') {
     erros.push({ campo: 'registrado_por', mensagem: 'Escolha quem registrou.' });
   } else if (registrante === 'OUTROS' && !campoOutro.value.trim()) {
@@ -308,13 +315,15 @@ function validar(): { erros: ErroCampo[]; dados: NovaOcorrencia | null } {
   if (erros.length || escolaId === undefined) return { erros, dados: null };
   return { erros, dados: { escola_id: escolaId, data_ocorrencia: campoData.value,
     tipo: campoTipo.value.trim(), descricao: campoDescricao.value.trim(), gravidade: gravidade as Gravidade,
-    registrado_por: registrante as Registrante, registrado_por_outro: campoOutro.value.trim() } };
+    registrado_por: registrante as Registrante, registrado_por_nome: campoRegistranteNome.value.trim(),
+    registrado_por_outro: campoOutro.value.trim() } };
 }
 
 // Some o erro assim que a pessoa corrige o campo.
 campoEscola.addEventListener('input', () => limparErro('escola'));
 campoData.addEventListener('input', () => limparErro('data'));
 campoOutro.addEventListener('input', () => limparErro('outro'));
+campoRegistranteNome.addEventListener('input', () => limparErro('registrado_por_nome'));
 form.querySelectorAll<HTMLInputElement>('input[name="gravidade"]').forEach((r) => r.addEventListener('change', () => limparErro('gravidade')));
 form.querySelectorAll<HTMLInputElement>('input[name="registrado_por"]').forEach((r) => r.addEventListener('change', () => {
   limparErro('registrado_por');
@@ -378,6 +387,7 @@ form.addEventListener('submit', async (ev) => {
 });
 function reiniciarFormulario(registrante: Registrante): void {
   campoEscola.value = ''; campoTipo.value = ''; campoDescricao.value = '';
+  campoRegistranteNome.value = '';
   campoAnexoTipo.value = ''; campoAnexoPDF.value = ''; campoAnexoLink.value = '';
   q('#anexo-pdf-campo').hidden = true; q('#anexo-link-campo').hidden = true;
   contador.textContent = '0 / 5000';
@@ -781,6 +791,8 @@ function editarRegistro(o: Ocorrencia): void {
   const registrante = campo('registrado_por', 'Responsável pelo registro', el('select')) as HTMLSelectElement;
   for (const [valor, rotulo] of Object.entries(ROTULO_REGISTRANTE)) registrante.add(new Option(rotulo, valor));
   registrante.value = o.registrado_por;
+  const nomeRegistrante = campo('registrado_por_nome', 'Nome de quem registrou', el('input')) as HTMLInputElement;
+  nomeRegistrante.maxLength = 100; nomeRegistrante.required = true; nomeRegistrante.value = o.registrado_por_nome || '';
   const outro = campo('outro', 'Nome ou cargo (obrigatório para Outros)', el('input')) as HTMLInputElement;
   outro.maxLength = 100; outro.value = o.registrado_por_outro || '';
   const erro = el('p', 'erro'); erro.setAttribute('role', 'alert');
@@ -793,7 +805,8 @@ function editarRegistro(o: Ocorrencia): void {
     try {
       await gerenciarRegistro(o.id, 'PATCH', { escola_id: Number(escola.value), data_ocorrencia: data.value,
         tipo: tipo.value, descricao: descricao.value, gravidade: gravidade.value as Gravidade,
-        registrado_por: registrante.value as Registrante, registrado_por_outro: outro.value });
+        registrado_por: registrante.value as Registrante, registrado_por_nome: nomeRegistrante.value.trim(),
+        registrado_por_outro: outro.value });
       q<HTMLDialogElement>('#detalhes-dialog').close();
       await atualizarDados(); mostrarAviso('Registro alterado.');
     } catch (e) { erro.textContent = e instanceof Error ? e.message : 'Falha ao alterar o registro.'; }

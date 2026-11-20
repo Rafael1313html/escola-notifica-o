@@ -153,6 +153,8 @@
 
         <fieldset>
           <legend>Quem registrou</legend>
+          <label for="registrado-por-nome">Nome de quem está registrando *</label>
+          <input type="text" id="registrado-por-nome" name="registrado_por_nome" maxlength="100" autocomplete="name" required>
           <div class="opcoes">
             <label><input type="radio" name="registrado_por" value="DIRETOR"> Diretor</label>
             <label><input type="radio" name="registrado_por" value="VICE_DIRETOR"> Vice-diretor</label>
@@ -245,7 +247,7 @@ async function carregarLista() {
     selo.textContent = o.gravidade === 'VERMELHO' ? 'Vermelho' : 'Amarelo';
     tdG.appendChild(selo);
     tr.appendChild(tdG);
-    celula(tr, ROTULO_REGISTRANTE[o.registrado_por] || o.registrado_por_outro);
+    celula(tr, `${o.registrado_por_nome ? `${o.registrado_por_nome} · ` : ''}${ROTULO_REGISTRANTE[o.registrado_por] || o.registrado_por_outro}`);
     corpo.appendChild(tr);
   });
 }

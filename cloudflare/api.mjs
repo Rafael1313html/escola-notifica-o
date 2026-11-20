@@ -13,7 +13,7 @@ const cabecalhos = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-C
 const json = (corpo, status = 200) => new Response(JSON.stringify(corpo), { status, headers: cabecalhos });
 const falha = (mensagem, status) => json({ erros: [mensagem] }, status);
 const consulta = `SELECT o.id, e.nome AS escola, o.data_ocorrencia, o.tipo, o.descricao,
-  o.gravidade, o.registrado_por, o.registrado_por_outro, o.status, o.criado_em,
+  o.gravidade, o.registrado_por, o.registrado_por_nome, o.registrado_por_outro, o.status, o.criado_em,
   a.tipo AS anexo_tipo, a.nome AS anexo_nome, a.url AS anexo_url, a.tamanho AS anexo_tamanho
   FROM ocorrencias o JOIN escolas e ON e.id = o.escola_id
   LEFT JOIN ocorrencia_anexos a ON a.ocorrencia_id = o.id`;
@@ -93,8 +93,8 @@ export async function atenderAPI(request, env) {
       const { erros, dados } = validarOcorrencia(await lerJSON(request, 32768));
       if (erros.length) return json({ erros }, 400);
       const resultado = await db.prepare(`UPDATE ocorrencias SET escola_id = ?, data_ocorrencia = ?, tipo = ?, descricao = ?,
-        gravidade = ?, registrado_por = ?, registrado_por_outro = ? WHERE id = ?`).bind(dados.escola_id, dados.data_ocorrencia,
-        dados.tipo, dados.descricao, dados.gravidade, dados.registrado_por, dados.registrado_por_outro, id).run();
+        gravidade = ?, registrado_por = ?, registrado_por_nome = ?, registrado_por_outro = ? WHERE id = ?`).bind(dados.escola_id, dados.data_ocorrencia,
+        dados.tipo, dados.descricao, dados.gravidade, dados.registrado_por, dados.registrado_por_nome, dados.registrado_por_outro, id).run();
       return resultado.meta.changes ? json({ alterado: true }) : falha('Ocorrência não encontrada.', 404);
     }
     if (/^\/api\/admin\/ocorrencias\/[1-9]\d*\/links$/.test(caminho) && metodo === 'POST') {
@@ -115,9 +115,9 @@ export async function atenderAPI(request, env) {
       const pedido = crypto.randomUUID();
       const idSQL = '(SELECT id FROM ocorrencias WHERE pedido = ?)';
       const comandos = [db.prepare(`INSERT INTO ocorrencias
-        (pedido, escola_id, data_ocorrencia, tipo, descricao, gravidade, registrado_por, registrado_por_outro)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`).bind(pedido, dados.escola_id, dados.data_ocorrencia,
-        dados.tipo, dados.descricao, dados.gravidade, dados.registrado_por, dados.registrado_por_outro)];
+        (pedido, escola_id, data_ocorrencia, tipo, descricao, gravidade, registrado_por, registrado_por_nome, registrado_por_outro)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`).bind(pedido, dados.escola_id, dados.data_ocorrencia,
+        dados.tipo, dados.descricao, dados.gravidade, dados.registrado_por, dados.registrado_por_nome, dados.registrado_por_outro)];
       if (anexo) {
         comandos.push(db.prepare(`INSERT INTO ocorrencia_anexos (ocorrencia_id, tipo, nome, url, tamanho)
           VALUES (${idSQL}, ?, ?, ?, ?)`).bind(pedido, anexo.tipo, anexo.nome || null, anexo.url || null, anexo.tamanho || null));

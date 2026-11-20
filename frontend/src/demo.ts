@@ -196,6 +196,7 @@ export async function criarOcorrenciaDemo(dados: NovaOcorrencia): Promise<{ id: 
     descricao: dados.descricao || null,
     gravidade: dados.gravidade,
     registrado_por: dados.registrado_por,
+    registrado_por_nome: dados.registrado_por_nome,
     registrado_por_outro: dados.registrado_por === 'OUTROS' ? dados.registrado_por_outro : null,
     status: 'ABERTA',
     criado_em: new Date().toISOString(),

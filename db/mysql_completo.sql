@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS ocorrencias (
     descricao            TEXT NULL,
     gravidade            VARCHAR(8) NOT NULL,
     registrado_por       VARCHAR(12) NOT NULL,
+    registrado_por_nome  VARCHAR(100) NOT NULL DEFAULT '',
     registrado_por_outro VARCHAR(100) NULL,
     status               VARCHAR(30) NOT NULL DEFAULT 'ABERTA',
     criado_em            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

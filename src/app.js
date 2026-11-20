@@ -38,8 +38,8 @@ function criarApp(pool, { mensageria, env = process.env } = {}) {
       if (erros.length) return res.status(400).json({ erros });
       try {
         const [resultado] = await pool.query(`UPDATE ocorrencias SET escola_id = ?, data_ocorrencia = ?, tipo = ?, descricao = ?,
-          gravidade = ?, registrado_por = ?, registrado_por_outro = ? WHERE id = ?`, [dados.escola_id, dados.data_ocorrencia,
-          dados.tipo, dados.descricao, dados.gravidade, dados.registrado_por, dados.registrado_por_outro, Number(req.params.id)]);
+          gravidade = ?, registrado_por = ?, registrado_por_nome = ?, registrado_por_outro = ? WHERE id = ?`, [dados.escola_id, dados.data_ocorrencia,
+          dados.tipo, dados.descricao, dados.gravidade, dados.registrado_por, dados.registrado_por_nome, dados.registrado_por_outro, Number(req.params.id)]);
         if (!resultado.affectedRows) return res.status(404).json({ erros: ['Ocorrência não encontrada.'] });
         res.json({ alterado: true });
       } catch (erro) { next(erro); }
@@ -91,10 +91,10 @@ function criarApp(pool, { mensageria, env = process.env } = {}) {
         if (transacao) await conexao.beginTransaction();
         [resultado] = await conexao.query(
           `INSERT INTO ocorrencias
-             (escola_id, data_ocorrencia, tipo, descricao, gravidade, registrado_por, registrado_por_outro)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+             (escola_id, data_ocorrencia, tipo, descricao, gravidade, registrado_por, registrado_por_nome, registrado_por_outro)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           [dados.escola_id, dados.data_ocorrencia, dados.tipo, dados.descricao,
-            dados.gravidade, dados.registrado_por, dados.registrado_por_outro]
+            dados.gravidade, dados.registrado_por, dados.registrado_por_nome, dados.registrado_por_outro]
         );
         if (anexo) {
           await conexao.query(`INSERT INTO ocorrencia_anexos
@@ -131,7 +131,7 @@ function criarApp(pool, { mensageria, env = process.env } = {}) {
       const where = filtros.length ? `WHERE ${filtros.join(' AND ')}` : '';
       const [rows] = await pool.query(
         `SELECT o.id, e.nome AS escola, o.data_ocorrencia, o.tipo, o.descricao,
-                o.gravidade, o.registrado_por, o.registrado_por_outro, o.status, o.criado_em,
+                o.gravidade, o.registrado_por, o.registrado_por_nome, o.registrado_por_outro, o.status, o.criado_em,
                 a.tipo AS anexo_tipo, a.nome AS anexo_nome, a.url AS anexo_url, a.tamanho AS anexo_tamanho
            FROM ocorrencias o JOIN escolas e ON e.id = o.escola_id
            LEFT JOIN ocorrencia_anexos a ON a.ocorrencia_id = o.id
@@ -145,7 +145,7 @@ function criarApp(pool, { mensageria, env = process.env } = {}) {
     if (!idValido(req.params.id)) return res.status(400).json({ erros: ['Registro inválido.'] });
     try {
       const [rows] = await pool.query(`SELECT o.id, e.nome AS escola, o.data_ocorrencia, o.tipo, o.descricao,
-        o.gravidade, o.registrado_por, o.registrado_por_outro, o.status, o.criado_em,
+                o.gravidade, o.registrado_por, o.registrado_por_nome, o.registrado_por_outro, o.status, o.criado_em,
         a.tipo AS anexo_tipo, a.nome AS anexo_nome, a.url AS anexo_url, a.tamanho AS anexo_tamanho
         FROM ocorrencias o JOIN escolas e ON e.id = o.escola_id
         LEFT JOIN ocorrencia_anexos a ON a.ocorrencia_id = o.id WHERE o.id = ?`, [Number(req.params.id)]);
