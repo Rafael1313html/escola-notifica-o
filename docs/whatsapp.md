@@ -4,7 +4,7 @@ Para o backend nativo no Cloudflare, siga [cloudflare.md](cloudflare.md): Worker
 
 O administrador entra por **ADM** no topo da página e valida sua chave no servidor. Só depois aparecem a aba **Canal direto com a diretoria** e os seis campos: Marcela (dirigente), Alexandra e Susana (supervisoras), Mercia (PEC / ADM), Monica (PEC) e Camila (CEC). Use DDI + DDD + número. Campo vazio desativa o destinatário. Números repetidos são recusados.
 
-O sistema envia avisos automáticos ao WhatsApp pessoal dos seis responsáveis. Cada aviso inclui um link direto para a ocorrência, como `https://seu-sistema/#ocorrencias/123`. Ao tocar no link, o responsável abre os detalhes no navegador. Não há recebimento de respostas, webhook de mensagens ou interface de conversa dentro do sistema.
+O sistema envia avisos automáticos ao WhatsApp dos seis destinatários configurados pelo ADM. Cada aviso leva ao painel geral; não existe link direto que libere uma ocorrência. Consultas no painel exigem a chave ADM. Não há recebimento de respostas, webhook de mensagens ou interface de conversa dentro do sistema.
 
 ## Arquitetura simplificada
 
@@ -24,14 +24,14 @@ flowchart LR
     Meta --> Camila[Camila: CEC]
 ```
 
-A apresentação visual em `/mensageria.html` pode ser impressa ou salva em PDF. Arquivos prontos: [PDF](mensageria-arquitetura.pdf), [PNG](mensageria-arquitetura.png) e [prévia da configuração ADM](whatsapp-adm.png). O acesso à configuração exige uma chave ADM no servidor. A chave fica apenas na memória da página e é descartada ao recarregar ou bloquear a configuração. A escola somente registra. O ADM e os seis responsáveis com links pessoais válidos consultam toda a rede. Somente o ADM altera ou apaga registros e configura números.
+A apresentação visual em `/mensageria.html` pode ser impressa ou salva em PDF. Arquivos prontos: [PDF](mensageria-arquitetura.pdf), [PNG](mensageria-arquitetura.png) e [prévia da configuração ADM](whatsapp-adm.png). O acesso à configuração exige uma chave ADM no servidor. A chave fica apenas na memória da página e é descartada ao recarregar ou bloquear a configuração. A escola somente registra. Somente o ADM consulta toda a rede. Somente o ADM altera ou apaga registros e configura números.
 
 ## Preparar o servidor
 
 1. Execute `npm run db:init`. A migração `db/whatsapp.sql` cria as configurações e a fila sem apagar ocorrências.
 2. Gere uma chave aleatória de pelo menos 32 caracteres para `ADMIN_WHATSAPP_KEY`. Entregue-a ao ADM por um canal privado. Não a coloque no frontend.
 3. Crie uma conta WhatsApp Business com acesso à Cloud API da Meta, número remetente habilitado e token de servidor com permissão de envio. Cadastre somente destinatários que aceitaram receber os avisos.
-4. Submeta um modelo chamado `ocorrencia_registrada`, idioma `pt_BR`, com cinco parâmetros **posicionais no corpo**, nesta ordem: protocolo numérico, escola, data ISO, classificação e link direto da ocorrência.
+4. Submeta um modelo chamado `ocorrencia_registrada`, idioma `pt_BR`, com cinco parâmetros **posicionais no corpo**, nesta ordem: protocolo numérico, escola, data ISO, classificação e link para o painel ADM.
 
    ```text
    Nova ocorrência registrada.
@@ -42,7 +42,7 @@ A apresentação visual em `/mensageria.html` pode ser impressa ou salva em PDF.
    Acesse o registro completo: {{5}}
    ```
 
-5. Configure no servidor as variáveis de `.env.example`: `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_API_VERSION` (uma versão atualmente suportada no formato `vNN.N`), `WHATSAPP_TEMPLATE`, `WHATSAPP_TEMPLATE_LANGUAGE` e `APP_PUBLIC_URL`. Esta última deve conter o endereço HTTPS do frontend conectado ao mesmo backend, sem query string ou fragmento. O link é gerado no servidor; não depende do endereço enviado pelo visitante. Sem um endereço válido, o disparo permanece desativado. Após a aprovação do modelo, defina `WHATSAPP_ENABLED=true` e reinicie o servidor. Nunca use prefixo `VITE_` para segredos.
+5. Configure no servidor as variáveis de `.env.example`: `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_API_VERSION` (uma versão atualmente suportada no formato `vNN.N`), `WHATSAPP_TEMPLATE`, `WHATSAPP_TEMPLATE_LANGUAGE` e `APP_PUBLIC_URL`. Esta última deve conter o endereço HTTPS do frontend conectado ao mesmo backend, sem query string ou fragmento. O link do painel é gerado no servidor; não concede acesso e não depende do endereço enviado pelo visitante. Sem um endereço válido, o disparo permanece desativado. Após a aprovação do modelo, defina `WHATSAPP_ENABLED=true` e reinicie o servidor. Nunca use prefixo `VITE_` para segredos.
 6. Use **ADM** no topo, informe a chave e salve os números. O cadastro e os números ficam ocultos antes da validação. **Bloquear configuração**, recarregar a página ou receber uma resposta 401/403 do servidor encerra o acesso. A ativação afeta **novos registros**; ocorrências anteriores não são reenviadas.
 
 Referência de envio: [coleção oficial da Meta para WhatsApp Cloud API](https://www.postman.com/meta/whatsapp-business-platform/documentation/wlk6lh4/whatsapp-cloud-api).
@@ -67,7 +67,7 @@ Referências: [Pages Functions](https://developers.cloudflare.com/pages/function
 
 - O cadastro não espera chamadas externas. Ocorrência, anexo e avisos são persistidos na mesma transação. Uma falha ao gravar a fila desfaz o cadastro; falha posterior da Meta preserva a ocorrência já salva.
 - A fila é processada a cada minuto no Cloudflare, ou a cada cinco segundos no Node.js, em lotes de até seis avisos. A atualização condicional de status impede dois processadores de assumirem o mesmo aviso.
-- O aviso envia protocolo, escola, data, classificação e link direto. Descrição, nome do registrante e anexos não são enviados à Meta. O link consulta a ocorrência pelo ID, inclusive quando ela não está mais entre os 200 registros recentes. O link pessoal assinado libera consulta da rede por sete dias; a API confere prazo e número ativo a cada pedido. Alterar ou remover o número revoga seus links anteriores.
+- O aviso envia protocolo, escola, data e classificação, além de link ao painel ADM. Descrição e anexos não são enviados à Meta. Abrir o painel não autentica; cada consulta exige a chave ADM. Links pessoais antigos foram desativados.
 - `PENDENTE`: na fila; `PROCESSANDO`: tentativa em curso; `ACEITO`: Meta retornou um ID de mensagem; `FALHOU`: resposta de erro da API; `INCERTO`: timeout, resposta sem ID ou processamento interrompido.
 - O painel mostra os últimos 30 avisos. Não há confirmação de entrega ou leitura, pois webhooks ainda não fazem parte desta integração.
 - Não há reenvio automático de falhas ou resultados incertos. Consulte o provedor antes de uma intervenção manual para evitar mensagens duplicadas. Processamentos interrompidos há mais de dez minutos passam a `INCERTO` quando o processador volta a rodar.

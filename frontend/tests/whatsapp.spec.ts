@@ -2,6 +2,32 @@ import { abrirComoADM, entrarADM } from './helpers/adm';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
+test('falha de conexão informa servidor indisponível e permite tentar o ADM novamente', async ({ page }) => {
+  let tentativa = 0;
+  await page.route('**/api/admin/whatsapp', (route) => {
+    tentativa++;
+    if (tentativa === 1) return route.abort('connectionrefused');
+    if (tentativa === 2) return route.fulfill({ status: 500, body: '' });
+    return route.fulfill({ json: { ativo: false, envios: [], destinatarios: [] } });
+  });
+  await page.goto('/#registrar');
+  await page.locator('#abrir-acesso-adm').click();
+  const senha = page.getByLabel('Senha do ADM', { exact: true });
+  const entrar = page.getByRole('button', { name: 'Acessar configuração' });
+  for (const mensagem of ['Não foi possível conectar ao servidor', 'Servidor indisponível']) {
+    await senha.fill('senha-isolada-do-teste');
+    await entrar.click();
+    await expect(page.locator('#whatsapp-acesso-status')).toContainText(mensagem);
+    await expect(page.locator('#whatsapp-acesso-status')).toContainText('A senha não pôde ser validada');
+    await expect(page.locator('#aba-visao-geral')).toBeHidden();
+    await expect(entrar).toBeEnabled();
+  }
+  await senha.fill('senha-isolada-do-teste');
+  await entrar.click();
+  await expect(page.locator('#whatsapp-form')).toBeVisible();
+  await expect(page.locator('#aba-visao-geral')).toBeVisible();
+});
+
 test('cadastro de números fica oculto sem ADM, inclusive na demonstração e no link direto', async ({ page }) => {
   let pedidos = 0;
   await page.route('**/api/admin/whatsapp', async (route) => {

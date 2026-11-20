@@ -14,20 +14,20 @@
   </style>
 </head>
 <body><main>
-  <header><img src="assets/conviva-sp.jpeg" alt="Conviva SP"><div><p class="legenda">ARQUITETURA SIMPLIFICADA</p><h1>Registrar. Salvar. Avisar a equipe.</h1><p>Uma ocorrência registrada gera avisos com link no WhatsApp pessoal dos responsáveis configurados pelo ADM.</p></div></header>
+  <header><img src="assets/conviva-sp.jpeg" alt="Conviva SP"><div><p class="legenda">ARQUITETURA SIMPLIFICADA</p><h1>Registrar. Salvar. Notificar a equipe ADM.</h1><p>Uma ocorrência registrada gera avisos para a equipe configurada pelo ADM. O link abre o painel, que exige senha ADM.</p></div></header>
   <h2>Fluxo de registro e envio</h2>
   <ol class="fluxo" aria-label="Fluxo do registro e da mensageria">
     <li><span class="numero">01 · ESCOLA</span><h3>Registrar ocorrência</h3><p>Preencher escola, data, classificação e fatos. Confirmar o cadastro.</p></li>
     <li class="destaque"><span class="numero">02 · API WORKER + D1</span><h3>Salvar e gerar protocolo</h3><p>Guardar ocorrência, documento e avisos juntos no banco D1 do Cloudflare.</p></li>
     <li><span class="numero">03 · WORKER CRON</span><h3>Enviar pelo WhatsApp</h3><p>Com a integração ativa, o cron verifica a fila a cada minuto e envia pela API da Meta.</p></li>
-    <li><span class="numero">04 · EQUIPE</span><h3>Abrir o link recebido</h3><p>Cada responsável recebe o aviso no WhatsApp pessoal e toca no link para consultar a ocorrência.</p></li>
+    <li><span class="numero">04 · EQUIPE</span><h3>Abrir o link recebido</h3><p>A equipe ADM recebe aviso no WhatsApp e entra no painel com a senha. O link sozinho não libera registros.</p></li>
   </ol>
   <h2>Seis números, preenchidos pelo administrador</h2>
   <div class="destinatarios"><div class="pessoa"><strong>Marcela</strong><span>Dirigente</span></div><div class="pessoa"><strong>Alexandra</strong><span>Supervisora</span></div><div class="pessoa"><strong>Susana</strong><span>Supervisora</span></div><div class="pessoa"><strong>Mercia</strong><span>PEC · ADM</span></div><div class="pessoa"><strong>Monica</strong><span>PEC</span></div><div class="pessoa"><strong>Camila</strong><span>CEC</span></div></div>
-  <p>A escola somente registra. O ADM e os seis responsáveis com link pessoal válido consultam todas as ocorrências e relatórios. Somente o ADM pode alterar ou apagar registros e cadastrar os seis números. Campo vazio desativa o destinatário e revoga seus links anteriores.</p>
+  <p>A escola somente registra. Somente o ADM autenticado consulta ocorrências e relatórios. Somente o ADM pode alterar ou apagar registros e cadastrar os seis números. Campo vazio desativa o destinatário. Links pessoais antigos não autenticam.</p>
   <div class="aviso"><strong>Ativação pendente da conta WhatsApp Business.</strong><p>O envio depende das credenciais e de um modelo de mensagem aprovado pela Meta. O cadastro de números exige acesso ADM validado no servidor, inclusive na demonstração. Usuários sem acesso ADM não visualizam os campos. A demonstração não envia mensagens.</p></div>
-  <h2>Exemplo de aviso</h2><div class="mensagem"><strong>Nova ocorrência registrada</strong><p>Protocolo: #123<br>Escola: unidade escolar<br>Data: 2026-10-17<br>Classificação: AMARELO</p><p>Acesse pelo link pessoal recebido. Ele abre a ocorrência e libera consulta da rede por sete dias. Não encaminhe o link.</p></div>
-  <p>O aviso contém protocolo, escola, data, classificação e link direto. Descrição e documentos ficam no sistema. Somente envio: o sistema não recebe respostas, não usa webhook de mensagens e não tem interface de conversa. O painel ADM diferencia fila, aceite pela Meta, falha e resultado incerto. O aceite não confirma a entrega no aparelho.</p>
+  <h2>Exemplo de aviso</h2><div class="mensagem"><strong>Nova ocorrência registrada</strong><p>Protocolo: #123<br>Escola: unidade escolar<br>Data: 2026-10-17<br>Classificação: AMARELO</p><p>Acesse o painel pelo link. Entre com a senha ADM para consultar ocorrências.</p></div>
+  <p>O aviso contém protocolo, escola, data, classificação e link para o painel ADM. Descrição e documentos ficam no sistema. Somente envio: o sistema não recebe respostas, não usa webhook de mensagens e não tem interface de conversa. O painel ADM diferencia fila, aceite pela Meta, falha e resultado incerto. O aceite não confirma a entrega no aparelho.</p>
   <div class="acoes"><a href="./#whatsapp">Configurar os seis números</a><a href="apresentacao.html">Apresentação do sistema</a><button type="button" onclick="window.print()">Imprimir ou salvar em PDF</button></div>
   <footer>Conviva SP · Registro de ocorrências e mensageria · BNI Tecnologia</footer>
 </main></body></html>

@@ -137,11 +137,11 @@ test('processador envia modelo aprovado sem descrição, registra aceite, falha 
       const corpo = JSON.parse(opcoes.body);
       assert.equal(corpo.template.name, 'ocorrencia_registrada');
       const parametros = corpo.template.components[0].parameters.map((p) => p.text);
-      assert.deepEqual(parametros.slice(0, 4), ['42', 'Escola exemplo', '2024-02-29', 'VERMELHO']);
-      const { lerToken } = require('../src/acesso');
-      const token = new URLSearchParams(new URL(parametros[4]).hash.split('?')[1]).get('acesso');
-      assert.equal(lerToken(token, env).o, 42);
-      assert.equal(lerToken(token, env).d, 'marcela');
+      assert.deepEqual(parametros.slice(0, 4), ['Acesso ADM', 'Dados protegidos', 'Consulte o painel', 'Restrita']);
+      assert.equal(parametros[4], 'https://escola.example.com/#visao-geral');
+      assert.equal(new URL(parametros[4]).hash.includes('acesso='), false);
+      assert.equal(opcoes.body.includes('Escola exemplo'), false);
+      assert.equal(opcoes.body.includes('2024-02-29'), false);
       assert.equal(opcoes.body.includes('Dado que não deve sair'), false);
       if (resultado === 'timeout') throw new Error('timeout');
       return { ok: resultado !== 'falha', json: async () => resultado === 'sem-id' ? {} : { messages: [{ id: 'wamid.exemplo' }] } };

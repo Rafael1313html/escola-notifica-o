@@ -4,7 +4,7 @@ const express = require('express');
 const { GRAVIDADES, hojeISO, idValido, validarOcorrencia } = require('./validacao');
 const { validarAnexo } = require('./anexos');
 const { validarDestinatarios } = require('./whatsapp');
-const { admValido, lerToken, criarLink } = require('./acesso');
+const { admValido } = require('./acesso');
 
 function comAnexo({ anexo_tipo, anexo_nome, anexo_url, anexo_tamanho, ...ocorrencia }) {
   return { ...ocorrencia,
@@ -28,18 +28,9 @@ function criarApp(pool, { mensageria, env = process.env } = {}) {
     if (!['GET', 'HEAD'].includes(req.method) || !/^\/api\/(ocorrencias(?:\/|$)|indicadores$|relatorios\/|acesso$)/.test(req.path)) return next();
     const autorizacao = req.get('Authorization') || '';
     if (admValido(autorizacao, env)) { req.perfil = 'ADM'; return next(); }
-    const token = autorizacao.startsWith('Link ') ? lerToken(autorizacao.slice(5), env) : null;
-    if (token) {
-      try {
-        const [pessoas] = await pool.query('SELECT numero, acesso_versao FROM whatsapp_destinatarios WHERE id = ?', [token.d]);
-        if (pessoas[0]?.numero && pessoas[0].acesso_versao === token.r) {
-          req.ocorrenciaInicial = token.o; req.perfil = 'RESPONSAVEL'; return next();
-        }
-      } catch (erro) { return next(erro); }
-    }
-    return res.status(401).json({ erros: ['Acesso restrito ao ADM ou ao link recebido pelo responsável.'] });
+    return res.status(401).json({ erros: ['Acesso restrito ao ADM.'] });
   });
-  app.get('/api/acesso', (req, res) => res.json({ perfil: req.perfil, ocorrencia_id: req.ocorrenciaInicial || null, escopo: 'REDE' }));
+  app.get('/api/acesso', (req, res) => res.json({ perfil: req.perfil, escopo: 'REDE' }));
   if (mensageria) {
     app.patch('/api/admin/ocorrencias/:id', mensageria.proteger, async (req, res, next) => {
       if (!idValido(req.params.id)) return res.status(400).json({ erros: ['Registro inválido.'] });
@@ -69,15 +60,8 @@ function criarApp(pool, { mensageria, env = process.env } = {}) {
       if (erros.length) return res.status(400).json({ erros });
       try { await mensageria.salvar(dados); res.json({ salvo: true }); } catch (erro) { next(erro); }
     });
-    app.post('/api/admin/ocorrencias/:id/links', mensageria.proteger, async (req, res, next) => {
-      if (!idValido(req.params.id)) return res.status(400).json({ erros: ['Registro inválido.'] });
-      try {
-        const [registros] = await pool.query('SELECT id FROM ocorrencias WHERE id = ?', [Number(req.params.id)]);
-        if (!registros.length) return res.status(404).json({ erros: ['Ocorrência não encontrada.'] });
-        const [pessoas] = await pool.query("SELECT id, acesso_versao FROM whatsapp_destinatarios WHERE numero <> ''");
-        res.json({ links: pessoas.map((p) => ({ destinatario: p.id, url: criarLink(env, Number(req.params.id), p.id, p.acesso_versao) })), validade_dias: 7 });
-      } catch (erro) { next(erro); }
-    });
+    app.post('/api/admin/ocorrencias/:id/links', mensageria.proteger, (_req, res) =>
+      res.status(410).json({ erros: ['Links pessoais de consulta foram desativados.'] }));
   }
   // Serve o front-end compilado (frontend/dist). Se ainda não foi gerado, usa a página simples em public/.
   const pastaFront = path.join(__dirname, '..', 'frontend', 'dist');

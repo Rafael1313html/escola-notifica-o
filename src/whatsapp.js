@@ -1,5 +1,5 @@
 const { timingSafeEqual } = require('node:crypto');
-const { criarLink } = require('./acesso');
+const { linkPainelADM } = require('./acesso');
 
 const DESTINATARIOS = [
   { id: 'marcela', nome: 'Marcela', cargo: 'Dirigente' },
@@ -33,18 +33,10 @@ function validarDestinatarios(corpo) {
 }
 
 function criarMensageria(pool, env = process.env, enviar = fetch) {
-  function linkOcorrencia(id) {
-    try {
-      const url = new URL(env.APP_PUBLIC_URL);
-      if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) return null;
-      url.hash = `ocorrencias/${id}`;
-      return url.href;
-    } catch { return null; }
-  }
   const pronto = () => env.WHATSAPP_ENABLED === 'true'
     && Boolean(env.WHATSAPP_TOKEN && /^\d+$/.test(env.WHATSAPP_PHONE_NUMBER_ID || '')
       && /^v\d+\.\d+$/.test(env.WHATSAPP_API_VERSION || '') && env.WHATSAPP_TEMPLATE
-      && (env.ADMIN_WHATSAPP_KEY || '').length >= 32 && linkOcorrencia(1));
+      && (env.ADMIN_WHATSAPP_KEY || '').length >= 32 && linkPainelADM(env));
 
   function proteger(req, res, next) {
     const chave = env.ADMIN_WHATSAPP_KEY || '';
@@ -93,9 +85,7 @@ function criarMensageria(pool, env = process.env, enviar = fetch) {
       // Uma interrupção após o envio pode deixar o resultado desconhecido. Não reenviar automaticamente.
       await pool.query(`UPDATE whatsapp_envios SET status = 'INCERTO'
         WHERE status = 'PROCESSANDO' AND atualizado_em < DATE_SUB(NOW(), INTERVAL 10 MINUTE)`);
-      const [pendentes] = await pool.query(`SELECT w.id, w.numero, w.ocorrencia_id, w.destinatario_id, w.acesso_versao, e.nome AS escola,
-        o.data_ocorrencia, o.gravidade FROM whatsapp_envios w
-        JOIN ocorrencias o ON o.id = w.ocorrencia_id JOIN escolas e ON e.id = o.escola_id
+      const [pendentes] = await pool.query(`SELECT w.id, w.numero, w.ocorrencia_id, w.destinatario_id, w.acesso_versao FROM whatsapp_envios w
         WHERE w.status = 'PENDENTE' ORDER BY w.id LIMIT 6`);
       await Promise.all(pendentes.map(async (item) => {
         const [claim] = await pool.query(`UPDATE whatsapp_envios SET status = 'PROCESSANDO'
@@ -114,8 +104,7 @@ function criarMensageria(pool, env = process.env, enviar = fetch) {
             headers: { Authorization: `Bearer ${env.WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ messaging_product: 'whatsapp', to: item.numero, type: 'template',
               template: { name: env.WHATSAPP_TEMPLATE, language: { code: env.WHATSAPP_TEMPLATE_LANGUAGE || 'pt_BR' },
-                components: [{ type: 'body', parameters: [String(item.ocorrencia_id), item.escola,
-                  item.data_ocorrencia, item.gravidade, criarLink(env, item.ocorrencia_id, item.destinatario_id, item.acesso_versao)].map((text) => ({ type: 'text', text })) }] } }),
+                components: [{ type: 'body', parameters: ['Acesso ADM', 'Dados protegidos', 'Consulte o painel', 'Restrita', linkPainelADM(env)].map((text) => ({ type: 'text', text })) }] } }),
           });
           if (resposta.ok) {
             const corpo = await resposta.json();

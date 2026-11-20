@@ -94,7 +94,7 @@ test('D1: PDF de 5 MB é salvo em partes e baixado sem alterações; falha desfa
   assert.equal((await pedir(env, 'ocorrencias', 'POST', { ...dados, anexo: { ...anexo, conteudo: 'bmFvLXBlZg==' } })).status, 400);
 });
 
-test('D1: fila grava junto à ocorrência, cron envia link e não duplica ao concorrer', async () => {
+test('D1: fila grava junto à ocorrência; cron envia aviso genérico com painel ADM e não duplica', async () => {
   const env = { ...ambiente(), WHATSAPP_ENABLED: 'true', WHATSAPP_TOKEN: 'teste', WHATSAPP_PHONE_NUMBER_ID: '123', WHATSAPP_API_VERSION: 'v25.0', WHATSAPP_TEMPLATE: 'ocorrencia' };
   env.sqlite.exec("UPDATE whatsapp_destinatarios SET numero = '5511999990000' WHERE id = 'marcela'");
   const { processarAvisos } = await import('../cloudflare/whatsapp.mjs');
@@ -105,9 +105,13 @@ test('D1: fila grava junto à ocorrência, cron envia link e não duplica ao con
     chamadas++;
     const corpo = JSON.parse(opcoes.body);
     assert.equal(corpo.to, '5511999990000');
-    const { lerToken } = require('../src/acesso');
-    const link = new URL(corpo.template.components[0].parameters[4].text);
-    assert.equal(lerToken(new URLSearchParams(link.hash.split('?')[1]).get('acesso'), env).o, resposta.id);
+    const parametros = corpo.template.components[0].parameters.map((p) => p.text);
+    assert.deepEqual(parametros.slice(0, 4), ['Acesso ADM', 'Dados protegidos', 'Consulte o painel', 'Restrita']);
+    assert.ok(!opcoes.body.includes('ABEL DOS REIS'));
+    assert.ok(!opcoes.body.includes('2026-01-10'));
+    const link = new URL(parametros[4]);
+    assert.equal(link.hash, '#visao-geral');
+    assert.equal(link.search, '');
     return Response.json({ messages: [{ id: 'wamid.teste' }] });
   };
   await Promise.all([processarAvisos(env, enviar), processarAvisos(env, enviar)]);
@@ -144,73 +148,47 @@ test('D1: escola não acessa registros, documentos, relatórios ou indicadores p
   }
 });
 
-test('D1: responsavel cadastrado consulta todos os registros e relatorios sem acesso ADM', async () => {
+test('D1: link pessoal legado não consulta nenhuma ocorrência; só ADM consulta rede', async () => {
   const env = ambiente();
-  const { criarToken } = require('../src/acesso');
   const primeiro = await (await pedir(env, 'ocorrencias', 'POST', dados)).json();
   const segundo = await (await pedir(env, 'ocorrencias', 'POST', { ...dados, escola_id: 2, descricao: 'Registro secreto de outra escola' })).json();
-  env.sqlite.exec("UPDATE whatsapp_destinatarios SET numero = '5511999990000' WHERE id = 'marcela'");
-  const token = 'Link ' + criarToken(env, primeiro.id, 'marcela', 0);
-  assert.equal((await pedir(env, `ocorrencias/${primeiro.id}`, 'GET', undefined, token)).status, 200);
-  assert.equal((await pedir(env, `ocorrencias/${segundo.id}`, 'GET', undefined, token)).status, 200);
-  assert.equal((await pedir(env, `ocorrencias/${segundo.id}/anexo`, 'GET', undefined, token)).status, 404);
-  const lista = await (await pedir(env, 'ocorrencias', 'GET', undefined, token)).json();
+  const linkLegado = 'Link token-legado';
+  for (const rota of [`ocorrencias/${primeiro.id}`, `ocorrencias/${segundo.id}`, 'ocorrencias', 'indicadores', 'relatorios/vermelhas-por-escola']) {
+    assert.equal((await pedir(env, rota, 'GET', undefined, linkLegado)).status, 401);
+  }
+  const lista = await (await pedir(env, 'ocorrencias', 'GET', undefined, env.ADMIN_WHATSAPP_KEY)).json();
   assert.deepEqual(lista.map((r) => r.id), [segundo.id, primeiro.id]);
-  assert.equal((await (await pedir(env, 'ocorrencias?escola_id=2', 'GET', undefined, token)).json()).length, 1);
-  const resumo = await (await pedir(env, 'indicadores', 'GET', undefined, token)).json();
+  assert.equal((await (await pedir(env, 'ocorrencias?escola_id=2', 'GET', undefined, env.ADMIN_WHATSAPP_KEY)).json()).length, 1);
+  const resumo = await (await pedir(env, 'indicadores', 'GET', undefined, env.ADMIN_WHATSAPP_KEY)).json();
   assert.equal(resumo.total_ocorrencias, 2);
-  const relatorio = await (await pedir(env, 'relatorios/vermelhas-por-escola', 'GET', undefined, token)).json();
+  const relatorio = await (await pedir(env, 'relatorios/vermelhas-por-escola', 'GET', undefined, env.ADMIN_WHATSAPP_KEY)).json();
   assert.equal(relatorio.length, 103);
   assert.equal(relatorio.reduce((total, r) => total + r.total_vermelhas, 0), 2);
-  assert.equal((await pedir(env, 'admin/whatsapp', 'GET', undefined, token)).status, 401);
-  assert.equal((await pedir(env, `admin/ocorrencias/${primeiro.id}/links`, 'POST', {}, token)).status, 401);
-  const adm = await (await pedir(env, 'ocorrencias', 'GET', undefined, env.ADMIN_WHATSAPP_KEY)).json();
-  assert.equal(adm.length, 2);
 });
 
-test('D1: links exigem número cadastrado, expiram e são revogados ao trocar ou remover o número', async () => {
+test('D1: endpoint de links legados é desativado mesmo com senha ADM', async () => {
   const env = ambiente();
-  const { criarToken } = require('../src/acesso');
-  await pedir(env, 'ocorrencias', 'POST', dados);
-  const token = 'Link ' + criarToken(env, 1, 'marcela', 0);
-  assert.equal((await pedir(env, 'ocorrencias/1', 'GET', undefined, token)).status, 401);
-  const vazio = await (await pedir(env, 'admin/ocorrencias/1/links', 'POST', {}, env.ADMIN_WHATSAPP_KEY)).json();
-  assert.deepEqual(vazio.links, []);
-  env.sqlite.exec("UPDATE whatsapp_destinatarios SET numero = '5511999990000' WHERE id = 'marcela'");
-  assert.equal((await pedir(env, 'ocorrencias/1', 'GET', undefined, token)).status, 200);
-  const gerado = await (await pedir(env, 'admin/ocorrencias/1/links', 'POST', {}, env.ADMIN_WHATSAPP_KEY)).json();
-  assert.equal(gerado.links.length, 1);
-  const expirado = 'Link ' + criarToken(env, 1, 'marcela', 0, Date.now() - 8 * 86400000);
-  assert.equal((await pedir(env, 'ocorrencias/1', 'GET', undefined, expirado)).status, 401);
-  const config = await (await pedir(env, 'admin/whatsapp', 'GET', undefined, env.ADMIN_WHATSAPP_KEY)).json();
-  config.destinatarios[0].numero = '5511999999999';
-  assert.equal((await pedir(env, 'admin/whatsapp', 'PUT', config, env.ADMIN_WHATSAPP_KEY)).status, 200);
-  assert.equal((await pedir(env, 'ocorrencias/1', 'GET', undefined, token)).status, 401);
-  const novo = 'Link ' + criarToken(env, 1, 'marcela', 1);
-  assert.equal((await pedir(env, 'ocorrencias/1', 'GET', undefined, novo)).status, 200);
-  config.destinatarios[0].numero = '';
-  await pedir(env, 'admin/whatsapp', 'PUT', config, env.ADMIN_WHATSAPP_KEY);
-  assert.equal((await pedir(env, 'ocorrencias/1', 'GET', undefined, novo)).status, 401);
+  const r = await pedir(env, 'admin/ocorrencias/1/links', 'POST', {}, env.ADMIN_WHATSAPP_KEY);
+  assert.equal(r.status, 410);
+  assert.match((await r.json()).erros.join(' '), /desativados/);
 });
 
-test('D1: somente ADM altera e exclui; responsável e escola não mudam registros nem anexos', async () => {
+test('D1: somente ADM consulta, altera e exclui registros e anexos', async () => {
   const env = ambiente();
-  const { criarToken } = require('../src/acesso');
   const criado = await (await pedir(env, 'ocorrencias', 'POST', { ...dados, anexo: { tipo: 'PDF', nome: 'registro.pdf', conteudo: Buffer.from('%PDF-1.7\n%%EOF').toString('base64') } })).json();
-  env.sqlite.exec("UPDATE whatsapp_destinatarios SET numero = '5511999990000' WHERE id = 'marcela'");
-  const token = 'Link ' + criarToken(env, criado.id, 'marcela', 0);
-  for (const senha of [undefined, token, 'senha-incorreta']) {
+  for (const senha of [undefined, 'Link token-legado', 'senha-incorreta']) {
     assert.equal((await pedir(env, `admin/ocorrencias/${criado.id}`, 'PATCH', { ...dados, descricao: 'Alteração indevida' }, senha)).status, 401);
     assert.equal((await pedir(env, `admin/ocorrencias/${criado.id}`, 'DELETE', undefined, senha)).status, 401);
+    assert.equal((await pedir(env, `ocorrencias/${criado.id}`, 'GET', undefined, senha)).status, 401);
   }
   const alterado = { ...dados, descricao: 'Revisado pelo ADM', gravidade: 'AMARELO' };
   assert.equal((await pedir(env, `admin/ocorrencias/${criado.id}`, 'PATCH', alterado, env.ADMIN_WHATSAPP_KEY)).status, 200);
-  const consulta = await (await pedir(env, `ocorrencias/${criado.id}`, 'GET', undefined, token)).json();
+  const consulta = await (await pedir(env, `ocorrencias/${criado.id}`, 'GET', undefined, env.ADMIN_WHATSAPP_KEY)).json();
   assert.equal(consulta.descricao, alterado.descricao);
   assert.equal(consulta.anexo.tipo, 'PDF');
   assert.equal((await pedir(env, `admin/ocorrencias/${criado.id}`, 'PATCH', { ...dados, escola_id: 99999 }, env.ADMIN_WHATSAPP_KEY)).status, 400);
   assert.equal((await pedir(env, `admin/ocorrencias/${criado.id}`, 'DELETE', undefined, env.ADMIN_WHATSAPP_KEY)).status, 200);
-  assert.equal((await pedir(env, `ocorrencias/${criado.id}`, 'GET', undefined, token)).status, 404);
+  assert.equal((await pedir(env, `ocorrencias/${criado.id}`, 'GET', undefined, env.ADMIN_WHATSAPP_KEY)).status, 404);
   assert.equal(env.sqlite.prepare('SELECT COUNT(*) AS n FROM anexo_partes').get().n, 0);
   assert.equal((await pedir(env, `admin/ocorrencias/${criado.id}`, 'DELETE', undefined, env.ADMIN_WHATSAPP_KEY)).status, 404);
 });

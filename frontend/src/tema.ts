@@ -33,3 +33,25 @@ window.addEventListener('storage', (evento) => {
   escolha = evento.newValue === 'claro' || evento.newValue === 'escuro' ? evento.newValue : null;
   aplicarTema(escolha || temaDoSistema());
 });
+
+// A paleta visual nunca altera a classificação gravada na ocorrência.
+const chaveCores = 'escola-notificacao:cores';
+const botoesCores = document.querySelectorAll<HTMLButtonElement>('[data-alternar-cores]');
+function aplicarCores(acessiveis: boolean): void {
+  document.documentElement.dataset.cores = acessiveis ? 'acessiveis' : 'padrao';
+  botoesCores.forEach((botao) => {
+    botao.setAttribute('aria-pressed', String(acessiveis));
+    botao.title = acessiveis ? 'Restaurar cores padrão' : 'Ativar paleta azul e laranja para daltonismo';
+  });
+}
+let coresSalvas = true;
+try { coresSalvas = localStorage.getItem(chaveCores) !== 'padrao'; } catch { /* Funciona sem armazenamento. */ }
+aplicarCores(coresSalvas);
+botoesCores.forEach((botao) => botao.addEventListener('click', () => {
+  const acessiveis = document.documentElement.dataset.cores !== 'acessiveis';
+  aplicarCores(acessiveis);
+  try { localStorage.setItem(chaveCores, acessiveis ? 'acessiveis' : 'padrao'); } catch { /* Mantém nesta página. */ }
+}));
+window.addEventListener('storage', (evento) => {
+  if (evento.key === chaveCores || evento.key === null) aplicarCores(evento.newValue !== 'padrao');
+});

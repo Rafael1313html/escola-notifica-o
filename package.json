@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
+    "dev:local": "npm --prefix frontend run build && wrangler dev --config cloudflare/wrangler.jsonc --ip 127.0.0.1 --port 5173",
     "build": "npm --prefix frontend ci && npm --prefix frontend run build",
     "build:demo": "npm --prefix frontend ci && npm --prefix frontend run build:demo",
     "db:init": "node scripts/init-db.js",

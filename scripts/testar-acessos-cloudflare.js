@@ -79,7 +79,7 @@ async function testar() {
     configuracao.destinatarios[0].numero = '';
     await pedir('admin/whatsapp', 'PUT', configuracao);
     assert.equal((await pedir(`ocorrencias/${ids[1]}`, 'GET', undefined, pessoal)).status, 401);
-    console.log('Worker real: escola sem consultas; responsável consulta toda a rede; somente ADM edita e exclui. Desktop e celular aprovados.');
+    console.log('Worker real: escola registra; somente ADM consulta, edita e exclui. Desktop e celular aprovados.');
   } finally {
     for (const id of ids) await pedir(`admin/ocorrencias/${id}`, 'DELETE');
     await pedir('admin/whatsapp', 'PUT', original);

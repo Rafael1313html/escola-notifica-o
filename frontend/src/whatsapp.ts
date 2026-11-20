@@ -51,14 +51,22 @@ export function iniciarWhatsApp(aoAutorizar: () => void, aoBloquear: () => void)
   async function pedir(opcoes?: RequestInit): Promise<Configuracao | { salvo: boolean }> {
     const chavePedido = credencial;
     if (!chavePedido) throw new Error('Entre com a senha ADM para acessar a configuração.');
-    const resposta = await fetch('/api/admin/whatsapp', { ...opcoes, cache: 'no-store',
-      signal: AbortSignal.timeout(15000),
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${chavePedido}` } });
+    let resposta: Response;
+    try {
+      resposta = await fetch('/api/admin/whatsapp', { ...opcoes, cache: 'no-store',
+        signal: AbortSignal.timeout(15000),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${chavePedido}` } });
+    } catch {
+      throw new Error('Não foi possível conectar ao servidor. A senha não pôde ser validada. Verifique se o sistema está iniciado e tente novamente.');
+    }
     if (credencial !== chavePedido) throw new Error('A sessão ADM foi encerrada.');
     const corpo = await resposta.json().catch(() => null);
     if (credencial !== chavePedido) throw new Error('A sessão ADM foi encerrada.');
     if (!resposta.ok || !corpo) {
       if (resposta.status === 401 || resposta.status === 403) bloquear();
+      if (resposta.status >= 500 || !corpo) {
+        throw new Error(corpo?.erros?.join(' ') || 'Servidor indisponível. A senha não pôde ser validada. Inicie o sistema completo e tente novamente.');
+      }
       throw new Error(corpo?.erros?.join(' ') || 'Não foi possível acessar a configuração de WhatsApp.');
     }
     return corpo;

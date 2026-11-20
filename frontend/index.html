@@ -1,18 +1,7 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <script>
-      // Retira a credencial da URL antes de carregar recursos externos ou analytics.
-      (() => {
-        const [rota, consulta = ''] = location.hash.split('?');
-        const token = new URLSearchParams(consulta).get('acesso');
-        if (token && /^#ocorrencias\/[1-9]\d*$/.test(rota)) {
-          Object.defineProperty(window, '__convivaLink', { value: token, configurable: true });
-          history.replaceState(null, '', location.pathname + location.search + rota);
-        }
-      })();
-    </script>
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
@@ -30,6 +19,9 @@
             : matchMedia("(prefers-color-scheme: dark)").matches
               ? "escuro"
               : "claro";
+        try {
+          document.documentElement.dataset.cores = localStorage.getItem("escola-notificacao:cores") === "padrao" ? "padrao" : "acessiveis";
+        } catch { document.documentElement.dataset.cores = "acessiveis"; }
       })();
     </script>
     <meta
@@ -130,6 +122,9 @@
       <main class="entrada-fundo" id="entrada-conteudo" tabindex="-1">
         <div class="entrada-cartao">
           <div class="entrada-tema">
+            <button type="button" class="alternar-cores" data-alternar-cores aria-label="Cores acessíveis para daltonismo" aria-pressed="false">
+              <svg class="icone" aria-hidden="true"><use href="#i-olho" /></svg><span>Cores acessíveis</span>
+            </button>
             <button
               type="button"
               class="alternar-tema"
@@ -201,7 +196,7 @@
       </a>
       <p class="marca-descricao">GESTÃO DE OCORRÊNCIAS ESCOLARES</p>
       <p class="nav-legenda">ÁREA DE GESTÃO</p>
-      <nav class="abas" aria-label="Navegação principal">
+      <nav class="abas" id="navegacao-principal" aria-label="Navegação principal">
         <div
           role="tablist"
           aria-label="Seções"
@@ -271,7 +266,7 @@
           </button>
         </div>
       </nav>
-      <div class="lateral-apoio">
+      <div class="lateral-apoio" id="menu-apoio" hidden>
         <p class="nav-legenda">APOIO À GESTÃO</p>
         <button class="nav-ajuda" id="abrir-orientacoes" type="button">
           <svg class="icone"><use href="#i-info" /></svg>Orientações de registro
@@ -311,17 +306,20 @@
 
     <div class="aplicacao">
       <header class="topo">
-        <div class="caminho">
-          <svg class="icone"><use href="#i-escola" /></svg
-          ><span>Gestão escolar</span><span class="separador">/</span
-          ><strong id="caminho-atual">Visão geral</strong>
+        <div class="topo-marca">
+          <button type="button" id="alternar-menu" class="menu-botao" aria-label="Abrir navegação" aria-controls="navegacao-principal menu-apoio" aria-expanded="false">
+            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
+          <a href="#inicio" class="marca-topo" aria-label="Conviva SP — início"><img src="/assets/conviva-sp.jpeg" alt="Conviva SP" width="2752" height="1536" /></a>
         </div>
         <div class="topo-acoes">
           <span class="data-atual"
             ><svg class="icone"><use href="#i-calendario" /></svg
             ><time id="data-atual"></time></span
           ><span class="ambiente" id="ambiente">Rede de ensino</span
-          ><button
+          ><button type="button" class="alternar-cores" data-alternar-cores aria-label="Cores acessíveis para daltonismo" aria-pressed="false">
+            <svg class="icone" aria-hidden="true"><use href="#i-olho" /></svg><span>Cores acessíveis</span>
+          </button><button
             type="button"
             class="alternar-tema"
             data-alternar-tema
@@ -342,6 +340,10 @@
       </header>
 
       <main id="conteudo" class="layout" tabindex="-1">
+        <div class="caminho">
+          <svg class="icone" aria-hidden="true"><use href="#i-escola" /></svg>
+          <a href="#inicio">Início</a><span class="separador" aria-hidden="true">/</span><strong id="caminho-atual">Visão geral</strong>
+        </div>
         <div id="aviso-demo" class="aviso-demo" hidden>
           <svg class="icone"><use href="#i-info" /></svg>
           <p>
@@ -385,41 +387,36 @@
           aria-labelledby="aba-visao-geral"
           tabindex="0"
         >
-          <div class="mensagem-rede">
-            <div>
-              <span class="etiqueta">INFORMAÇÃO QUE ORIENTA O CUIDADO</span>
-              <h2>Um olhar atento para cada escola.</h2>
-              <p>
-                Centralize os registros e acompanhe as ocorrências da sua rede
-                de ensino.
-              </p>
-            </div>
-            <svg
-              class="ilustracao-rede"
-              viewBox="0 0 210 120"
-              aria-hidden="true"
-            >
-              <circle cx="117" cy="60" r="54" fill="#e0ebe5" />
-              <g
-                fill="none"
-                stroke="#72968a"
-                stroke-width="1.5"
-                stroke-linejoin="round"
-              >
-                <path
-                  d="m63 55 47-29 47 29M72 51v49h76V51M100 100V72h21v28M84 63h7v10h-7zM131 63h7v10h-7zM84 82h7v10h-7zM131 82h7v10h-7zM109 26V12h23v11h-23M49 100h117"
-                />
-                <path
-                  d="m163 47 22 8v17c0 16-22 29-22 29s-22-13-22-29V55l22-8Z"
-                  fill="#f1f6f3"
-                  stroke="#356755"
-                />
-                <path d="m152 72 7 7 14-16" stroke="#356755" stroke-width="3" />
-              </g>
-              <circle cx="48" cy="39" r="4" fill="#c3a263" />
-              <circle cx="173" cy="23" r="3" fill="#c3a263" />
-            </svg>
+          <div class="resumo-contexto">
+            <div><span>Escopo</span><strong>Rede de ensino</strong></div>
+            <div><span>Período dos indicadores</span><strong>Histórico completo</strong></div>
+            <p><svg class="icone" aria-hidden="true"><use href="#i-escudo" /></svg>Convivência e proteção escolar</p>
           </div>
+
+          <section class="acompanhamento" aria-label="Calendário de ocorrências">
+            <div class="acompanhamento-filtros">
+              <div class="campo">
+                <label for="painel-escola">Escola</label>
+                <select id="painel-escola"><option value="">Todas as escolas da rede</option></select>
+              </div>
+              <p><svg class="icone" aria-hidden="true"><use href="#i-escudo" /></svg>Convivência e proteção escolar</p>
+            </div>
+            <div class="calendario-cabecalho">
+              <div class="calendario-navegacao">
+                <button type="button" id="mes-anterior" class="botao-icone" aria-label="Mês anterior">‹</button>
+                <h2 id="calendario-mes" aria-live="polite"></h2>
+                <button type="button" id="mes-proximo" class="botao-icone" aria-label="Próximo mês">›</button>
+                <button type="button" id="calendario-hoje" class="link">Hoje</button>
+              </div>
+              <p>Selecione um dia para consultar os registros.</p>
+            </div>
+            <div id="calendario-dias" class="calendario-dias" role="group" aria-label="Dias do mês"></div>
+            <div class="calendario-legenda">
+              <span><i class="dia-marca hoje"></i>Hoje</span>
+              <span><i class="dia-marca registrado"></i>Com registro</span>
+              <span><i class="dia-marca sem-registro"></i>Sem registro na consulta</span>
+            </div>
+          </section>
 
           <div class="indicadores" aria-label="Indicadores de todo o histórico">
             <article class="indicador">
@@ -466,6 +463,44 @@
             </article>
           </div>
 
+          <div class="painel-acompanhamento">
+          <article class="recentes mural">
+            <div class="mural-filtros">
+              <div class="campo"><label for="painel-busca">Buscar ocorrência</label><input id="painel-busca" type="search" placeholder="Número ou tipo da ocorrência" /></div>
+              <div class="campo"><label for="painel-gravidade">Gravidade</label><select id="painel-gravidade"><option value="">Todas as classificações</option><option value="AMARELO">Amarela</option><option value="VERMELHO">Vermelha</option></select></div>
+            </div>
+            <div class="bloco-cabecalho">
+              <div>
+                <h2>O que tem de novo</h2>
+                <p id="mural-contexto">Últimos registros da rede de ensino</p>
+              </div>
+              <button
+                type="button"
+                class="link com-icone"
+                data-abrir="ocorrencias"
+              >
+                Ver todas<svg class="icone"><use href="#i-seta" /></svg>
+              </button>
+            </div>
+            <button type="button" id="mural-limpar" class="link" hidden>Limpar filtros do painel</button>
+            <p id="mural-status" class="sr-only" role="status"></p>
+            <div id="recentes-lista" class="mural-lista"></div>
+          </article>
+          <aside class="painel-atalhos" aria-label="Atalhos e escolas">
+            <section class="links-rapidos">
+              <h2>Links rápidos</h2>
+              <p>Acesso às ações do dia a dia</p>
+              <button type="button" data-abrir="registrar">Adicionar ocorrência<svg class="icone" aria-hidden="true"><use href="#i-plus" /></svg></button>
+              <button type="button" data-abrir="ocorrencias">Buscar ocorrências<svg class="icone" aria-hidden="true"><use href="#i-busca" /></svg></button>
+              <button type="button" data-abrir="relatorio">Relatórios da rede<svg class="icone" aria-hidden="true"><use href="#i-grafico" /></svg></button>
+            </section>
+            <section class="escolas-destaque">
+              <h2>Escolas com mais registros</h2>
+              <p>Na consulta dos 200 registros mais recentes</p>
+              <div id="escolas-destaque" class="escolas-avatares"></div>
+            </section>
+          </aside>
+          </div>
           <div class="grade-analise">
             <article class="bloco grafico-bloco">
               <div class="bloco-cabecalho">
@@ -514,22 +549,6 @@
             </article>
           </div>
 
-          <article class="bloco recentes">
-            <div class="bloco-cabecalho">
-              <div>
-                <h2>Ocorrências recentes</h2>
-                <p>Últimos registros da rede de ensino</p>
-              </div>
-              <button
-                type="button"
-                class="link com-icone"
-                data-abrir="ocorrencias"
-              >
-                Ver todas<svg class="icone"><use href="#i-seta" /></svg>
-              </button>
-            </div>
-            <div id="recentes-lista"></div>
-          </article>
           <div class="atualizacao">
             <span class="ponto verde"></span
             ><span id="ultima-atualizacao" role="status"
@@ -773,9 +792,9 @@
                   <button
                     type="button"
                     class="botao secundario"
-                    data-abrir="ocorrencias"
+                    id="limpar-registro"
                   >
-                    Voltar à consulta</button
+                    Limpar</button
                   ><button type="submit" id="enviar" class="botao principal">
                     <svg class="icone"><use href="#i-check" /></svg
                     ><span>Registrar ocorrência</span>
@@ -1103,9 +1122,8 @@
               </li>
             </ol>
             <p>
-              O aviso informa protocolo, escola, data, classificação e link
-              direto da ocorrência. Ao tocar no link recebido no WhatsApp
-              pessoal, o responsável abre o registro no sistema.
+              O aviso envia apenas texto genérico e link para o painel. A
+              consulta de ocorrências exige senha ADM.
             </p>
             <p>
               Somente envio de avisos. O sistema não recebe respostas e não tem

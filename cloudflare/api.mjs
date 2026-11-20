@@ -7,7 +7,7 @@ import { DESTINATARIOS, validarDestinatarios, pronto } from './whatsapp.mjs';
 
 const { GRAVIDADES, hojeISO, idValido, validarOcorrencia } = validacao;
 const { validarAnexo } = anexos;
-const { admValido, lerToken, criarLink } = acesso;
+const { admValido } = acesso;
 const cabecalhos = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store',
   'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin', 'X-Frame-Options': 'DENY' };
 const json = (corpo, status = 200) => new Response(JSON.stringify(corpo), { status, headers: cabecalhos });
@@ -50,16 +50,10 @@ export async function atenderAPI(request, env) {
     const autorizacao = request.headers.get('Authorization') || '';
     const adm = admValido(autorizacao, env);
     if (caminho.startsWith('/api/admin/') && (env.ADMIN_WHATSAPP_KEY || '').length < 32) return falha('O acesso ADM ainda não foi configurado no servidor.', 503);
-    let origemLink = null;
     const publico = metodo === 'GET' && caminho === '/api/escolas'
       || metodo === 'POST' && caminho === '/api/ocorrencias';
     if (!publico && !adm) {
-      const token = autorizacao.startsWith('Link ') ? lerToken(autorizacao.slice(5), env) : null;
-      if (token && !caminho.startsWith('/api/admin/')) {
-        const pessoa = await db.prepare('SELECT numero, acesso_versao FROM whatsapp_destinatarios WHERE id = ?').bind(token.d).first();
-        if (pessoa?.numero && pessoa.acesso_versao === token.r) origemLink = token.o;
-      }
-      if (!origemLink) return falha('Acesso restrito ao ADM ou ao link recebido pelo responsável.', 401);
+      return falha('Acesso restrito ao ADM.', 401);
     }
 
     // A autorização acontece no servidor antes de consultar ou alterar números.
@@ -87,7 +81,7 @@ export async function atenderAPI(request, env) {
         numero = excluded.numero`).bind(p.id, p.numero)));
       return json({ salvo: true });
     }
-    if (caminho === '/api/acesso' && metodo === 'GET') return json({ perfil: adm ? 'ADM' : 'RESPONSAVEL', ocorrencia_id: origemLink, escopo: 'REDE' });
+    if (caminho === '/api/acesso' && metodo === 'GET') return json({ perfil: 'ADM', escopo: 'REDE' });
     const gerenciar = caminho.match(/^\/api\/admin\/ocorrencias\/([1-9]\d*)$/);
     if (gerenciar && ['PATCH', 'DELETE'].includes(metodo)) {
       const id = Number(gerenciar[1]);
@@ -103,13 +97,8 @@ export async function atenderAPI(request, env) {
         dados.tipo, dados.descricao, dados.gravidade, dados.registrado_por, dados.registrado_por_outro, id).run();
       return resultado.meta.changes ? json({ alterado: true }) : falha('Ocorrência não encontrada.', 404);
     }
-    const links = caminho.match(/^\/api\/admin\/ocorrencias\/([1-9]\d*)\/links$/);
-    if (links && metodo === 'POST') {
-      const id = Number(links[1]);
-      if (!idValido(id)) return falha('Registro inválido.', 400);
-      if (!await db.prepare('SELECT id FROM ocorrencias WHERE id = ?').bind(id).first()) return falha('Ocorrência não encontrada.', 404);
-      const { results } = await db.prepare("SELECT id, acesso_versao FROM whatsapp_destinatarios WHERE numero <> ''").all();
-      return json({ links: results.map((p) => ({ destinatario: p.id, url: criarLink(env, id, p.id, p.acesso_versao) })), validade_dias: 7 });
+    if (/^\/api\/admin\/ocorrencias\/[1-9]\d*\/links$/.test(caminho) && metodo === 'POST') {
+      return falha('Links pessoais de consulta foram desativados.', 410);
     }
     if (caminho === '/api/escolas' && metodo === 'GET') {
       return json((await db.prepare('SELECT id, nome FROM escolas ORDER BY nome').all()).results);

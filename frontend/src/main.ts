@@ -1,8 +1,10 @@
 import './styles.css';
 import './tema.css';
+import './referencia.css';
 import './tema';
+import { iniciarAcompanhamento } from './acompanhamento';
 import { iniciarWhatsApp, mensagemWhatsApp } from './whatsapp';
-import { cabecalhoAcesso, entrarPeloLink, perfilAtual, podeConsultar, versaoAcesso } from './acesso';
+import { cabecalhoAcesso, perfilAtual, podeConsultar, versaoAcesso } from './acesso';
 import { ApiError, baixarAnexo, buscarOcorrencia, criarOcorrencia, listarEscolas, listarIndicadores, listarOcorrencias, listarRelatorio, modoDemo } from './api';
 import { lerPDF, LIMITE_PDF, linkValido } from './anexos';
 import type { Escola, Gravidade, Indicadores, ItemRelatorio, NovaOcorrencia, Ocorrencia, Registrante } from './types';
@@ -114,7 +116,7 @@ const paineis: Record<Painel, HTMLElement> = {
   whatsapp: q('#painel-whatsapp'),
 };
 const TITULOS: Record<Painel, [string, string]> = {
-  'visao-geral': ['Visão geral', 'Informações da rede para uma gestão mais atenta e integrada.'],
+  'visao-geral': ['Resumo da rede', 'Acompanhe os registros e a convivência nas escolas.'],
   registrar: ['Nova ocorrência', 'Registre os fatos e contribua para o acompanhamento da sua escola.'],
   ocorrencias: ['Ocorrências', 'Consulte, filtre e acompanhe os registros da rede de ensino.'],
   relatorio: ['Relatórios', 'Informações consolidadas para apoiar as decisões da gestão.'],
@@ -166,10 +168,29 @@ abas.forEach((aba) => {
   });
 });
 function ajustarOrientacao(): void {
-  q('[role="tablist"]').setAttribute('aria-orientation', telaMovel.matches ? 'horizontal' : 'vertical');
+  q('[role="tablist"]').setAttribute('aria-orientation', 'horizontal');
 }
 telaMovel.addEventListener('change', ajustarOrientacao);
 ajustarOrientacao();
+const menuBotao = q<HTMLButtonElement>('#alternar-menu');
+const menuApoio = q('#menu-apoio');
+const navegacao = q('.lateral');
+function fecharMenu(): void {
+  menuApoio.hidden = true;
+  navegacao.classList.remove('menu-aberto');
+  menuBotao.setAttribute('aria-expanded', 'false');
+}
+menuBotao.addEventListener('click', () => {
+  menuApoio.hidden = !menuApoio.hidden;
+  navegacao.classList.toggle('menu-aberto', !menuApoio.hidden);
+  menuBotao.setAttribute('aria-expanded', String(!menuApoio.hidden));
+});
+document.addEventListener('keydown', (evento) => {
+  if (evento.key === 'Escape' && !menuApoio.hidden) { fecharMenu(); menuBotao.focus(); }
+});
+document.addEventListener('click', (evento) => {
+  if (evento.target instanceof Node && !menuApoio.contains(evento.target) && !menuBotao.contains(evento.target)) fecharMenu();
+});
 function painelDaUrl(): Painel {
   const h = location.hash.replace('#', '').split('/')[0];
   return Object.hasOwn(paineis, h) ? h as Painel : 'visao-geral';
@@ -182,24 +203,10 @@ function sincronizarRota(): void {
     const hash = location.hash;
     const [valor, parametros = ''] = hash.slice('#ocorrencias/'.length).split('?');
     const id = Number(valor);
-    const memoria = window as Window & { __convivaLink?: string };
-    const token = new URLSearchParams(parametros).get('acesso') || memoria.__convivaLink;
-    delete memoria.__convivaLink;
-    if (token) {
-      const limpo = `#ocorrencias/${valor}`;
-      history.replaceState(null, '', limpo);
-      ativar('registrar');
-      history.replaceState(null, '', limpo);
-      status.textContent = 'Validando link de acesso…';
-      void entrarPeloLink(token).then(() => {
-        history.replaceState(null, '', limpo);
-        sincronizarRota();
-      }).catch((erro) => { mostrarAviso(erro instanceof Error ? erro.message : 'Não foi possível validar o link.'); });
-      return;
-    }
+    if (parametros) history.replaceState(null, '', `#ocorrencias/${valor}`);
     if (!podeConsultar()) {
       ativar('registrar');
-      mostrarAviso('Consulta restrita ao ADM ou ao link pessoal recebido no WhatsApp.');
+      mostrarAviso('Consulta restrita ao ADM.');
       return;
     }
     if (!/^[1-9]\d*$/.test(valor) || !Number.isSafeInteger(id)) {
@@ -381,6 +388,14 @@ function reiniciarFormulario(registrante: Registrante): void {
   if (mantido) mantido.checked = true;
   if (registrante !== 'OUTROS') { campoOutro.value = ''; blocoOutro.hidden = true; campoOutro.required = false; }
 }
+q('#limpar-registro').addEventListener('click', () => {
+  if (estado.enviando) return;
+  form.reset();
+  campoData.value = hojeISO();
+  reiniciarFormulario('DIRETOR');
+  q('#registro-mensageria').textContent = '';
+  campoEscola.focus();
+});
 // Em telas largas o formulário fica sempre visível ao lado.
 // As orientações de preenchimento ocupam a coluna lateral do painel de registro.
 
@@ -399,12 +414,23 @@ async function carregarEscolas(): Promise<void> {
     filtro.append(new Option(e.nome, e.nome));
   });
   filtro.value = estado.escolaFiltro;
+  acompanhamento.atualizarEscolas(escolas.map((e) => e.nome));
 }
 
 /* ---------- lista de ocorrências ---------- */
 
 const listaEl = q<HTMLDivElement>('#lista');
 const listaStatus = q<HTMLParagraphElement>('#lista-status');
+const acompanhamento = iniciarAcompanhamento({
+  detalhes: abrirDetalhes,
+  selo: criarSelo,
+  consultarEscola: (nome) => {
+    limparFiltros();
+    estado.escolaFiltro = nome;
+    q<HTMLSelectElement>('#filtro-escola').value = nome;
+    atualizarFiltros(); ativar('ocorrencias'); q('#busca').focus();
+  },
+});
 
 function criarTabela(itens: Ocorrencia[]): HTMLElement {
   const container = el('div', 'tabela-container');
@@ -467,11 +493,7 @@ function desenharLista(): void {
   q<HTMLButtonElement>('#pagina-anterior').disabled = estado.pagina <= 1;
   q<HTMLButtonElement>('#pagina-proxima').disabled = estado.pagina >= paginas;
   q<HTMLButtonElement>('#exportar-lista').disabled = !itens.length || estado.carregando;
-  const recentes = q('#recentes-lista');
-  recentes.replaceChildren(estado.ocorrencias?.length ? criarTabela(estado.ocorrencias.slice(0, 5)) : criarVazio(
-    estado.ocorrencias === null ? 'Não foi possível carregar os registros' : 'Sua rede, acompanhada desde o primeiro registro',
-    estado.ocorrencias === null ? 'Use Atualizar para tentar novamente.' : 'As ocorrências mais recentes serão exibidas aqui.',
-    estado.ocorrencias === null ? undefined : { rotulo: 'Registrar ocorrência', executar: () => { ativar('registrar'); campoEscola.focus(); } }));
+  acompanhamento.atualizar(estado.ocorrencias);
 }
 function atualizarFiltros(): void { estado.pagina = 1; desenharLista(); }
 q<HTMLInputElement>('#busca').addEventListener('input', (ev) => { estado.busca = (ev.target as HTMLInputElement).value; atualizarFiltros(); });
@@ -666,27 +688,6 @@ function abrirDetalhes(o: Ocorrencia): void {
       finally { confirmar.disabled = false; }
     });
     conteudo.append(editar, apagar, confirmacao);
-    const gerar = el('button', 'botao secundario', 'Gerar links dos responsáveis'); gerar.type = 'button';
-    const links = el('div', 'links-responsaveis');
-    const mensagem = el('p', 'ajuda', 'Links pessoais permitem consultar toda a rede por sete dias. Compartilhe somente com o responsável indicado.');
-    gerar.addEventListener('click', async () => {
-      const versao = versaoAcesso(); gerar.disabled = true;
-      try {
-        const r = await fetch(`/api/admin/ocorrencias/${o.id}/links`, { method: 'POST', headers: cabecalhoAcesso(), cache: 'no-store', signal: AbortSignal.timeout(15000) });
-        const corpo = await r.json();
-        if (versao !== versaoAcesso()) return;
-        if (!r.ok) throw new Error(corpo.erros?.join(' ') || 'Não foi possível gerar os links.');
-        links.replaceChildren();
-        for (const item of corpo.links) {
-          const label = el('label', 'campo', item.destinatario);
-          const input = el('input'); input.type = 'text'; input.readOnly = true; input.value = item.url;
-          label.append(input); links.append(label);
-        }
-        mensagem.textContent = corpo.links.length ? 'Cada link permite consultar toda a rede por sete dias. Envie somente ao responsável indicado.' : 'Cadastre primeiro os números no acesso ADM.';
-      } catch (erro) { mensagem.textContent = erro instanceof Error ? erro.message : 'Falha ao gerar links.'; }
-      finally { gerar.disabled = false; }
-    });
-    conteudo.append(gerar, mensagem, links);
   }
   q<HTMLDialogElement>('#detalhes-dialog').showModal();
 }
@@ -828,7 +829,7 @@ function ajustarAcesso(): void {
   q('#entrar-painel').textContent = consultar ? 'Acessar painel' : 'Registrar ocorrência';
   q('#entrar-painel').setAttribute('aria-label', consultar ? 'Acessar painel de ocorrências' : 'Registrar ocorrência da escola');
   q('.abas-lista').classList.toggle('somente-registro', !consultar);
-  q('#ambiente').textContent = perfilAtual() === 'ADM' ? 'Administrador' : perfilAtual() === 'RESPONSAVEL' ? 'Responsável · consulta da rede' : 'Escola · registro de ocorrência';
+  q('#ambiente').textContent = perfilAtual() === 'ADM' ? 'Administrador' : 'Escola · registro de ocorrência';
   if (!consultar) {
     acessoADM?.encerrar();
     estado.ocorrencias = null; estado.relatorio = null; estado.indicadores = null;

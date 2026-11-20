@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#181f2e">
+  <title>Programa Conviver Serrana · Vídeo Institucional e Normas do App</title>
+  <link rel="icon" type="image/jpeg" href="assets/conviva-sp.jpeg">
+  <link rel="stylesheet" href="assets/bni-rodape.css">
+  <style>
+    @font-face { font-family: Montserrat; src: url('assets/montserrat-400.ttf'); font-weight: 400; }
+    @font-face { font-family: Montserrat; src: url('assets/montserrat-600.ttf'); font-weight: 600; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #0f172a; color: #f8fafc; font: 14px/1.6 Montserrat, system-ui, sans-serif; }
+    .container { max-width: 1120px; margin: 24px auto; padding: 0 16px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+    header h1 { font-size: 20px; margin: 0; color: #f8fafc; }
+    header p { margin: 2px 0 0; font-size: 12px; color: #94a3b8; }
+    .links-topo a { color: #38bdf8; text-decoration: none; font-size: 13px; margin-left: 14px; }
+    .player-card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,.45); }
+    .canvas-wrap { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #0b1120; }
+    canvas { width: 100%; height: 100%; display: block; }
+    .controles { display: flex; align-items: center; gap: 10px; padding: 14px 18px; background: #0f172a; border-top: 1px solid #334155; flex-wrap: wrap; }
+    button { font: 600 13px Montserrat, sans-serif; padding: 9px 15px; border: 0; border-radius: 8px; cursor: pointer; background: #0ea5e9; color: #082f49; transition: opacity .15s; }
+    button:hover { opacity: .9; }
+    button.sec { background: #334155; color: #f1f5f9; }
+    button.gravar { background: #10b981; color: #052e16; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .barra { flex: 1; min-width: 160px; height: 8px; background: #334155; border-radius: 99px; overflow: hidden; cursor: pointer; position: relative; }
+    .progresso { height: 100%; background: linear-gradient(90deg, #2abfc3, #38bdf8); width: 0%; }
+    .tempo { font-size: 12px; color: #94a3b8; font-variant-numeric: tabular-nums; min-width: 85px; text-align: right; }
+    .cenas { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; padding: 12px 18px; background: #162033; border-top: 1px solid #1e293b; }
+    .cena-btn { background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 8px 10px; border-radius: 8px; font-size: 12px; text-align: left; }
+    .cena-btn.ativa { border-color: #2abfc3; background: #133340; color: #fff; }
+    .cena-btn span { display: block; font-size: 11px; color: #38bdf8; font-weight: 600; }
+    @media (max-width: 760px) { .cenas { grid-template-columns: repeat(2, 1fr); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Programa Conviver · Rede Municipal de Ensino de Serrana</h1>
+        <p>Vídeo resumo: Diretrizes legais (BNCC, Lei 13.185/2015, ECA), objetivos e fluxo do aplicativo web</p>
+      </div>
+      <nav class="links-topo">
+        <a href="/">Abrir aplicativo</a>
+        <a href="apresentacao.html">Apresentação</a>
+        <a href="mensageria.html">WhatsApp</a>
+      </nav>
+    </header>
+
+    <div class="player-card">
+      <div class="canvas-wrap">
+        <canvas id="videoCanvas" width="1280" height="720" aria-label="Vídeo animado do Programa Conviver Serrana"></canvas>
+      </div>
+      <div class="controles">
+        <button type="button" id="btnPlay">▶ Reproduzir</button>
+        <button type="button" id="btnVoz" class="sec">🔊 Narração: Ligada</button>
+        <div class="barra" id="barra" title="Clique para avançar"><div class="progresso" id="progresso"></div></div>
+        <span class="tempo" id="tempo">00:00 / 00:42</span>
+        <button type="button" id="btnBaixar" class="gravar">⬇ Gerar vídeo (.webm)</button>
+      </div>
+      <div class="cenas" id="cenasNav"></div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('videoCanvas');
+    const ctx = canvas.getContext('2d');
+    const DURACAO_CENA = 7; // segundos por cena
+    const CENAS = [
+      {
+        etiqueta: '01 · PROGRAMA CONVIVER · SERRANA',
+        titulo: 'Escolas seguras, acolhedoras e transformadoras',
+        subtitulo: 'Política pública permanente de convivência e proteção escolar na Rede Municipal de Serrana.',
+        cor: '#2abfc3',
+        narra: 'Programa Conviver Serrana. Construindo escolas seguras, acolhedoras e transformadoras em toda a rede municipal.',
+        itens: [
+          ['Cultura de Paz', 'Prevenção contínua à violência e fortalecimento do vínculo escolar'],
+          ['Pertencimento', 'O estudante precisa sentir-se seguro e acolhido para aprender'],
+          ['Gestão em Rede', 'Registro padronizado e acompanhamento em tempo real']
+        ]
+      },
+      {
+        etiqueta: '02 · BASE LEGAL E DIRETRIZES',
+        titulo: 'Normas que fundamentam o aplicativo',
+        subtitulo: 'Alinhamento jurídico e pedagógico para proteção integral dos estudantes.',
+        cor: '#38bdf8',
+        narra: 'O projeto segue a Base Nacional Comum Curricular, a Lei 13.185 de combate ao bullying e o Estatuto da Criança e do Adolescente.',
+        itens: [
+          ['BNCC · Competências Socioemocionais', 'Desenvolvimento integral adaptado à realidade de Serrana'],
+          ['Lei Federal nº 13.185/2015', 'Programa de Combate à Intimidação Sistemática (Bullying e Cyberbullying)'],
+          ['ECA · Lei nº 8.069/1990', 'Garantia de proteção integral à criança e ao adolescente']
+        ]
+      },
+      {
+        etiqueta: '03 · OBJETIVOS DO PROGRAMA',
+        titulo: 'Prevenção, formação e protocolo municipal',
+        subtitulo: 'Ações educativas, preventivas e intersetoriais em todas as unidades escolares.',
+        cor: '#f59e0b',
+        narra: 'Objetivos: reduzir violência e bullying, prevenir uso de álcool e drogas, capacitar educadores e unir escola, família e comunidade.',
+        itens: [
+          ['Prevenção Ativa', 'Reduzir violência, bullying, cyberbullying e uso de álcool e drogas'],
+          ['Escola + Família', 'Fortalecer o vínculo comunitário e capacitar gestores e professores'],
+          ['Protocolo Municipal', 'Atendimento padronizado e ágil às situações de risco']
+        ]
+      },
+      {
+        etiqueta: '04 · COMO FUNCIONA NO CELULAR E PC',
+        titulo: 'Acesso direto por link web (sem instalar app)',
+        subtitulo: 'A equipe escolar abre o link no Android ou computador e registra em 4 passos:',
+        cor: '#10b981',
+        narra: 'No celular ou computador, basta abrir o link. Identifique a escola, classifique em amarelo ou vermelho, anexe PDF e receba o protocolo.',
+        itens: [
+          ['1. Identificar e Relatar', 'Escola, data, tipo de ocorrência e descrição detalhada (até 5.000 caracteres)'],
+          ['2. Classificar Gravidade', 'AMARELA (acompanhamento pedagógico) ou VERMELHA (atenção imediata)'],
+          ['3. Anexar e Protocolar', 'Envio opcional de PDF até 5 MB ou link externo + geração de protocolo']
+        ]
+      },
+      {
+        etiqueta: '05 · ALERTA IMEDIATO E REDE DE PROTEÇÃO',
+        titulo: 'Comunicação automática e ação intersetorial',
+        subtitulo: 'Integração entre gestão educacional e órgãos de proteção do município.',
+        cor: '#ef4444',
+        narra: 'A ocorrência aciona alertas no WhatsApp da diretoria e integra Saúde, Assistência Social, Conselho Tutelar, Ministério Público e Segurança.',
+        itens: [
+          ['Alerta via WhatsApp', 'Notificação automática aos 6 responsáveis da gestão com link seguro'],
+          ['Rede Intersetorial', 'Saúde · Assistência Social · Conselho Tutelar · Ministério Público · Segurança'],
+          ['Acesso Protegido', 'Escolas apenas registram; diretoria e ADM consultam indicadores da rede']
+        ]
+      },
+      {
+        etiqueta: '06 · LEGADO PARA SERRANA',
+        titulo: '“A educação transforma vidas. A convivência transforma a educação.”',
+        subtitulo: 'Decisões orientadas por dados para proteger o futuro dos estudantes.',
+        cor: '#a855f7',
+        narra: 'A educação transforma vidas. A convivência transforma a educação. Programa Conviver Serrana: tecnologia e cuidado humano na rede municipal.',
+        itens: [
+          ['Painel e Indicadores', 'Evolução dos últimos 6 meses e ranking de atenção por unidade'],
+          ['Relatórios e CSV', 'Exportação segura para acompanhamento pedagógico e políticas públicas'],
+          ['Compromisso Permanente', 'Menos evasão, menos violência e mais aprendizagem em Serrana']
+        ]
+      }
+    ];
+
+    const DURACAO_TOTAL = CENAS.length * DURACAO_CENA;
+    let tempoAtual = 0;
+    let rodando = false;
+    let vozAtiva = true;
+    let ultimaCenaFalada = -1;
+    let ultimoTs = 0;
+
+    const cenasNav = document.getElementById('cenasNav');
+    CENAS.forEach((c, i) => {
+      const b = document.createElement('button');
+      b.className = 'cena-btn';
+      b.innerHTML = `<span>Cena 0${i + 1}</span>${c.titulo.slice(0, 32)}…`;
+      b.onclick = () => { tempoAtual = i * DURACAO_CENA; ultimaCenaFalada = -1; atualizarUI(); if (rodando) falarCena(i); };
+      cenasNav.appendChild(b);
+    });
+
+    function falarCena(idx) {
+      if (!vozAtiva || !('speechSynthesis' in window) || ultimaCenaFalada === idx) return;
+      ultimaCenaFalada = idx;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(CENAS[idx].narra);
+      u.lang = 'pt-BR';
+      u.rate = 1.08;
+      window.speechSynthesis.speak(u);
+    }
+
+    function fmt(s) {
+      const m = Math.floor(s / 60).toString().padStart(2, '0');
+      const sec = Math.floor(s % 60).toString().padStart(2, '0');
+      return `${m}:${sec}`;
+    }
+
+    function roundRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, r);
+      ctx.closePath();
+    }
+
+    function desenhar(t) {
+      const idx = Math.min(CENAS.length - 1, Math.floor(t / DURACAO_CENA));
+      const tCena = t - idx * DURACAO_CENA;
+      const entrada = Math.min(1, tCena / 0.6);
+      const ease = 1 - Math.pow(1 - entrada, 3);
+      const c = CENAS[idx];
+
+      // Fundo gradiente
+      const grad = ctx.createLinearGradient(0, 0, 1280, 720);
+      grad.addColorStop(0, '#0f172a');
+      grad.addColorStop(1, '#1e293b');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1280, 720);
+
+      // Círculo decorativo suave
+      ctx.save();
+      ctx.globalAlpha = 0.12;
+      ctx.fillStyle = c.cor;
+      ctx.beginPath();
+      ctx.arc(1120, 140, 260 + Math.sin(t * 1.5) * 18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Barra superior institucional
+      ctx.fillStyle = '#0b1120';
+      ctx.fillRect(0, 0, 1280, 68);
+      ctx.fillStyle = c.cor;
+      ctx.fillRect(0, 65, 1280, 3);
+
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = '600 16px Montserrat, sans-serif';
+      ctx.fillText('PROGRAMA CONVIVER · REDE MUNICIPAL DE SERRANA', 64, 41);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '400 14px Montserrat, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(`Cena ${idx + 1} de ${CENAS.length} · Sistema Web de Ocorrências Escolares`, 1216, 41);
+      ctx.textAlign = 'left';
+
+      // Etiqueta
+      ctx.save();
+      ctx.globalAlpha = ease;
+      ctx.translate(0, (1 - ease) * 24);
+
+      roundRect(64, 108, 360, 34, 99);
+      ctx.fillStyle = c.cor + '28';
+      ctx.fill();
+      ctx.fillStyle = c.cor;
+      ctx.font = '600 14px Montserrat, sans-serif';
+      ctx.fillText(c.etiqueta, 82, 130);
+
+      // Título e subtítulo
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '600 40px Montserrat, sans-serif';
+      ctx.fillText(c.titulo, 64, 198, 1150);
+
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '400 21px Montserrat, sans-serif';
+      ctx.fillText(c.subtitulo, 64, 242, 1150);
+      ctx.restore();
+
+      // 3 Cartões animados em sequência
+      c.itens.forEach((item, i) => {
+        const atraso = 0.2 + i * 0.18;
+        const pCard = Math.max(0, Math.min(1, (tCena - atraso) / 0.5));
+        const eCard = 1 - Math.pow(1 - pCard, 3);
+        const x = 64 + i * 392;
+        const y = 295 + (1 - eCard) * 35;
+
+        ctx.save();
+        ctx.globalAlpha = eCard;
+        roundRect(x, y, 368, 290, 18);
+        ctx.fillStyle = '#1e293b';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = c.cor + '66';
+        ctx.stroke();
+
+        // Topo colorido do card
+        roundRect(x + 24, y + 26, 48, 48, 12);
+        ctx.fillStyle = c.cor + '25';
+        ctx.fill();
+        ctx.fillStyle = c.cor;
+        ctx.font = '600 22px Montserrat, sans-serif';
+        ctx.fillText(`0${i + 1}`, x + 36, y + 58);
+
+        // Título do card
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = '600 22px Montserrat, sans-serif';
+        wrapText(ctx, item[0], x + 24, y + 115, 320, 28);
+
+        // Texto do card
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '400 18px Montserrat, sans-serif';
+        wrapText(ctx, item[1], x + 24, y + 175, 320, 26);
+        ctx.restore();
+      });
+
+      // Rodapé e barra de progresso no próprio vídeo
+      ctx.fillStyle = '#0b1120';
+      ctx.fillRect(0, 648, 1280, 72);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '400 14px Montserrat, sans-serif';
+      ctx.fillText('BNCC · Lei nº 13.185/2015 (Bullying) · ECA · Acesso via navegador no Android e PC', 64, 688);
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillText('Conviver Serrana · Proteção e Cultura de Paz', 1216, 688);
+      ctx.textAlign = 'left';
+
+      // Progresso global no rodapé do vídeo
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(0, 644, 1280, 4);
+      ctx.fillStyle = c.cor;
+      ctx.fillRect(0, 644, 1280 * (t / DURACAO_TOTAL), 4);
+    }
+
+    function wrapText(context, text, x, y, maxWidth, lineHeight) {
+      const words = text.split(' ');
+      let line = '';
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        if (context.measureText(testLine).width > maxWidth && n > 0) {
+          context.fillText(line, x, y);
+          line = words[n] + ' ';
+          y += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      context.fillText(line, x, y);
+    }
+
+    function atualizarUI() {
+      desenhar(tempoAtual);
+      document.getElementById('progresso').style.width = `${(tempoAtual / DURACAO_TOTAL) * 100}%`;
+      document.getElementById('tempo').textContent = `${fmt(tempoAtual)} / ${fmt(DURACAO_TOTAL)}`;
+      const idx = Math.min(CENAS.length - 1, Math.floor(tempoAtual / DURACAO_CENA));
+      [...cenasNav.children].forEach((b, i) => b.classList.toggle('ativa', i === idx));
+    }
+
+    function loop(ts) {
+      if (!rodando) return;
+      if (!ultimoTs) ultimoTs = ts;
+      const dt = (ts - ultimoTs) / 1000;
+      ultimoTs = ts;
+      tempoAtual += dt;
+      const idx = Math.min(CENAS.length - 1, Math.floor(tempoAtual / DURACAO_CENA));
+      falarCena(idx);
+      if (tempoAtual >= DURACAO_TOTAL) {
+        tempoAtual = DURACAO_TOTAL;
+        rodando = false;
+        document.getElementById('btnPlay').textContent = '↺ Reproduzir novamente';
+        atualizarUI();
+        return;
+      }
+      atualizarUI();
+      requestAnimationFrame(loop);
+    }
+
+    document.getElementById('btnPlay').onclick = () => {
+      if (tempoAtual >= DURACAO_TOTAL) { tempoAtual = 0; ultimaCenaFalada = -1; }
+      rodando = !rodando;
+      ultimoTs = 0;
+      document.getElementById('btnPlay').textContent = rodando ? '⏸ Pausar' : '▶ Reproduzir';
+      if (rodando) {
+        falarCena(Math.floor(tempoAtual / DURACAO_CENA));
+        requestAnimationFrame(loop);
+      } else if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+
+    document.getElementById('btnVoz').onclick = (e) => {
+      vozAtiva = !vozAtiva;
+      e.target.textContent = vozAtiva ? '🔊 Narração: Ligada' : '🔇 Narração: Mudo';
+      if (!vozAtiva && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+    };
+
+    document.getElementById('barra').onclick = (e) => {
+      const r = e.currentTarget.getBoundingClientRect();
+      tempoAtual = Math.max(0, Math.min(DURACAO_TOTAL, ((e.clientX - r.left) / r.width) * DURACAO_TOTAL));
+      ultimaCenaFalada = -1;
+      atualizarUI();
+    };
+
+    document.getElementById('btnBaixar').onclick = (e) => {
+      const btn = e.currentTarget;
+      if (!canvas.captureStream || typeof MediaRecorder === 'undefined') {
+        alert('Seu navegador não suporta gravação direta de WebM.');
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = '⏺ Gravando vídeo (42s)...';
+      tempoAtual = 0;
+      ultimaCenaFalada = -1;
+      rodando = true;
+      ultimoTs = 0;
+      document.getElementById('btnPlay').textContent = '⏸ Pausar';
+
+      const stream = canvas.captureStream(30);
+      const chunks = [];
+      const rec = new MediaRecorder(stream, { mimeType: 'video/webm' });
+      rec.ondataavailable = (ev) => { if (ev.data.size > 0) chunks.push(ev.data); };
+      rec.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'programa-conviver-serrana.webm';
+        a.click();
+        btn.disabled = false;
+        btn.textContent = '⬇ Gerar vídeo (.webm)';
+      };
+      rec.start();
+      requestAnimationFrame(function monitor() {
+        if (rodando && tempoAtual < DURACAO_TOTAL) {
+          requestAnimationFrame(monitor);
+        } else if (rec.state === 'recording') {
+          rec.stop();
+        }
+      });
+      requestAnimationFrame(loop);
+    };
+
+    atualizarUI();
+  </script>
+</body>
+</html>

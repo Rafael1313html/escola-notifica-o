@@ -3,6 +3,50 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { hojeISO } from '../src/utils';
 
+test('paleta para daltonismo persiste, mantém a classificação e distingue séries por forma', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('html')).toHaveAttribute('data-cores', 'acessiveis');
+  await abrirComoADM(page, '/#registrar');
+  const cores = page.locator('.topo [data-alternar-cores]');
+  await expect(cores).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('label[for="g-vermelho"]').click();
+  for (const tema of ['claro', 'escuro']) {
+    if (await page.locator('html').getAttribute('data-tema') !== tema) await page.locator('.topo [data-alternar-tema]').click();
+    await expect(page.locator('#g-vermelho')).toBeChecked();
+    await expect(page.locator('#g-vermelho')).toHaveValue('VERMELHO');
+    await expect(page.locator('label[for="g-amarelo"] .ponto')).toHaveCSS('border-radius', '50%');
+    await expect(page.locator('label[for="g-vermelho"] .ponto')).toHaveCSS('border-radius', '0px');
+    const resultados = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+    expect(resultados.violations.map((v) => ({ id: v.id, elementos: v.nodes.map((n) => ({ alvo: n.target, motivo: n.failureSummary })) }))).toEqual([]);
+  }
+  await page.reload();
+  await expect(cores).toHaveAttribute('aria-pressed', 'true');
+  await cores.focus();
+  await page.keyboard.press('Space');
+  await expect(page.locator('html')).toHaveAttribute('data-cores', 'padrao');
+});
+
+test('limpar remove dados e anexos e redefine contador e validação', async ({ page }) => {
+  await page.goto('/#registrar');
+  await expect(page.locator('#enviar')).toBeEnabled();
+  await page.locator('#enviar').click();
+  await expect(page.locator('#erro-escola')).not.toBeEmpty();
+  await page.locator('#descricao').fill('Texto temporário');
+  await page.locator('label[for="r-outros"]').click();
+  await page.locator('#outro').fill('Responsável fictício');
+  await page.locator('#anexo-tipo').selectOption('LINK');
+  await page.locator('#anexo-link').fill('https://example.org/arquivo');
+  await page.locator('#limpar-registro').click();
+  await expect(page.locator('#descricao')).toHaveValue('');
+  await expect(page.locator('#contador')).toHaveText('0 / 5000');
+  await expect(page.locator('#anexo-link')).toHaveValue('');
+  await expect(page.locator('#anexo-link-campo')).toBeHidden();
+  await expect(page.locator('#outro')).toHaveValue('');
+  await expect(page.locator('#outro-campo')).toBeHidden();
+  await expect(page.locator('#erro-escola')).toBeEmpty();
+  await expect(page.locator('#escola')).toBeFocused();
+});
+
 test('troca tema por teclado e preserva a escolha entre entrada, painel e recarga', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light' });
   await page.goto('/');

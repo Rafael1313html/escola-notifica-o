@@ -128,6 +128,8 @@ test('Node nega consultas anônimas, inclusive HEAD e variações de rota', asyn
       assert.ok([401, 404].includes(resposta.status), `${method} ${rota}: ${resposta.status}`);
     }
   }
+  const linkLegado = await globalThis.fetch(`${base}/api/ocorrencias`, { headers: { Authorization: 'Link token-legado' } });
+  assert.equal(linkLegado.status, 401);
 });
 
 test('valida PDF, base64, limite de tamanho e links seguros antes da persistência', () => {
@@ -204,7 +206,7 @@ test('listagem retorna metadados do anexo sem carregar o conteúdo do PDF', asyn
   assert.equal(itens[1].anexo, null);
 });
 
-test('link direto consulta ocorrência pelo ID sem limitar aos 200 recentes ou carregar PDF', async (t) => {
+test('ADM consulta ocorrência pelo ID sem limitar aos 200 recentes ou carregar PDF', async (t) => {
   const base = await servidorTeste(t, async (sql, valores) => {
     assert.match(sql, /WHERE o\.id = \?/);
     assert.doesNotMatch(sql, /LIMIT 200|a\.arquivo/);

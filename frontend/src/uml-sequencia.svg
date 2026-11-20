@@ -1,15 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 900" role="img" aria-labelledby="seq-titulo seq-descricao">
-  <title id="seq-titulo">Sequência UML: registrar e enviar o link da ocorrência</title>
-  <desc id="seq-descricao">A equipe escolar confirma o cadastro pela interface Pages. A API Worker salva ocorrência, anexo e avisos no D1 em um batch atômico e devolve o protocolo. O Worker Cron verifica a fila a cada minuto e envia um modelo aprovado pela API WhatsApp, quando a integração está ativa. Os responsáveis abrem o link no navegador. Não há recebimento de respostas ou chat interno.</desc>
+  <title id="seq-titulo">Sequência UML: registrar, avisar e exigir autenticação ADM</title>
+  <desc id="seq-descricao">A equipe escolar envia o cadastro. A API Worker salva ocorrência, anexo e avisos no D1. O cron envia aviso genérico com link do painel. Somente o ADM autenticado consulta os dados; o link não concede acesso.</desc>
   <style>text{font-family:Arial,sans-serif;fill:#24364b}.moldura{fill:#fff;stroke:#6b879e;stroke-width:1.5}.titulo{font-size:23px;font-weight:bold;text-anchor:middle}.estereotipo{font-size:14px;text-anchor:middle;fill:#456177}.atributo{font:17px monospace}.relacao{fill:none;stroke:#456177;stroke-width:2}.rotulo{font-size:17px}.nota{font-size:17px;fill:#456177}.classe{cursor:pointer}.classe:hover .moldura{stroke:#12636d;stroke-width:4}</style><defs><marker id="seq-seta" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#456177"/></marker></defs>
   <rect width="1800" height="900" fill="#f5f8fb"/>
-  <text x="35" y="40" font-size="22" font-weight="bold">DO CADASTRO AO LINK NO WHATSAPP PESSOAL</text>
+  <text x="35" y="40" font-size="22" font-weight="bold">DO CADASTRO AO PAINEL ADM</text>
   <rect x="30" y="75" width="220" height="60" rx="8" fill="#e7f5f5" stroke="#6b879e"/><text x="140" y="112" text-anchor="middle" font-size="21" font-weight="bold">Equipe escolar</text><path d="M140 135V810" stroke="#8195a5" stroke-dasharray="6 7"/>
 <rect x="320" y="75" width="220" height="60" rx="8" fill="#e7f5f5" stroke="#6b879e"/><text x="430" y="112" text-anchor="middle" font-size="21" font-weight="bold">API Worker</text><path d="M430 135V810" stroke="#8195a5" stroke-dasharray="6 7"/>
 <rect x="620" y="75" width="220" height="60" rx="8" fill="#e7f5f5" stroke="#6b879e"/><text x="730" y="112" text-anchor="middle" font-size="21" font-weight="bold">D1 e fila</text><path d="M730 135V810" stroke="#8195a5" stroke-dasharray="6 7"/>
 <rect x="920" y="75" width="220" height="60" rx="8" fill="#e7f5f5" stroke="#6b879e"/><text x="1030" y="112" text-anchor="middle" font-size="21" font-weight="bold">Worker Cron</text><path d="M1030 135V810" stroke="#8195a5" stroke-dasharray="6 7"/>
 <rect x="1220" y="75" width="220" height="60" rx="8" fill="#e7f5f5" stroke="#6b879e"/><text x="1330" y="112" text-anchor="middle" font-size="21" font-weight="bold">API WhatsApp</text><path d="M1330 135V810" stroke="#8195a5" stroke-dasharray="6 7"/>
-<rect x="1520" y="75" width="220" height="60" rx="8" fill="#e7f5f5" stroke="#6b879e"/><text x="1630" y="112" text-anchor="middle" font-size="21" font-weight="bold">Responsáveis</text><path d="M1630 135V810" stroke="#8195a5" stroke-dasharray="6 7"/>
+<rect x="1520" y="75" width="220" height="60" rx="8" fill="#e7f5f5" stroke="#6b879e"/><text x="1630" y="112" text-anchor="middle" font-size="21" font-weight="bold">Equipe ADM</text><path d="M1630 135V810" stroke="#8195a5" stroke-dasharray="6 7"/>
   <rect x="420" y="180" width="20" height="200" fill="#d9eafa" stroke="#6b879e"/>
   <path d="M140 190H420" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="280" y="177" text-anchor="middle" font-size="17">1. Confirmar registro</text>
   <path d="M440 260H730" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="585" y="247" text-anchor="middle" font-size="17">2. Registro, anexo e avisos</text>
@@ -19,8 +19,8 @@
   <text x="710" y="453" font-size="15" font-weight="bold">loop · cron a cada minuto · integração ativa · um aviso por número preenchido</text>
   <path d="M1030 500H730" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="880" y="487" text-anchor="middle" font-size="17">5. Buscar e assumir pendente</text>
   <path d="M730 550H1030" fill="none" stroke="#456177" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#seq-seta)"/><text x="880" y="537" text-anchor="middle" font-size="17">6. Dados do aviso</text>
-  <path d="M1030 600H1330" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="1180" y="587" text-anchor="middle" font-size="17">7. Modelo + link assinado</text>
-  <path d="M1330 650H1630" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="1480" y="637" text-anchor="middle" font-size="17">8. Aviso no WhatsApp pessoal</text>
-  <path d="M1630 755H430" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="1030" y="742" text-anchor="middle" font-size="17">9. Validar assinatura, prazo e número ativo; liberar consulta das ocorrências e relatórios da rede</text>
+  <path d="M1030 600H1330" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="1180" y="587" text-anchor="middle" font-size="17">7. Modelo + link do painel</text>
+  <path d="M1330 650H1630" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="1480" y="637" text-anchor="middle" font-size="17">8. Aviso para equipe ADM</text>
+  <path d="M1630 755H430" fill="none" stroke="#456177" stroke-width="2"  marker-end="url(#seq-seta)"/><text x="1030" y="742" text-anchor="middle" font-size="17">9. Abrir painel; API exige chave ADM</text>
   <text x="35" y="863" class="nota">API verifica cada consulta e documento · escola sem acesso ao histórico · ADM com acesso à rede · envio depende da Meta</text>
 </svg>

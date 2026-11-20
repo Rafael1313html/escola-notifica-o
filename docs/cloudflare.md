@@ -5,10 +5,10 @@ O frontend do projeto `escola-notificacao` usa Cloudflare Pages. As Pages Functi
 ## Acessos
 
 - **Escola:** registrar uma ocorrência e receber seu protocolo. Não pode consultar histórico, indicadores, relatórios ou documentos de nenhuma escola, nem editar ou excluir registros.
-- **Responsáveis:** Marcela, Alexandra, Susana, Mercia, Monica e Camila recebem links pessoais após cadastrar seus números. Um link válido libera consulta de todas as ocorrências, documentos, indicadores e relatórios da rede. Não permite alterar ou excluir registros nem configurar números.
-- **ADM:** clicar em **ADM** e informar a senha. Pode consultar a rede, editar e apagar registros, configurar os seis números e gerar links pessoais nos detalhes de uma ocorrência. A senha é um secret `ADMIN_WHATSAPP_KEY` do Worker, com pelo menos 32 caracteres, fora do Git e do frontend.
-- **Links pessoais:** assinatura HMAC-SHA256, validade de sete dias e versão do cadastro do destinatário. A API confere assinatura, prazo e número ativo a cada consulta. Alterar ou remover um número revoga seus links anteriores; trocar a senha ADM revoga todos. O link é uma credencial de consulta da rede: encaminhá-lo também permite acesso a quem o recebe. Compartilhe apenas com o responsável indicado.
-- **Sair:** usar **Sair do acesso**, **Bloquear configuração** ou recarregar a página. O navegador descarta credenciais e dados privados. Para entrar novamente, o responsável reabre o link original; o ADM informa a senha. A credencial do link é retirada da URL antes do carregamento de recursos externos e não fica em armazenamento do navegador.
+- **Destinatários:** Marcela, Alexandra, Susana, Mercia, Monica e Camila recebem avisos no WhatsApp. O link abre o painel geral, sem conceder acesso a registros. A consulta exige a senha ADM.
+- **ADM:** clicar em **ADM** e informar a senha. Pode consultar, editar e apagar registros, configurar os seis números e consultar envios. A chave `ADMIN_WHATSAPP_KEY` fica como secret do Worker, fora do Git e do frontend.
+- **Acesso:** somente a chave `Bearer ADMIN_WHATSAPP_KEY` autoriza consultas, indicadores, relatórios, PDFs e ações administrativas. Links pessoais antigos não autenticam mais; o endpoint de geração retorna HTTP 410.
+- **Sair:** usar **Sair do acesso**, **Bloquear configuração** ou recarregar a página. O navegador descarta a credencial e os dados privados.
 
 O cadastro continua público, mas todas as consultas são autorizadas no servidor, inclusive PDFs, exportações e indicadores. Ocultar abas não concede nem substitui autorização. Os endpoints `PATCH /api/admin/ocorrencias/:id` e `DELETE /api/admin/ocorrencias/:id` exigem senha ADM. A edição valida novamente os campos e preserva o documento; a exclusão remove o registro, documento e avisos vinculados. Alterar ou excluir um registro não dispara mensagens adicionais.
 

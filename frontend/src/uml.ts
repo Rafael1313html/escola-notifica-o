@@ -16,7 +16,7 @@ const classes: Record<string, ClasseUML> = {
   Ocorrencia: {
     tipo: 'Entidade', descricao: 'Registro dos fatos, da classificação e do responsável pelo preenchimento.',
     atributos: [['id', 'Inteiro · chave primária · protocolo EN-000001'], ['escola_id', 'Inteiro · referência à escola'], ['data_ocorrencia', 'Data válida, igual ou anterior a hoje'], ['tipo', 'Texto opcional de até 100 caracteres'], ['descricao', 'Texto opcional de até 5.000 caracteres'], ['gravidade', 'Enumeração Gravidade'], ['registrado_por', 'Enumeração Registrante'], ['registrado_por_outro', 'Nome ou cargo opcional · até 100 caracteres'], ['status', 'Texto de até 30 caracteres · padrão ABERTA'], ['criado_em', 'Data e hora geradas pelo banco']],
-    regras: ['Pertence a exatamente uma escola.', 'Pode ter zero ou um anexo e gerar até seis avisos WhatsApp.', 'OUTROS exige nome ou cargo; os demais responsáveis mantêm esse campo vazio.', 'Ocorrência, anexo e fila de avisos são gravados na mesma transação.', 'O link recebido abre o registro pelo ID, inclusive fora dos 200 recentes.', 'Tabela: ocorrencias.'],
+    regras: ['Pertence a exatamente uma escola.', 'Pode ter zero ou um anexo e gerar até seis avisos WhatsApp.', 'OUTROS exige nome ou cargo; os demais responsáveis mantêm esse campo vazio.', 'Ocorrência, anexo e fila de avisos são gravados na mesma transação.', 'Toda consulta exige chave ADM, inclusive por ID e fora dos 200 recentes.', 'Tabela: ocorrencias.'],
   },
   Anexo: {
     tipo: 'Entidade', descricao: 'Documento opcional vinculado a uma ocorrência. Guarda um PDF ou um endereço de documento.',
@@ -26,7 +26,7 @@ const classes: Record<string, ClasseUML> = {
   Registrante: {
     tipo: 'Enumeração', descricao: 'Função de quem preencheu o registro; não representa uma conta autenticada.',
     atributos: [['DIRETOR', 'Diretor'], ['VICE_DIRETOR', 'Vice-diretor'], ['OUTROS', 'Outra função, com nome ou cargo obrigatório']],
-    regras: ['Uma única opção por ocorrência.', 'A escola somente cadastra. O ADM e os seis responsáveis com links pessoais válidos consultam toda a rede. Somente o ADM altera ou exclui registros.'],
+    regras: ['Uma única opção por ocorrência.', 'A escola somente cadastra. Apenas o ADM autenticado consulta, altera ou exclui registros.'],
   },
   Gravidade: {
     tipo: 'Enumeração', descricao: 'Classificação usada nos indicadores, filtros e relatórios da rede.',
@@ -39,14 +39,14 @@ const classes: Record<string, ClasseUML> = {
     regras: ['Um anexo escolhe apenas uma alternativa.', 'Representa a união de tipos TypeScript e as restrições CHECK do banco.'],
   },
   DestinatarioWhatsApp: {
-    tipo: 'Configuração de mensageria', descricao: 'Um dos seis responsáveis que podem receber o link da ocorrência no WhatsApp pessoal.',
-    atributos: [['id', 'Identificador fixo · chave primária'], ['numero', 'DDI, DDD e telefone · até 15 dígitos'], ['acesso_versao', 'Inteiro · muda ao trocar ou remover número; revoga links anteriores'], ['/ nome', 'Derivado do cadastro fixo da aplicação'], ['/ cargo', 'Derivado do cadastro fixo da aplicação']],
+    tipo: 'Configuração de mensageria', descricao: 'Um dos seis destinatários que recebem avisos no WhatsApp e link para o painel ADM.',
+    atributos: [['id', 'Identificador fixo · chave primária'], ['numero', 'DDI, DDD e telefone · até 15 dígitos'], ['acesso_versao', 'Inteiro · invalida avisos pendentes quando número muda'], ['/ nome', 'Derivado do cadastro fixo da aplicação'], ['/ cargo', 'Derivado do cadastro fixo da aplicação']],
     regras: ['Marcela: dirigente. Alexandra e Susana: supervisoras. Mercia: PEC / ADM. Monica: PEC. Camila: CEC.', 'O ADM altera os seis números usando uma senha de acesso.', 'Campo vazio desativa o destinatário; números repetidos são recusados.', 'Pode receber avisos de várias ocorrências.', 'Tabela: whatsapp_destinatarios.'],
   },
   AvisoWhatsApp: {
     tipo: 'Entidade da fila', descricao: 'Aviso individual persistido após o cadastro e enviado pela API da Meta.',
-    atributos: [['id', 'Inteiro longo · chave primária'], ['ocorrencia_id', 'Referência à ocorrência'], ['destinatario_id', 'Referência ao responsável'], ['numero', 'Cópia do telefone no momento do registro'], ['acesso_versao', 'Versão do cadastro quando o aviso foi criado'], ['status', 'Enumeração StatusEnvioWhatsApp'], ['mensagem_id', 'ID retornado pela Meta · opcional'], ['atualizado_em', 'Data e hora da última atualização']],
-    regras: ['Um aviso por ocorrência e destinatário; a combinação é única no banco.', 'Protocolo, escola, data, classificação e link direto seguem no modelo aprovado.', 'Descrição e documentos ficam no sistema.', 'A fila é processada após a gravação, sem esperar pela Meta durante o cadastro.', 'Somente envio: sem respostas, webhook de mensagens ou chat interno.', 'Tabela: whatsapp_envios.'],
+    atributos: [['id', 'Inteiro longo · chave primária'], ['ocorrencia_id', 'Referência à ocorrência'], ['destinatario_id', 'Referência ao responsável'], ['numero', 'Cópia do telefone no momento do registro'], ['acesso_versao', 'Versão do cadastro para validar envio pendente'], ['status', 'Enumeração StatusEnvioWhatsApp'], ['mensagem_id', 'ID retornado pela Meta · opcional'], ['atualizado_em', 'Data e hora da última atualização']],
+    regras: ['Um aviso por ocorrência e destinatário; a combinação é única no banco.', 'O modelo envia valores genéricos e link do painel; não inclui dados da ocorrência e não autentica.', 'Descrição e documentos ficam no sistema.', 'A fila é processada após a gravação, sem esperar pela Meta durante o cadastro.', 'Somente envio: sem respostas, webhook de mensagens ou chat interno.', 'Tabela: whatsapp_envios.'],
   },
   StatusEnvioWhatsApp: {
     tipo: 'Enumeração de mensageria', descricao: 'Situação da tentativa de envio; não representa confirmação de entrega no aparelho.',

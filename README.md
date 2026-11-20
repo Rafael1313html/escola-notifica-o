@@ -14,6 +14,8 @@ A entrada usa fotografia escolar, cartão branco, botão azul e fonte Montserrat
 - Relatório de classificação vermelha por escola e exportação CSV dos resultados selecionados.
 - Navegação por teclado, suporte a celular, preferência por movimento reduzido e impressão.
 - Botão de tema claro/escuro na entrada e no topo do painel, com preferência salva por navegador. Na primeira visita, acompanha o tema do dispositivo. A impressão mantém fundo claro.
+- Cabeçalho claro, navegação horizontal, resumo da rede e formulário centralizado inspirados nas telas de referência Conviva. O menu de apoio reúne orientações e documentos.
+- Botão **Cores acessíveis** na entrada e no painel: usa azul/laranja para distinguir as classificações, com preferência salva. Formas, rótulos e texturas nos gráficos identificam as séries sem depender só das cores. Os nomes e valores das classificações permanecem os mesmos nos registros.
 - Rodapé institucional da BNI Tecnologia na entrada, no painel e nos documentos, sem catálogo de produtos ou informações de contato.
 
 A tela de entrada abre o painel da aplicação. Ela não autentica usuários nem integra o Gov.br. A identidade visual não indica homologação oficial. Antes do uso com dados reais, ainda é necessário implementar autenticação e controle de acesso.
@@ -38,6 +40,16 @@ Na demonstração, os registros e metadados continuam em `localStorage`; PDFs fi
 
 ## Rodar localmente
 
+Para visualizar o sistema completo com acesso ADM e banco local, execute na pasta principal:
+
+```sh
+npm run dev:local
+```
+
+Mantenha esse terminal aberto e acesse **http://127.0.0.1:5173/**. Esse comando compila a interface e inicia o backend Cloudflare local na mesma porta. A senha ADM vem de `ADMIN_WHATSAPP_KEY` em `cloudflare/.dev.vars`; não há senha de demonstração. A configuração e os dados publicados não são alterados.
+
+Na primeira execução, prepare o banco local com `npx wrangler d1 migrations apply DB --local --config cloudflare/wrangler.jsonc`. O modo `demo` do Vite é uma prévia com registros no navegador e precisa de um backend configurado para autenticar o ADM. “Servidor indisponível” indica falha de conexão; “Chave ADM inválida” indica senha recusada pelo servidor.
+
 Para configurar os seis destinatários e o envio automático pelo WhatsApp Business, consulte [docs/whatsapp.md](docs/whatsapp.md). Use **ADM** no topo e valide a chave no servidor para liberar a aba **Canal direto com a diretoria**, com os números e o histórico. O cadastro fica oculto para usuários sem acesso ADM, inclusive na demonstração. A apresentação simplificada está em `/mensageria.html`. O envio depende de conta e modelo aprovados na Meta; a demonstração não envia mensagens.
 
 Use Node.js 20.19 ou superior na linha 20, ou Node.js 22.12 ou superior, para compilar o front-end.
@@ -54,6 +66,8 @@ Use Node.js 20.19 ou superior na linha 20, ou Node.js 22.12 ou superior, para co
 
 3. Acesse `http://localhost:3000`.
 
+O esquema local, relações e comandos de inicialização estão em [modelagem MySQL](docs/modelagem-mysql.md).
+
 Para desenvolver o front-end com recarga automática, rode `npm run dev` dentro de `frontend` e mantenha o servidor Node ativo na porta 3000.
 
 ## Demonstração no GitHub Pages
@@ -64,7 +78,7 @@ Essa demonstração funciona sem servidor e sem MySQL. Os registros ficam no arm
 
 ## Publicar o backend no Cloudflare
 
-O backend nativo usa Worker, D1 e cron. As escolas somente registram; o ADM e os seis responsáveis consultam a rede. Somente o ADM altera ou exclui registros e configura números. Consulte [publicação e acessos no Cloudflare](docs/cloudflare.md) para configuração, migrações e comandos. A senha fica como secret do Worker, fora do Git e do frontend.
+O backend nativo usa Worker, D1 e cron. A escola registra ocorrências; somente o ADM consulta, altera ou exclui registros e configura números. Os avisos do WhatsApp levam ao painel, que exige senha ADM; links antigos de consulta foram desativados. Consulte [publicação e acessos no Cloudflare](docs/cloudflare.md) para configuração, migrações e comandos. A senha fica como secret do Worker, fora do Git e do frontend.
 
 ## Alternativa: backend Node.js/MySQL no Railway
 
@@ -85,7 +99,7 @@ O `railway.json` configura o build, o início da aplicação e a rota de saúde.
 4. Gere um domínio público para o serviço da aplicação nas configurações de rede do Railway.
 5. Abra o domínio para testar o backend compartilhado e persistente.
 
-As escolas somente registram ocorrências. O ADM e os seis responsáveis com links pessoais válidos consultam os dados da rede. Somente o ADM configura números, altera ou exclui registros. A API verifica a autorização em toda consulta e operação administrativa. Nunca envie o arquivo `.env` ao GitHub.
+As escolas somente registram ocorrências. Apenas o ADM consulta dados da rede; consultas, relatórios, PDFs e operações administrativas exigem a chave ADM no servidor. Os seis destinatários do WhatsApp recebem o link do painel, sem credencial de consulta. Nunca envie o arquivo `.env` ao GitHub.
 
 ## Rotas da API
 
@@ -95,7 +109,7 @@ As escolas somente registram ocorrências. O ADM e os seis responsáveis com lin
 | GET | `/api/indicadores` | Totais de todo o histórico e agregados mensais dos últimos seis meses |
 | POST | `/api/ocorrencias` | Registra uma ocorrência |
 | GET | `/api/ocorrencias?gravidade=VERMELHO` | Lista ocorrências, com filtros opcionais `gravidade` e `escola_id` |
-| GET | `/api/ocorrencias/:id` | Detalhes da ocorrência pelo link recebido no WhatsApp, inclusive fora da lista dos 200 registros recentes |
+| GET | `/api/ocorrencias/:id` | Detalhes da ocorrência para ADM autenticado, inclusive fora da lista dos 200 registros recentes |
 | GET | `/api/ocorrencias/:id/anexo` | Baixa o PDF vinculado à ocorrência; retorna 404 quando não existe |
 | GET | `/api/relatorios/vermelhas-por-escola` | Total de ocorrências vermelhas por escola |
 | GET | `/health` | Verificação de disponibilidade |
